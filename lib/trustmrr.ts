@@ -66,5 +66,6 @@ export async function growingStartups() {
   "use cache";
   cacheLife("hours");
   const list = await listStartups({ sort: "growth-desc", pages: 1 });
-  return list.filter((s) => s.mrr > 0).slice(0, 6);
+  // Skip anonymous "Stealth company" listings: nothing to learn from them.
+  return list.filter((s) => s.mrr > 0 && !/^stealth/i.test(s.name)).slice(0, 6);
 }

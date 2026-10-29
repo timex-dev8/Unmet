@@ -23,7 +23,7 @@ const isProductPage = (url: string) => {
 // Use the short brand part of the title; fall back to the domain name when the title reads like a sentence.
 function productName(title: string, site: string) {
   const parts = title.split(/\s[|–—-]\s|:\s/).map((p) => p.trim()).filter(Boolean);
-  const short = parts.find((p) => p.split(/\s+/).length <= 3);
+  const short = parts.find((p) => p.split(/\s+/).length <= 3 && !/^(how|why|what|the)\b/i.test(p));
   if (short) return short.slice(0, 40);
   const label = site.split(".").slice(-2, -1)[0] ?? site;
   return label.charAt(0).toUpperCase() + label.slice(1);
@@ -46,7 +46,7 @@ export async function findCompetitors(card: Card, startups: Startup[]): Promise<
   const words = keywords(`${card.headline} ${card.summary}`);
   const verified: Competitor[] = startups
     .map((s) => ({ s, overlap: [...keywords(s.description)].filter((w) => words.has(w)).length }))
-    .filter((x) => x.overlap >= 2)
+    .filter((x) => x.overlap >= 3 && !/^stealth/i.test(x.s.name))
     .sort((a, b) => b.overlap - a.overlap || b.s.mrr - a.s.mrr)
     .slice(0, 2)
     .map(({ s }) => ({ name: s.name, url: s.website, note: s.description.slice(0, 120), mrr: s.mrr }));
