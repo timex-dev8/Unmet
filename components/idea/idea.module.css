@@ -1,5 +1,5 @@
 .page {
-  min-height: 100dvh;
+  min-height: calc(100dvh - var(--shell-top, 0px) - var(--shell-bottom, 0px));
   background: var(--gray);
 }
 .missing {
@@ -15,7 +15,7 @@
 .wrap {
   max-width: 640px;
   margin: 0 auto;
-  padding-bottom: 120px;
+  padding-bottom: 24px;
 }
 .header {
   padding: 8px 20px 24px;
@@ -152,10 +152,9 @@
   padding-bottom: 0;
 }
 .bottomBar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  /* sticks above the phone tab bar; stays inside the content column on desktop */
+  position: sticky;
+  bottom: var(--shell-bottom, 0px);
   background: rgba(245, 245, 247, 0.86);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   backdrop-filter: blur(20px) saturate(180%);

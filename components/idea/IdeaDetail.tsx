@@ -8,7 +8,7 @@ import s from "./idea.module.css";
 
 // The full idea page. Used by /idea/[slug] for feed cards and, in the browser,
 // for ideas found in research chat (which aren't in the database yet).
-export default function IdeaDetail({ card, backHref = "/feed", backLabel = "Feed" }: { card: Card; backHref?: string; backLabel?: string }) {
+export default function IdeaDetail({ card, backHref = "/app/feed", backLabel = "Feed" }: { card: Card; backHref?: string; backLabel?: string }) {
   const e = card.evidence;
   const yearly = e.days >= 365;
   const scores = [

@@ -14,7 +14,7 @@ export default function FilterChips({ active }: { active: FeedFilter }) {
     <nav className={s.chips} aria-label="Filter ideas">
       {chips.map((c) => {
         const on = c.value === active;
-        const href = c.value ? `/feed?topic=${encodeURIComponent(c.value)}` : "/feed";
+        const href = c.value ? `/app/feed?topic=${encodeURIComponent(c.value)}` : "/app/feed";
         return (
           <Link key={c.label} href={href} className={`${s.chip} ${on ? s.chipOn : ""}`} aria-current={on ? "page" : undefined}>
             {c.value === "Trending" && <TrendingUp size={15} strokeWidth={2.5} aria-hidden="true" />}

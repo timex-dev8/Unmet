@@ -1,0 +1,379 @@
+.home {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 28px 16px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+.muted {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+.h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.headLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  font-size: 14px;
+  color: var(--link);
+}
+
+/* Hero composer */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  padding-top: 8px;
+}
+.eyebrow {
+  margin: 0;
+  font-size: 15px;
+  color: var(--muted);
+}
+.title {
+  margin: 0;
+  font-size: clamp(30px, 5vw, 44px);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1.06;
+  max-width: 16em;
+}
+.composer {
+  width: min(720px, 100%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 6px 6px 6px 20px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: 0 12px 30px -16px rgba(0, 0, 0, 0.2);
+}
+.composer:focus-within {
+  border-color: var(--blue);
+}
+.input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  border: 0;
+  outline: 0;
+  background: none;
+  font: inherit;
+  font-size: 17px;
+  color: var(--ink);
+}
+.input::placeholder {
+  color: var(--muted);
+}
+.send {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--white);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.send:disabled {
+  background: #d2d2d7;
+  cursor: default;
+}
+.examples {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.example {
+  min-height: 40px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--white);
+  border: 1px solid var(--line);
+  font-size: 14px;
+}
+.example:hover {
+  background: var(--tint);
+  color: var(--navy);
+}
+
+/* Interests */
+.onboard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px;
+  border-radius: 24px;
+  background: var(--white);
+}
+.onboardActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.textBtn {
+  min-height: 44px;
+  border: 0;
+  background: none;
+  font-size: 15px;
+  color: var(--link);
+  cursor: pointer;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line);
+  background: var(--white);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.chipSmall {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+.chipOn {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--white);
+}
+.interestRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+  scroll-margin-top: 80px;
+}
+
+/* For you cards */
+.cards {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  margin: 0 -16px;
+  padding: 0 16px 4px;
+  scrollbar-width: none;
+}
+.cards::-webkit-scrollbar {
+  display: none;
+}
+.card {
+  flex: 0 0 82%;
+  scroll-snap-align: start;
+  background: var(--white);
+  border-radius: 22px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cardMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.sample {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: #8a4b00;
+  background: #fff4e5;
+  border-radius: var(--radius-pill);
+  padding: 3px 8px;
+}
+.cardTitle {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+.cardTitle a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.cardSummary {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-2);
+  flex: 1;
+}
+.cardEvidence {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--muted);
+}
+.cardEvidence strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.cardActions {
+  display: flex;
+  gap: 8px;
+}
+.dig {
+  flex: 1;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--tint);
+  color: var(--navy);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* Lower panels */
+.split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.panel {
+  background: var(--white);
+  border-radius: 22px;
+  padding: 20px;
+}
+.risingList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.risingList li + li {
+  border-top: 1px solid var(--line);
+}
+.risingRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+}
+.rank {
+  width: 18px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.risingTitle {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 500;
+}
+.risingRow:hover .risingTitle {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.risingCat {
+  display: none;
+  font-size: 13px;
+  color: var(--muted);
+}
+.growth {
+  width: 52px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--link);
+}
+.miniList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 500;
+}
+.miniList a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.continueRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  margin-top: 6px;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+@media (min-width: 900px) {
+  .home {
+    padding: 40px 40px 56px;
+    gap: 44px;
+  }
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    overflow: visible;
+    margin: 0;
+    padding: 0;
+  }
+  .card {
+    flex: none;
+  }
+  .split {
+    grid-template-columns: 1.4fr 1fr;
+  }
+  .risingCat {
+    display: inline;
+  }
+}

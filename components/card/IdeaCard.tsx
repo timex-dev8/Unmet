@@ -37,7 +37,7 @@ export default function IdeaCard({ card }: { card: Card }) {
       <ScoreBars card={card} />
 
       <div className={f.bottom}>
-        <Link href={`/idea/${card.slug}`} className={f.details} draggable={false}>
+        <Link href={`/app/idea/${card.slug}`} className={f.details} draggable={false}>
           See details and AI ideas
           <ArrowRight size={16} aria-hidden="true" />
         </Link>

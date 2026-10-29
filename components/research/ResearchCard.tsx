@@ -18,7 +18,7 @@ export default function ResearchCard({ card, index }: { card: Card; index: numbe
         <TrendBadge trend={card.trend} />
       </div>
       <h3 id={`r-${card.slug}`} className={s.cardTitle}>
-        <Link href={`/idea/${card.slug}`}>{card.headline}</Link>
+        <Link href={`/app/idea/${card.slug}`}>{card.headline}</Link>
       </h3>
       <p className={s.cardSummary}>{card.summary}</p>
       {card.quote && <Quote text={card.quote} highlight={card.highlight} className={s.cardQuote} />}
@@ -36,7 +36,7 @@ export default function ResearchCard({ card, index }: { card: Card; index: numbe
         <SaveButton card={card} />
         <SourcesSheet card={card} />
       </div>
-      <Link href={`/idea/${card.slug}`} className={s.cardMore}>
+      <Link href={`/app/idea/${card.slug}`} className={s.cardMore}>
         Details and AI ideas <ArrowRight size={15} aria-hidden="true" />
       </Link>
     </article>

@@ -12,14 +12,14 @@ export default function LocalIdea({ slug }: { slug: string }) {
   const { messages } = useResearchChat(); // re-render once the stored chat loads
   const card = saved.find((c) => c.slug === slug) ?? (messages.length ? findResearchCard(slug) : undefined);
 
-  if (card) return <IdeaDetail card={card} backHref={card.fresh ? "/research" : "/feed"} backLabel={card.fresh ? "Research" : "Feed"} />;
+  if (card) return <IdeaDetail card={card} backHref={card.fresh ? "/app/research" : "/app/feed"} backLabel={card.fresh ? "Research" : "Feed"} />;
 
   return (
     <div className={s.page}>
       <div className={s.missing}>
         <h1 className={s.h2}>This idea isn’t on this device.</h1>
         <p className={s.note}>Ideas from research are kept in the browser where you found them, until accounts arrive.</p>
-        <Link href="/research" className="pill pill-dark">
+        <Link href="/app/research" className="pill pill-dark">
           Start a research
         </Link>
       </div>

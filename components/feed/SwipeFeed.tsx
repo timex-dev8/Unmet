@@ -12,6 +12,7 @@ import {
 } from "motion/react";
 import { Bookmark, ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
 import IdeaCard from "@/components/card/IdeaCard";
+import { markSkipped } from "@/lib/interests";
 import { useSaved } from "@/lib/saved";
 import type { Card } from "@/lib/types";
 import s from "./feed.module.css";
@@ -44,10 +45,12 @@ export default function SwipeFeed({ cards }: { cards: Card[] }) {
   const go = useCallback(
     (d: Dir) => {
       markHintSeen();
+      // Moving on without saving tells the ranking this card wasn't interesting.
+      if (d === 1 && cards[index]) markSkipped(cards[index].slug);
       setDir(d);
       setIndex((i) => (d === -1 ? Math.max(i - 1, 0) : Math.min(i + 1, cards.length)));
     },
-    [cards.length],
+    [cards, index],
   );
 
   const saveAndNext = useCallback(() => {
@@ -101,7 +104,7 @@ export default function SwipeFeed({ cards }: { cards: Card[] }) {
       <div className={s.end}>
         <h2 className={s.endTitle}>No ideas here yet.</h2>
         <p className={s.endText}>Try another filter or search for a problem.</p>
-        <Link href="/search" className="pill pill-dark">
+        <Link href="/app/search" className="pill pill-dark">
           Search
         </Link>
       </div>
@@ -134,7 +137,7 @@ export default function SwipeFeed({ cards }: { cards: Card[] }) {
               <h2 className={s.endTitle}>You’ve seen every idea.</h2>
               <p className={s.endText}>New problems are added as people post them.</p>
               <div className={s.endActions}>
-                <Link href="/saved" className="pill pill-dark">
+                <Link href="/app/board" className="pill pill-dark">
                   View saved
                 </Link>
                 <button type="button" className="pill" style={{ background: "var(--white)" }} onClick={() => setIndex(0)}>

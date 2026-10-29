@@ -33,7 +33,15 @@
   - Chat kept in the browser (`lib/research-store.ts`); research ideas open at `/idea/[slug]` from the browser (`components/idea/LocalIdea.tsx`)
 - [x] Feed evidence refreshed from the last 60 days of Hacker News: `npm run refresh-evidence`
 
+- [x] Unmet Studio, step 1: one app shell under `/app` (desktop sidebar + top bar with ⌘K → search; phone top bar + bottom tabs Home · Feed · Research · Board). Old URLs redirect (`next.config.ts`).
+  - Home `/app`: research composer, interest picker (`lib/interests.ts`), "For you" + "Rising" ranking (`lib/rank.ts`), saved preview, continue research
+  - Feed records skipped cards for ranking; Board lists saved ideas (stages next)
+  - Design mockups: canvas "Unmet Studio" row (Home, Research, Board, Mind; desktop + phone)
+
 ## Not built yet
+- [ ] Studio step 2: research threads, desktop side panel, follow-up chips, "Dig deeper" with card context, "Add all to board"
+- [ ] Studio step 2b: Mind (thought capture + AI "what it adds up to" with evidence check)
+- [ ] Studio step 3: Board stages + notes, ⌘K palette
 - [ ] Stage 2: Supabase (save research runs + shareable idea links, cache, feed from research), `/review`, waitlist
 - [ ] Stage 3: Vercel deploy, daily GitHub Action, real cards on landing, share images, motion polish, `demo-v1` tag
 - [ ] Chat (only if time)

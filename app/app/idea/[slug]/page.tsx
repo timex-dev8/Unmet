@@ -10,13 +10,13 @@ export async function generateStaticParams() {
   return (await getAllSlugs()).map((slug) => ({ slug }));
 }
 
-export async function generateMetadata({ params }: PageProps<"/idea/[slug]">): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps<"/app/idea/[slug]">): Promise<Metadata> {
   const card = await getCard((await params).slug);
   if (!card) return { title: "Idea · Unmet" };
   return { title: `${card.headline} · Unmet`, description: card.summary };
 }
 
-export default async function IdeaPage({ params }: PageProps<"/idea/[slug]">) {
+export default async function IdeaPage({ params }: PageProps<"/app/idea/[slug]">) {
   const { slug } = await params;
   const card = await getCard(slug);
   // Ideas from research chat live in this browser until Supabase is connected.

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Search, Sparkles } from "lucide-react";
-import AppBar from "@/components/app/AppBar";
 import { CardTags } from "@/components/card/parts";
 import { searchCards } from "@/lib/cards";
 import s from "./search.module.css";
@@ -13,7 +12,7 @@ export const instant = false;
 
 const suggestions = ["invoices", "tests", "receipts", "tabs", "meetings"];
 
-export default async function SearchPage({ searchParams }: PageProps<"/search">) {
+export default async function SearchPage({ searchParams }: PageProps<"/app/search">) {
   const { q } = await searchParams;
   const query = typeof q === "string" ? q.trim().slice(0, 120) : "";
   const results = query ? await searchCards(query) : [];
@@ -21,9 +20,9 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
   return (
     <div className={s.page}>
       <main className={s.wrap}>
-        <AppBar variant="back" backHref="/feed" backLabel="Feed" title="Search" />
+        <h1 className={s.title}>Search</h1>
 
-        <form action="/search" className={s.form} role="search">
+        <form action="/app/search" className={s.form} role="search">
           <label htmlFor="q" className="sr-only">
             Describe a problem
           </label>
@@ -48,7 +47,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
             <p className={s.label}>Try</p>
             <div className={s.chips}>
               {suggestions.map((t) => (
-                <Link key={t} href={`/search?q=${encodeURIComponent(t)}`} className={s.chip}>
+                <Link key={t} href={`/app/search?q=${encodeURIComponent(t)}`} className={s.chip}>
                   {t}
                 </Link>
               ))}
@@ -64,7 +63,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
             <ul className={s.results}>
               {results.map((card) => (
                 <li key={card.slug}>
-                  <Link href={`/idea/${card.slug}`} className={s.result}>
+                  <Link href={`/app/idea/${card.slug}`} className={s.result}>
                     <CardTags card={card} />
                     <span className={s.resultTitle}>{card.headline}</span>
                     <span className={s.resultText}>{card.summary}</span>

@@ -83,6 +83,11 @@ summary:focus-visible {
 .pill:active {
   transform: scale(0.98);
 }
+.pill:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
+}
 .pill-white {
   background: var(--white);
   color: var(--navy);

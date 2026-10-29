@@ -22,6 +22,10 @@ export async function getCards({ filter, cursor = 0 }: { filter?: FeedFilter; cu
   return { cards: page, nextCursor: next, total: list.length };
 }
 
+export async function getAllCards() {
+  return cards;
+}
+
 export async function getCard(slug: string) {
   return cards.find((c) => c.slug === slug) ?? null;
 }

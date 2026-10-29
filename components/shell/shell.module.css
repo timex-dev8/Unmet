@@ -1,0 +1,237 @@
+/* Studio shell: phone = top bar + bottom tabs; desktop = sidebar + top bar.
+   Pages size themselves with --shell-top and --shell-bottom. */
+.shell {
+  --shell-top: 56px;
+  --shell-bottom: calc(60px + env(safe-area-inset-bottom));
+  min-height: 100dvh;
+  background: var(--gray);
+}
+.main {
+  min-width: 0;
+}
+.content {
+  padding-bottom: var(--shell-bottom);
+}
+
+/* ---------- Top bar ---------- */
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  height: var(--shell-top);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 8px 0 16px;
+  background: rgba(245, 245, 247, 0.86);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--line);
+}
+.topBrand {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.searchField {
+  display: none;
+}
+.searchIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.kbd {
+  margin-left: auto;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--gray);
+  color: var(--muted);
+}
+
+/* ---------- Tab bar (phone) ---------- */
+.tabs {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  height: var(--shell-bottom);
+  padding: 4px 4px env(safe-area-inset-bottom);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: rgba(251, 251, 253, 0.92);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid var(--line);
+}
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 48px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #86868b;
+  transition: color 0.15s ease;
+}
+.tabOn {
+  color: var(--blue);
+}
+
+/* ---------- Sidebar (desktop) ---------- */
+.side {
+  display: none;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 10px 10px;
+}
+.newBtn {
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink-2);
+  transition: background 0.15s ease;
+}
+.navItem:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+.navOn,
+.navOn:hover {
+  background: var(--white);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+.count {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.sideLabel {
+  margin: 18px 0 4px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.thread {
+  display: block;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.thread:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+.interests {
+  margin-top: auto;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--white);
+  border: 1px solid var(--line);
+}
+.interestsHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.interestsHead a {
+  color: var(--link);
+  font-weight: 500;
+}
+.interestChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.interestChip {
+  font-size: 13px;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--gray);
+}
+.interestsEmpty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+@media (min-width: 900px) {
+  .shell {
+    --shell-top: 60px;
+    --shell-bottom: 0px;
+    display: grid;
+    grid-template-columns: 256px minmax(0, 1fr);
+  }
+  .side {
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 12px;
+    background: #fbfbfd;
+    border-right: 1px solid var(--line);
+  }
+  .tabs,
+  .topBrand,
+  .searchIcon {
+    display: none;
+  }
+  .top {
+    justify-content: center;
+    padding: 0 28px;
+  }
+  .searchField {
+    width: min(460px, 100%);
+    height: 38px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 8px 0 14px;
+    border-radius: 10px;
+    background: var(--white);
+    border: 1px solid var(--line);
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .searchField:hover {
+    border-color: #d2d2d7;
+  }
+}

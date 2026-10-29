@@ -73,7 +73,7 @@ export function Features() {
           <div className={`${s.tile} ${s.narrow}`}>
             <h3 className={s.tileTitle}>Research with AI</h3>
             <p className={s.tileText}>Describe a market. Get real complaints, grouped into ideas, with sources.</p>
-            <Link href="/research" className={s.tileLink}>
+            <Link href="/app/research" className={s.tileLink}>
               Try it →
             </Link>
           </div>
@@ -102,7 +102,7 @@ export function Pricing() {
             <li>A few saves</li>
             <li>Basic search</li>
           </ul>
-          <Link href="/feed" className={`pill pill-blue ${s.full}`}>
+          <Link href="/app/feed" className={`pill pill-blue ${s.full}`}>
             Open the feed
           </Link>
         </div>
@@ -131,7 +131,7 @@ export function Closing() {
     <div className={s.closingWrap}>
       <div className={s.closing}>
         <h2 className={s.closingTitle}>Your next idea is one swipe away.</h2>
-        <Link href="/feed" className="pill pill-white">
+        <Link href="/app/feed" className="pill pill-white">
           Open the feed
         </Link>
       </div>

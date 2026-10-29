@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
-import AppBar from "@/components/app/AppBar";
 import SavedList from "@/components/saved/SavedList";
 import s from "@/components/saved/saved.module.css";
 
-export const metadata: Metadata = { title: "Saved · Unmet" };
+export const metadata: Metadata = { title: "Board · Unmet Studio" };
 
-export default function SavedPage() {
+// For now the board lists saved ideas; stages (Spotted → Building) come next.
+export default function BoardPage() {
   return (
     <div className={s.page}>
       <main className={s.wrap}>
-        <AppBar variant="back" backHref="/feed" backLabel="Feed" />
         <SavedList />
       </main>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowUp, Check, LoaderCircle, RotateCcw, Sparkles } from "lucide-react";
 import { useResearchChat, type ChatMessage } from "@/lib/research-store";
 import type { ResearchEvent } from "@/lib/research-types";
@@ -16,7 +17,16 @@ const EXAMPLES = [
 
 const id = () => Math.random().toString(36).slice(2, 10);
 
-export default function ResearchChat({ configured }: { configured: boolean }) {
+export default function ResearchChat({
+  configured,
+  initialQuery,
+  startFresh,
+}: {
+  configured: boolean;
+  initialQuery?: string;
+  startFresh?: boolean;
+}) {
+  const router = useRouter();
   const { messages, set, clear } = useResearchChat();
   const [input, setInput] = useState("");
   const [includeReddit, setIncludeReddit] = useState(false);
@@ -27,15 +37,26 @@ export default function ResearchChat({ configured }: { configured: boolean }) {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages]);
 
+  // Arriving from Home, a feed card ("Dig deeper") or "New research": start a fresh conversation.
+  const started = useRef(false);
+  useEffect(() => {
+    if (started.current || (!initialQuery && !startFresh)) return;
+    started.current = true;
+    clear();
+    if (initialQuery && configured) void send(initialQuery, { fresh: true });
+    router.replace("/app/research", { scroll: false });
+    // Runs once on arrival; send/clear are stable for this purpose.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const patch = (msgId: string, fn: (m: ChatMessage) => Partial<ChatMessage>) =>
     set((list) => list.map((m) => (m.id === msgId ? { ...m, ...fn(m) } : m)));
 
-  async function send(text: string) {
+  async function send(text: string, opts: { fresh?: boolean } = {}) {
     const message = text.trim();
     if (!message || busy || !configured) return;
-    setInput("");
 
-    const prior = messages.filter((m) => !m.error);
+    const prior = opts.fresh ? [] : messages.filter((m) => !m.error);
     const history = prior.slice(-8).map((m) => ({ role: m.role, text: m.text.slice(0, 1500) }));
     const cards = prior
       .flatMap((m) => m.cards ?? [])
@@ -84,12 +105,14 @@ export default function ResearchChat({ configured }: { configured: boolean }) {
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
+    setInput("");
     send(input);
   }
 
   function onKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
+      setInput("");
       send(input);
     }
   }

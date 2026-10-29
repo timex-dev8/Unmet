@@ -22,7 +22,7 @@ export default function Hero() {
         <h1 className={s.h1}>Find what people complain about. Build the fix.</h1>
         <p className={s.sub}>Swipe through real problems, saved with their sources.</p>
         <div className={s.ctaRow}>
-          <Link href="/feed" className="pill pill-white">
+          <Link href="/app/feed" className="pill pill-white">
             Open the feed
           </Link>
           <a href="#how" className="pill pill-glass">

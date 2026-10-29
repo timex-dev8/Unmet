@@ -4,7 +4,7 @@ import s from "./landing.module.css";
 
 const sections = [
   { href: "#how", label: "How it works" },
-  { href: "/research", label: "Research" },
+  { href: "/app/research", label: "Research" },
   { href: "#features", label: "Features" },
   { href: "#pricing", label: "Pricing" },
 ];
@@ -37,8 +37,8 @@ export default function Nav() {
               ))}
             </div>
           </details>
-          <Link href="/feed" className={`pill pill-white ${s.navCta}`}>
-            Open the feed
+          <Link href="/app" className={`pill pill-white ${s.navCta}`}>
+            Open Unmet
           </Link>
         </div>
       </nav>

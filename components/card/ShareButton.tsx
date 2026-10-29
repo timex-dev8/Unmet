@@ -9,7 +9,7 @@ export default function ShareButton({ card, withLabel = false }: { card: Card; w
   const [copied, setCopied] = useState(false);
 
   async function share() {
-    const url = `${window.location.origin}/idea/${card.slug}`;
+    const url = `${window.location.origin}/app/idea/${card.slug}`;
     if (navigator.share) {
       try {
         await navigator.share({ title: card.headline, text: card.summary, url });
