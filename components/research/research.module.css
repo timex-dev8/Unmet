@@ -468,3 +468,12 @@
   font-size: 13px;
   color: var(--muted);
 }
+.early {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: #8a4b00;
+  background: #fff4e5;
+  border-radius: var(--radius-pill);
+  padding: 3px 8px;
+}

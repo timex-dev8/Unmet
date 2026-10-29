@@ -50,5 +50,6 @@ export type Card = {
   sources: Source[];
   competitors?: Competitor[];
   sample?: boolean; // placeholder content, shown with a "Sample" tag
+  signal?: "early"; // backed by only 2 sources: shown as an early signal, not a proven problem
   fresh?: boolean; // built on demand from a search
 };

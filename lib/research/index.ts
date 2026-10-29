@@ -153,16 +153,21 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     problems = await critique(problems, extracted.complaints).catch(() => problems);
   }
 
-  // 6. Build cards with scores from real signals. If nothing meets the bar, show the
-  // strongest problems with 2 sources and say the evidence is thin.
+  // 6. Build cards with scores from real signals. Problems that meet the bar come first;
+  // ones backed by exactly 2 sources follow as clearly tagged "early signals".
   const opts = { topic: plan.topic, now, minSources: cfg.minSources, minSites: cfg.minSites };
-  let cards = problems.map((p) => buildCard(p, extracted.complaints, sources, opts)).filter((c): c is Card => c !== null);
-  let thin = false;
-  if (cards.length === 0 && cfg.minSources > 2) {
-    cards = problems.map((p) => buildCard(p, extracted.complaints, sources, { ...opts, minSources: 2, minSites: 1 })).filter((c): c is Card => c !== null);
-    thin = cards.length > 0;
+  const strong: Card[] = [];
+  const early: Card[] = [];
+  for (const p of problems) {
+    const card = buildCard(p, extracted.complaints, sources, opts);
+    if (card) strong.push(card);
+    else if (cfg.minSources > 2) {
+      const weak = buildCard(p, extracted.complaints, sources, { ...opts, minSources: 2, minSites: 1 });
+      if (weak) early.push({ ...weak, signal: "early" });
+    }
   }
-  cards.sort((a, b) => b.scores.demand.value - a.scores.demand.value);
+  const byDemand = (a: Card, b: Card) => b.scores.demand.value - a.scores.demand.value;
+  const cards = [...strong.sort(byDemand), ...early.sort(byDemand)].slice(0, 6);
 
   // 7. High: who already solves the top problems (web + TrustMRR verified revenue)
   if (cfg.high && cards.length) {
@@ -179,10 +184,11 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   }
 
   const dropped = problems.length - cards.length;
+  const earlyCount = cards.filter((c) => c.signal === "early").length;
   const notes = [
     grouped.answer,
-    thin ? "Evidence is thin: each of these comes from only two sources, so treat them as early signals." : "",
-    !thin && dropped > 0 ? `${dropped} more ${dropped === 1 ? "problem was" : "problems were"} left out for having too few independent sources.` : "",
+    earlyCount ? `${earlyCount === cards.length ? "All" : earlyCount} of these ${earlyCount === 1 ? "is an early signal" : "are early signals"}, backed by only two sources.` : "",
+    dropped > 0 ? `${dropped} more ${dropped === 1 ? "problem was" : "problems were"} left out for having too little independent evidence.` : "",
     grouped.notFound,
   ].filter(Boolean);
 

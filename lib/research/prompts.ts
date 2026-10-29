@@ -62,10 +62,11 @@ Rules:
 - summary: two short sentences in your own words: what happens, and what it costs them.
 - who: the specific people affected.
 - category: the closest from the list.
-- complaintIds: every complaint id that belongs to it.
+- complaintIds: every complaint id that belongs to it. Leave out complaints that only loosely fit.
+- quoteId: the one complaint whose quote shows this exact problem most clearly to a reader who sees nothing else.
 - competition and difficulty: your estimate 0–100 with a one-line reason. Competition = how well existing products already solve it. Difficulty = how hard a small team would find building a useful first version.
 - ideas: up to 3 possible products, each a title and one sentence. These are your suggestions, not evidence.
-- answer: 2–4 sentences summarizing what this audience struggles with most, citing problems as #1, #2. Never invent numbers.
+- answer: 2–4 sentences summarizing what this audience struggles with most. Refer to problems by a short name, never by number (some may be filtered out). Never invent numbers.
 - notFound: one sentence on what you looked for but found little evidence of, or empty.`;
 
 export const CRITIQUE_SYSTEM = `You review Unmet's draft problem cards before a founder sees them. Be strict.

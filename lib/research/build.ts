@@ -84,17 +84,19 @@ export function buildCard(
   used.sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0));
   const dates = used.map((s) => (s.postedAt ? Date.parse(s.postedAt) / 1000 : NaN)).filter((d) => !Number.isNaN(d));
 
-  // Best quote: from the strongest source, short enough to show.
-  const quoteFrom = [...own]
-    .filter((c) => c.quote.split(/\s+/).length <= MAX_QUOTE_WORDS)
-    .sort((a, b) => (sById.get(b.sourceId)?.weight ?? 0) - (sById.get(a.sourceId)?.weight ?? 0))[0];
+  // The quote the grouping step picked as clearest; otherwise one from the strongest source.
+  const showable = own.filter((c) => c.quote.split(/\s+/).length <= MAX_QUOTE_WORDS);
+  const quoteFrom =
+    showable.find((c) => c.id === p.quoteId) ??
+    [...showable].sort((a, b) => (sById.get(b.sourceId)?.weight ?? 0) - (sById.get(a.sourceId)?.weight ?? 0))[0];
 
   // Demand from real signals: how many independent sources, how many different sites,
   // how much engagement they got, and how fresh they are.
   const engagement = used.reduce((sum, s) => sum + (s.engagement?.score ?? 0), 0);
   const recent = dates.filter((d) => d > opts.now - 180 * DAY).length;
   const demand = clamp(15 + used.length * 7 + (sites.size - 1) * 6 + Math.min(Math.log10(1 + engagement) * 6, 15) + (recent / Math.max(used.length, 1)) * 10, 5, 95);
-  const engagementNote = engagement > 0 ? `, ${used.filter((s) => s.engagement && s.engagement.score > 1).length} with real engagement` : "";
+  const engaged = used.filter((s) => s.engagement && s.engagement.score > 2).length;
+  const engagementNote = engaged > 0 ? `, ${engaged} with votes or replies` : "";
 
   return {
     slug: slugify(p.headline),

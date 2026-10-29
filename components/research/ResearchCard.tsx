@@ -37,6 +37,7 @@ export default function ResearchCard({
         <span className={s.num}>#{index + 1}</span>
         <span>{card.category}</span>
         <TrendBadge trend={card.trend} />
+        {card.signal === "early" && <span className={s.early}>Early signal</span>}
       </div>
       <h3 id={`r-${card.slug}`} className={s.cardTitle}>
         <Link href={`/app/idea/${card.slug}`} onClick={open}>

@@ -82,12 +82,15 @@ export function filterSources(sources: Omit<ResearchSource, "id">[], windowDays:
   return { kept, rejected };
 }
 
+// No single service may crowd out the rest (App Store reviews can flood a business topic).
+const ORIGIN_CAP: Partial<Record<ResearchSource["origin"], number>> = { appstore: 8, hn: 10, stackexchange: 8, github: 8 };
+
 /** Picks the best sources while keeping every service represented (round-robin by origin). */
 export function pickDiverse(sources: ResearchSource[], max: number): ResearchSource[] {
   const byOrigin = new Map<string, ResearchSource[]>();
   for (const s of [...sources].sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0))) {
     const list = byOrigin.get(s.origin) ?? [];
-    list.push(s);
+    if (list.length < (ORIGIN_CAP[s.origin] ?? Infinity)) list.push(s);
     byOrigin.set(s.origin, list);
   }
   const out: ResearchSource[] = [];

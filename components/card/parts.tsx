@@ -47,6 +47,7 @@ export function CardTags({ card }: { card: Card }) {
         <span className={s.tag}>{card.category}</span>
         {card.sample && <span className={`${s.tag} ${s.tagSample}`}>Sample</span>}
         {card.fresh && <span className={`${s.tag} ${s.tagFresh}`}>Fresh</span>}
+        {card.signal === "early" && <span className={`${s.tag} ${s.tagSample}`}>Early signal</span>}
       </div>
       <TrendBadge trend={card.trend} />
     </div>
