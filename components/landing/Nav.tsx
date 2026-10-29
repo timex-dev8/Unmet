@@ -4,6 +4,7 @@ import s from "./landing.module.css";
 
 const sections = [
   { href: "#how", label: "How it works" },
+  { href: "/research", label: "Research" },
   { href: "#features", label: "Features" },
   { href: "#pricing", label: "Pricing" },
 ];

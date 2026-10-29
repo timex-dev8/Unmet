@@ -25,8 +25,16 @@
   - `/search` keyword search; "Pull fresh posts" shown but disabled until Stage 2
   - Data access only through `lib/cards.ts`, so Stage 2 swaps the source without touching screens
 
+- [x] AI research chat `/research` (needs keys in `.env.local` / Vercel env):
+  - `app/api/research/route.ts` streams steps + result (NDJSON), 5 runs/hour per visitor, `RESEARCH_DAILY_CAP` per day, 6h in-memory cache
+  - `lib/research.ts`: Gemini plans ≤3 searches → Exa `/search` (highlights, objective, last 12 months, reddit.com excluded unless "Include Reddit") + Hacker News → Gemini groups complaints into cards
+  - Server checks every quote word-for-word against the fetched text and computes all counts; problems with <2 verified sources are dropped
+  - `lib/llm.ts` (Gemini, model from `LLM_MODEL`, zod-checked JSON), `lib/exa.ts`, `lib/hn.ts`
+  - Chat kept in the browser (`lib/research-store.ts`); research ideas open at `/idea/[slug]` from the browser (`components/idea/LocalIdea.tsx`)
+- [x] Feed evidence refreshed from the last 60 days of Hacker News: `npm run refresh-evidence`
+
 ## Not built yet
-- [ ] Stage 2: Supabase project + keys, HN + Exa ingest → Gemini classify/group/write, `/review`, on-demand pull, waitlist
+- [ ] Stage 2: Supabase (save research runs + shareable idea links, cache, feed from research), `/review`, waitlist
 - [ ] Stage 3: Vercel deploy, daily GitHub Action, real cards on landing, share images, motion polish, `demo-v1` tag
 - [ ] Chat (only if time)
 

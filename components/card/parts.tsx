@@ -2,6 +2,10 @@ import { ArrowDown, ArrowRight, ArrowUp, Sparkles } from "lucide-react";
 import type { Card, Trend } from "@/lib/types";
 import s from "./card.module.css";
 
+export function windowLabel(days: number) {
+  return days >= 365 ? "last 12 months" : `last ${days} days`;
+}
+
 export function shortDate(iso?: string) {
   if (!iso) return "";
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -77,7 +81,7 @@ export function Sparkline({ values, width = 96, height = 30 }: { values: number[
       height={height}
       viewBox={`0 0 ${width} ${height}`}
       role="img"
-      aria-label={`Mentions per week, from ${first} to ${last}`}
+      aria-label={`Mentions over time, from ${first} to ${last}`}
       style={{ flex: "none" }}
     >
       <path d={`${line} L${width} ${height} L0 ${height} Z`} fill="var(--tint)" />

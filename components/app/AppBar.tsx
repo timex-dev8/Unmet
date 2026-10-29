@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, Search } from "lucide-react";
+import { ChevronLeft, Search, Sparkles } from "lucide-react";
 import Logo from "@/components/Logo";
 import SavedLink from "./SavedLink";
 import s from "./app.module.css";
@@ -30,6 +30,11 @@ export default function AppBar(props: Props) {
         <Logo size={24} />
       </Link>
       <div className={s.right}>
+        <Link href="/research" className={s.researchLink} aria-label="AI research">
+
+          <Sparkles size={16} aria-hidden="true" />
+          <span className={s.researchLabel}>Research</span>
+        </Link>
         <Link href="/search" className={s.iconLink} aria-label="Search">
           <Search size={21} aria-hidden="true" />
         </Link>

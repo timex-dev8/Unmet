@@ -71,8 +71,11 @@ export function Features() {
         </div>
         <div className={s.grid}>
           <div className={`${s.tile} ${s.narrow}`}>
-            <h3 className={s.tileTitle}>Chat with sources</h3>
-            <p className={s.tileText}>Ask a question. Every answer shows where it came from.</p>
+            <h3 className={s.tileTitle}>Research with AI</h3>
+            <p className={s.tileText}>Describe a market. Get real complaints, grouped into ideas, with sources.</p>
+            <Link href="/research" className={s.tileLink}>
+              Try it →
+            </Link>
           </div>
           <div className={`${s.tile} ${s.wide}`}>
             <h3 className={s.tileTitle}>

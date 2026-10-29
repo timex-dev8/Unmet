@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { Card } from "@/lib/types";
-import { ScoreBars, Sparkline, TrendBadge } from "./parts";
+import { ScoreBars, Sparkline, TrendBadge, windowLabel } from "./parts";
 import SaveButton from "./SaveButton";
 import ShareButton from "./ShareButton";
 import SourcesSheet from "./SourcesSheet";
@@ -29,7 +29,7 @@ export default function IdeaCard({ card }: { card: Card }) {
       <div className={f.evidence}>
         <p className={f.evidenceText}>
           <strong>{e.posts} mentions</strong>
-          {topic ? ` of “${topic}”` : ""} on {e.site} · last {e.days} days
+          {topic ? ` of “${topic}”` : ""} on {e.site} · {windowLabel(e.days)}
         </p>
         <Sparkline values={e.weekly} />
       </div>

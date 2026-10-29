@@ -2,6 +2,16 @@
   min-height: 100dvh;
   background: var(--gray);
 }
+.missing {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 120px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
 .wrap {
   max-width: 640px;
   margin: 0 auto;

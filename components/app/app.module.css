@@ -27,6 +27,26 @@
 .iconLink:hover {
   background: rgba(0, 0, 0, 0.04);
 }
+.researchLink {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--navy);
+  background: var(--tint);
+  margin-right: 2px;
+}
+@media (max-width: 400px) {
+  .researchLabel {
+    display: none;
+  }
+}
 .savedLink {
   min-height: 44px;
   padding: 0 14px;
