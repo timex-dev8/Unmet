@@ -32,7 +32,9 @@ const PLAN_SYSTEM = `You plan research for Unmet, a tool that finds real complai
 Decide the mode:
 - "search" when the user names a market, audience or problem space that needs fresh evidence.
 - "answer" when the user asks about ideas already found in this conversation (for example "compare #1 and #2", "which is easiest"). Answer only from those ideas; if they don't cover the question, choose "search" instead.
-For "search", write 2 different searches phrased like a search box entry, aimed at places people complain: forums, reviews, community posts, Q&A sites, blogs by practitioners.
+For "search", write 2 different searches in plain words, the way you'd describe the page you want to find (for example "barbers complaining about clients who don't show up").
+Never use search operators: no site:, OR, AND, minus signs or quotation marks. Never name Reddit unless told Reddit is allowed.
+Aim at places people complain: forums, reviews, community posts, Q&A sites, blogs by practitioners.
 Each objective says what to rank first (first-hand frustrations, workarounds, things people wish existed) and what to skip (marketing pages, listicles, vendor sales copy).`;
 
 // ---------- Step 3: group and write ----------
@@ -67,7 +69,8 @@ const WRITE_SYSTEM = `You turn source excerpts into problem cards for Unmet.
 Rules:
 - Use only complaints, frustrations, workarounds or wishes that appear in the sources. Ignore marketing, news and how-to content.
 - Group sources that describe the same underlying problem. A problem needs at least 2 different sources; skip one-offs.
-- Every evidence quote must be copied word-for-word from the text of the source it cites, under 15 words. Never paraphrase inside a quote. If you can't quote it exactly, leave that source out.
+- Every evidence quote must be copied character-for-character from the text of the source it cites: a short span of 5 to 12 consecutive words. Don't fix spelling, don't join two sentences, don't add or drop words. A program checks each quote against the source text and throws away any that don't match exactly.
+- Cite as many matching sources as you can per problem (up to 6).
 - Write headline, summary and who in your own words. Never copy long passages.
 - Competition and difficulty are your estimates (0-100) with a one-line reason.
 - Ideas are possible products, clearly your suggestions.
@@ -123,7 +126,11 @@ function toCard(p: z.infer<typeof WriteSchema>["problems"][number], sources: Res
     return src && words <= MAX_QUOTE_WORDS && words >= 3 && norm(src.text).includes(norm(ev.quote));
   });
   const used = [...new Set(verified.map((v) => v.source))].map((id) => byId.get(id)!);
-  if (used.length < 2) return null; // not a repeated problem, or the AI couldn't back it up
+  if (used.length < 2) {
+    // Not a repeated problem, or the AI couldn't back it up with exact quotes.
+    console.log(`[research] dropped "${p.headline}": ${verified.length}/${p.evidence.length} quotes verified, ${used.length} source(s)`);
+    return null;
+  }
 
   const dates = used.map((s) => (s.postedAt ? Date.parse(s.postedAt) / 1000 : NaN)).filter((d) => !Number.isNaN(d));
   const demand = Math.min(95, 25 + used.length * 12);
@@ -178,6 +185,7 @@ export async function runResearch(req: ResearchRequest, emit: Emit) {
   const context = [
     req.history.length ? `Conversation so far:\n${req.history.map((t) => `${t.role}: ${t.text}`).join("\n")}` : "",
     req.cards.length ? `Ideas already found:\n${req.cards.map((c, i) => `#${i + 1} ${c.headline}: ${c.summary}`).join("\n")}` : "",
+    `Reddit allowed: ${req.includeReddit ? "yes" : "no"}`,
     `New message: ${req.message}`,
   ]
     .filter(Boolean)
@@ -192,7 +200,12 @@ export async function runResearch(req: ResearchRequest, emit: Emit) {
   const now = Math.floor(Date.now() / 1000);
   const since = now - WINDOW_DAYS * DAY;
   // Each Exa search costs money, so cap it at 2 per research.
-  const searches = (plan.searches.length ? plan.searches : [{ query: req.message, objective: "First-hand complaints and unmet needs" }]).slice(0, 2);
+  // Search operators (site:, OR, quotes) don't help Exa's plain-language search, so strip any the AI adds.
+  const plain = (q: string) =>
+    q.replace(/\bsite:\S+/gi, "").replace(/\b(OR|AND)\b/g, " ").replace(/["()]/g, "").replace(/\s+/g, " ").trim();
+  const searches = (plan.searches.length ? plan.searches : [{ query: req.message, objective: "First-hand complaints and unmet needs" }])
+    .map((s) => ({ ...s, query: plain(s.query) || req.message }))
+    .slice(0, 2);
 
   emit({ type: "step", label: `Searching the web: ${searches.map((s) => `“${s.query}”`).join(", ")}` });
   const results = await Promise.allSettled([
@@ -232,10 +245,15 @@ export async function runResearch(req: ResearchRequest, emit: Emit) {
   });
 
   const cards = written.problems.map((p) => toCard(p, sources, plan.topic, now)).filter((c): c is Card => c !== null);
+  // Keep the summary honest about what's actually shown below it.
+  const dropped = written.problems.length - cards.length;
   const answer =
-    cards.length || written.problems.length === 0
+    dropped === 0
       ? written.answer
-      : `${written.answer} I couldn't verify the quotes for these problems against their sources, so I left them out.`;
+      : cards.length
+        ? `${written.answer} Only ${cards.length} of ${written.problems.length} problems had at least two sources I could verify word-for-word, so ${cards.length === 1 ? "that one is" : "those are"} shown below.`
+        : `${written.answer} I couldn't verify enough quotes against their sources to show any of these as cards. Try a more specific topic.`;
+  console.log(`[research] "${plan.topic}": ${sources.length} sources, ${written.problems.length} problems written, ${cards.length} kept`);
 
   const result = { type: "result" as const, answer, cards, sourceCount: sources.length };
   if (isFirst && cards.length) cache.set(key, { at: Date.now(), value: result });
