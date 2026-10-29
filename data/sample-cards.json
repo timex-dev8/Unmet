@@ -1,0 +1,222 @@
+[
+  {
+    "slug": "flaky-ci-tests",
+    "headline": "Flaky CI tests nobody owns",
+    "summary": "Teams rerun failing tests until they pass. Nobody knows which tests are flaky or who should fix them.",
+    "who": "Small engineering teams without a platform engineer",
+    "category": "Dev tools",
+    "trend": "rising",
+    "quote": "Half our CI time is rerunning flaky tests.",
+    "highlight": "rerunning flaky tests",
+    "evidence": { "posts": 27, "threads": 4, "days": 60, "weekly": [1, 2, 1, 3, 3, 4, 5, 6, 6], "site": "Hacker News" },
+    "scores": {
+      "demand": { "value": 78, "label": "High", "basis": "data", "reason": "27 posts, rising for 6 weeks" },
+      "competition": { "value": 50, "label": "Medium", "basis": "ai", "reason": "A few tools exist, mostly for big teams" },
+      "difficulty": { "value": 45, "label": "Medium", "basis": "ai", "reason": "Needs CI integrations to be useful" }
+    },
+    "aiSuggestions": [
+      { "title": "Owner tagging", "text": "Assign each flaky test to whoever last touched it." },
+      { "title": "Waste report", "text": "A weekly email of minutes lost to reruns." },
+      { "title": "Auto-quarantine", "text": "Skip known-flaky tests so merges stop blocking." }
+    ],
+    "sources": [{ "title": "Search Hacker News: flaky tests", "url": "https://hn.algolia.com/?q=flaky%20tests", "site": "Hacker News" }],
+    "sample": true
+  },
+  {
+    "slug": "pet-medication-prices",
+    "headline": "Pet medication prices are impossible to compare",
+    "summary": "Owners pay very different prices for the same prescription. There is no simple way to compare pharmacies or track refills.",
+    "who": "Pet owners with animals on long-term medication",
+    "category": "Money",
+    "trend": "rising",
+    "quote": "I still can’t tell which pharmacy is cheapest.",
+    "highlight": "which pharmacy is cheapest",
+    "evidence": { "posts": 19, "threads": 3, "days": 60, "weekly": [1, 1, 2, 2, 2, 3, 3, 4, 4], "site": "Hacker News" },
+    "scores": {
+      "demand": { "value": 80, "label": "High", "basis": "data", "reason": "19 posts, steady growth" },
+      "competition": { "value": 55, "label": "Medium", "basis": "ai", "reason": "Coupon sites exist, no clear tracker" },
+      "difficulty": { "value": 30, "label": "Low", "basis": "ai", "reason": "Price data and reminders are simple to start" }
+    },
+    "aiSuggestions": [
+      { "title": "Price tracker", "text": "Compare one prescription across pharmacies." },
+      { "title": "Refill reminders", "text": "Ping owners before a refill runs out." }
+    ],
+    "sources": [{ "title": "Search Hacker News: pet medication prices", "url": "https://hn.algolia.com/?q=pet%20medication", "site": "Hacker News" }],
+    "sample": true
+  },
+  {
+    "slug": "deposit-deductions",
+    "headline": "Renters can’t dispute deposit deductions",
+    "summary": "Landlords keep part of the deposit with vague reasons. Renters lack the photos and paperwork to push back.",
+    "who": "Renters moving out of an apartment",
+    "category": "Home",
+    "trend": "steady",
+    "quote": "They kept $600 and I had no move-in photos.",
+    "highlight": "no move-in photos",
+    "evidence": { "posts": 12, "threads": 3, "days": 60, "weekly": [2, 1, 2, 1, 2, 1, 1, 1, 1], "site": "Hacker News" },
+    "scores": {
+      "demand": { "value": 60, "label": "Medium", "basis": "data", "reason": "12 posts, steady" },
+      "competition": { "value": 40, "label": "Low", "basis": "ai", "reason": "Few tools focus on move-out disputes" },
+      "difficulty": { "value": 35, "label": "Low", "basis": "ai", "reason": "A guided photo checklist is a small app" }
+    },
+    "aiSuggestions": [
+      { "title": "Move-in kit", "text": "A timestamped room-by-room photo checklist." },
+      { "title": "Dispute letter", "text": "Generate a letter citing local deposit rules." }
+    ],
+    "sources": [{ "title": "Search Hacker News: security deposit", "url": "https://hn.algolia.com/?q=security%20deposit", "site": "Hacker News" }],
+    "sample": true
+  },
+  {
+    "slug": "lost-meeting-decisions",
+    "headline": "Decisions get lost after meetings",
+    "summary": "Teams agree on something in a call, then nobody can find what was decided. The same debate happens again a week later.",
+    "who": "Remote teams with many recurring meetings",
+    "category": "Work",
+    "trend": "rising",
+    "quote": "We re-decide the same thing every sprint.",
+    "highlight": "re-decide the same thing",
+    "evidence": { "posts": 22, "threads": 5, "days": 60, "weekly": [1, 2, 2, 2, 3, 3, 3, 3, 3], "site": "Hacker News" },
+    "scores": {
+      "demand": { "value": 72, "label": "High", "basis": "data", "reason": "22 posts across 5 threads" },
+      "competition": { "value": 75, "label": "High", "basis": "ai", "reason": "Many AI note-takers already exist" },
+      "difficulty": { "value": 40, "label": "Medium", "basis": "ai", "reason": "Needs calendar and chat integrations" }
+    },
+    "aiSuggestions": [
+      { "title": "Decision log", "text": "Pull only decisions, not full notes, into one list." },
+      { "title": "Re-debate alert", "text": "Flag when a topic was already decided." }
+    ],
+    "sources": [{ "title": "Search Hacker News: meeting decisions", "url": "https://hn.algolia.com/?q=meeting%20decisions", "site": "Hacker News" }],
+    "sample": true
+  },
+  {
+    "slug": "dev-laptop-setup",
+    "headline": "New laptops take days to set up for dev work",
+    "summary": "Every new hire or new machine means days of installing tools and fixing versions. Setup docs are always out of date.",
+    "who": "Developers joining a team or switching machines",
+    "category": "Dev tools",
+    "trend": "steady",
+    "quote": "Onboarding docs were wrong in five places.",
+    "highlight": "docs were wrong",
+    "evidence": { "posts": 16, "threads": 4, "days": 60, "weekly": [2, 2, 1, 2, 2, 2, 2, 1, 2], "site": "Hacker News" },
+    "scores": {
+      "demand": { "value": 62, "label": "Medium", "basis": "data", "reason": "16 posts, steady" },
+      "competition": { "value": 65, "label": "Medium", "basis": "ai", "reason": "Dev containers and scripts partly solve it" },
+      "difficulty": { "value": 55, "label": "Medium", "basis": "ai", "reason": "Many operating systems and stacks to cover" }
+    },
+    "aiSuggestions": [
+      { "title": "Setup recorder", "text": "Record a working machine and replay it on a new one." },
+      { "title": "Docs checker", "text": "Run setup docs in CI so they never go stale." }
+    ],
+    "sources": [{ "title": "Search Hacker News: developer onboarding", "url": "https://hn.algolia.com/?q=developer%20onboarding", "site": "Hacker News" }],
+    "sample": true
+  },
+  {
+    "slug": "scattered-receipts",
+    "headline": "Receipts scattered across email at tax time",
+    "summary": "Freelancers hunt through inboxes for receipts every spring. Missing ones mean lost deductions.",
+    "who": "Freelancers and solo founders",
+    "category": "Money",
+    "trend": "rising",
+    "quote": "I spend a whole weekend digging up receipts.",
+    "highlight": "digging up receipts",
+    "evidence": { "posts": 14, "threads": 3, "days": 60, "weekly": [1, 1, 1, 1, 2, 2, 2, 2, 2], "site": "Hacker News" },
+    "scores": {
+      "demand": { "value": 65, "label": "Medium", "basis": "data", "reason": "14 posts, rising toward tax season" },
+      "competition": { "value": 60, "label": "Medium", "basis": "ai", "reason": "Expense apps exist but need manual work" },
+      "difficulty": { "value": 40, "label": "Medium", "basis": "ai", "reason": "Email access and parsing are the hard part" }
+    },
+    "aiSuggestions": [
+      { "title": "Inbox sweep", "text": "Find every receipt in email and tag it by category." },
+      { "title": "Missing check", "text": "Spot recurring charges with no receipt." }
+    ],
+    "sources": [{ "title": "Search Hacker News: receipts taxes", "url": "https://hn.algolia.com/?q=receipts%20taxes", "site": "Hacker News" }],
+    "sample": true
+  },
+  {
+    "slug": "sleep-data-no-action",
+    "headline": "Sleep trackers give numbers nobody can act on",
+    "summary": "People collect months of sleep data but don’t know what to change. The scores feel arbitrary.",
+    "who": "People who wear a sleep or fitness tracker",
+    "category": "Health",
+    "trend": "steady",
+    "quote": "Great, a score of 72. Now what?",
+    "highlight": "Now what?",
+    "evidence": { "posts": 11, "threads": 2, "days": 60, "weekly": [1, 2, 1, 1, 1, 2, 1, 1, 1], "site": "Hacker News" },
+    "scores": {
+      "demand": { "value": 55, "label": "Medium", "basis": "data", "reason": "11 posts, steady" },
+      "competition": { "value": 70, "label": "High", "basis": "ai", "reason": "Tracker makers add coaching features" },
+      "difficulty": { "value": 50, "label": "Medium", "basis": "ai", "reason": "Needs data exports from several devices" }
+    },
+    "aiSuggestions": [
+      { "title": "One-change coach", "text": "Suggest one experiment per week and measure it." }
+    ],
+    "sources": [{ "title": "Search Hacker News: sleep tracker", "url": "https://hn.algolia.com/?q=sleep%20tracker", "site": "Hacker News" }],
+    "sample": true
+  },
+  {
+    "slug": "contractor-quotes",
+    "headline": "Contractor quotes that don’t match the work",
+    "summary": "Homeowners get quotes that are hard to compare and grow once work starts. They can’t tell a fair price from padding.",
+    "who": "Homeowners planning a repair or renovation",
+    "category": "Home",
+    "trend": "steady",
+    "quote": "The final bill was double the quote.",
+    "highlight": "double the quote",
+    "evidence": { "posts": 13, "threads": 3, "days": 60, "weekly": [2, 1, 1, 2, 1, 2, 1, 2, 1], "site": "Hacker News" },
+    "scores": {
+      "demand": { "value": 60, "label": "Medium", "basis": "data", "reason": "13 posts, steady" },
+      "competition": { "value": 45, "label": "Medium", "basis": "ai", "reason": "Marketplaces exist, few compare line items" },
+      "difficulty": { "value": 45, "label": "Medium", "basis": "ai", "reason": "Needs local price data to be trusted" }
+    },
+    "aiSuggestions": [
+      { "title": "Quote checker", "text": "Upload a quote, see line items that look high." },
+      { "title": "Change-order log", "text": "Track every price change with a signature." }
+    ],
+    "sources": [{ "title": "Search Hacker News: contractor quote", "url": "https://hn.algolia.com/?q=contractor%20quote", "site": "Hacker News" }],
+    "sample": true
+  },
+  {
+    "slug": "research-tab-overload",
+    "headline": "Research gets lost in 80 open tabs",
+    "summary": "People keep tabs open as a to-do list and lose them in a crash. Bookmarks become a graveyard nobody reads.",
+    "who": "Students, researchers and knowledge workers",
+    "category": "Productivity",
+    "trend": "rising",
+    "quote": "My browser is my to-do list and it crashed.",
+    "highlight": "my to-do list",
+    "evidence": { "posts": 24, "threads": 5, "days": 60, "weekly": [2, 2, 2, 3, 2, 3, 3, 3, 4], "site": "Hacker News" },
+    "scores": {
+      "demand": { "value": 74, "label": "High", "basis": "data", "reason": "24 posts across 5 threads" },
+      "competition": { "value": 70, "label": "High", "basis": "ai", "reason": "Many tab managers, few stick" },
+      "difficulty": { "value": 35, "label": "Low", "basis": "ai", "reason": "A browser extension is a small first step" }
+    },
+    "aiSuggestions": [
+      { "title": "Tab to task", "text": "Turn a tab into a task with a reason to return." },
+      { "title": "Weekly sweep", "text": "Close stale tabs and summarize what was in them." }
+    ],
+    "sources": [{ "title": "Search Hacker News: too many tabs", "url": "https://hn.algolia.com/?q=too%20many%20tabs", "site": "Hacker News" }],
+    "sample": true
+  },
+  {
+    "slug": "freelance-late-invoices",
+    "headline": "Freelancers chase late invoices for weeks",
+    "summary": "Clients pay 30 to 60 days late and freelancers feel awkward following up. Cash flow suffers.",
+    "who": "Freelancers and small agencies",
+    "category": "Work",
+    "trend": "rising",
+    "quote": "I hate sending the third payment reminder.",
+    "highlight": "third payment reminder",
+    "evidence": { "posts": 18, "threads": 4, "days": 60, "weekly": [1, 1, 2, 2, 2, 2, 3, 3, 2], "site": "Hacker News" },
+    "scores": {
+      "demand": { "value": 70, "label": "High", "basis": "data", "reason": "18 posts, rising" },
+      "competition": { "value": 60, "label": "Medium", "basis": "ai", "reason": "Invoicing apps send basic reminders" },
+      "difficulty": { "value": 30, "label": "Low", "basis": "ai", "reason": "Email sequences are simple to build" }
+    },
+    "aiSuggestions": [
+      { "title": "Polite autopilot", "text": "Escalating reminders in the freelancer’s own tone." },
+      { "title": "Late-payer score", "text": "Warn before taking work from slow payers." }
+    ],
+    "sources": [{ "title": "Search Hacker News: late invoices", "url": "https://hn.algolia.com/?q=late%20invoices", "site": "Hacker News" }],
+    "sample": true
+  }
+]

@@ -1,0 +1,135 @@
+.screen {
+  height: 100dvh;
+  max-width: 520px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--gray);
+}
+.page {
+  background: var(--gray);
+}
+
+.stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: 0 12px;
+}
+.peek {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 0;
+  height: 40px;
+  border-radius: 24px;
+  background: #e3e3e8;
+}
+.cardWrap {
+  position: absolute;
+  inset: 0 0 12px;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+.cardWrap:active {
+  cursor: grabbing;
+}
+.stamp {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--blue);
+  color: var(--white);
+  font-size: 15px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.footer {
+  height: 52px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px calc(env(safe-area-inset-bottom) / 2);
+}
+.navBtn {
+  min-height: 44px;
+  border: 0;
+  background: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+}
+.counter {
+  font-size: 13px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.end {
+  position: absolute;
+  inset: 0 0 12px;
+  background: var(--white);
+  border-radius: var(--radius-tile);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px;
+  gap: 12px;
+}
+.endTitle {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+.endText {
+  margin: 0 0 8px;
+  color: var(--muted);
+  max-width: 20em;
+}
+.endActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  top: 64px;
+  z-index: 30;
+  transform: translate(-50%, -12px);
+  opacity: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  color: var(--white);
+  font-size: 15px;
+  font-weight: 600;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.toastOn {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}

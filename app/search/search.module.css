@@ -1,0 +1,127 @@
+.page {
+  min-height: 100dvh;
+  background: var(--gray);
+}
+.wrap {
+  max-width: 640px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+}
+.form {
+  position: relative;
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px 20px;
+}
+.formIcon {
+  position: absolute;
+  left: 34px;
+  top: 21px;
+  color: var(--muted);
+  pointer-events: none;
+}
+.input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 16px 0 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--white);
+  font: inherit;
+  font-size: 17px;
+  color: var(--ink);
+}
+.input::placeholder {
+  color: var(--muted);
+}
+.input:focus {
+  outline: 3px solid var(--blue);
+  outline-offset: 1px;
+}
+.suggest {
+  padding: 0 20px;
+}
+.label {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  background: var(--white);
+  display: inline-flex;
+  align-items: center;
+  font-size: 15px;
+}
+.count {
+  margin: 0 20px 12px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.results {
+  list-style: none;
+  margin: 0 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.result {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px;
+  background: var(--white);
+  border-radius: 22px;
+}
+.result:hover {
+  box-shadow: 0 6px 20px -10px rgba(0, 0, 0, 0.2);
+}
+.resultTitle {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+.resultText {
+  font-size: 15px;
+  color: var(--ink-2);
+}
+.resultMeta {
+  font-size: 13px;
+  color: var(--muted);
+}
+.empty {
+  margin: 0 16px;
+  padding: 32px 24px;
+  background: var(--white);
+  border-radius: 22px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.emptyTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+.emptyText {
+  margin: 0 0 12px;
+  color: var(--muted);
+  max-width: 24em;
+}
+.empty button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

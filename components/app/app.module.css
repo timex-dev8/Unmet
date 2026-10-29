@@ -1,0 +1,101 @@
+.bar {
+  height: 56px;
+  padding: 0 8px 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: none;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.right {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.iconLink {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.iconLink:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+.savedLink {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  background: var(--white);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.savedLink svg {
+  color: var(--blue);
+}
+.bump {
+  animation: bump 0.35s ease;
+}
+@keyframes bump {
+  40% {
+    transform: scale(1.15);
+  }
+}
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 44px;
+  padding-right: 10px;
+  font-size: 17px;
+  color: var(--link);
+}
+.barTitle {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* Filter chips */
+.chips {
+  display: flex;
+  gap: 8px;
+  padding: 2px 16px 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex: none;
+}
+.chips::-webkit-scrollbar {
+  display: none;
+}
+.chip {
+  flex: none;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+  background: var(--white);
+  color: var(--ink);
+}
+.chip svg {
+  color: var(--blue);
+}
+.chipOn {
+  background: var(--ink);
+  color: var(--white);
+}
+.chipOn svg {
+  color: var(--white);
+}

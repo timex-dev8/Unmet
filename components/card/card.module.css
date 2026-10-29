@@ -1,0 +1,195 @@
+/* Shared pieces of an idea card: evidence, scores, AI box, tags. */
+
+.tagRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.tag {
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--gray);
+  border-radius: var(--radius-pill);
+  padding: 5px 11px;
+  white-space: nowrap;
+}
+.tagSample {
+  background: #fff4e5;
+  color: #8a4b00;
+}
+.tagFresh {
+  background: var(--tint);
+  color: var(--navy);
+}
+.trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.trendRising {
+  color: var(--link);
+}
+
+/* Evidence (real data) */
+.evidence {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 14px 16px;
+  background: var(--white);
+}
+.evidenceHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.evidenceHead strong {
+  font-weight: 600;
+}
+.evidenceHead span {
+  color: var(--muted);
+}
+.evidenceNumbers {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.count {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+.countSub {
+  font-size: 14px;
+  color: var(--muted);
+}
+.quote {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+/* Scores */
+.scores {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.scoreLabel {
+  font-size: 12px;
+  color: var(--muted);
+}
+.bar {
+  height: 5px;
+  background: var(--line);
+  border-radius: 3px;
+  margin: 6px 0 5px;
+  overflow: hidden;
+}
+.bar i {
+  display: block;
+  height: 100%;
+  background: var(--blue);
+  border-radius: 3px;
+  transform-origin: left;
+  animation: fill 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.scoreValue {
+  font-size: 13px;
+  font-weight: 600;
+}
+@keyframes fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* AI suggestions (clearly not evidence) */
+.ai {
+  background: #f2f7fd;
+  border-radius: 18px;
+  padding: 14px 16px;
+}
+.aiHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 8px;
+}
+.aiTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+}
+.aiNote {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.aiList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.aiList strong {
+  font-weight: 600;
+}
+
+/* Action buttons */
+.actions {
+  display: flex;
+  gap: 8px;
+}
+.act {
+  flex: 1;
+  min-height: 44px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  background: var(--gray);
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.15s ease;
+}
+.act:active {
+  transform: scale(0.97);
+}
+.actPrimary {
+  background: var(--ink);
+  color: var(--white);
+}
+.actSaved {
+  background: var(--blue);
+  color: var(--white);
+}
+.iconBtn {
+  flex: none;
+  width: 44px;
+  padding: 0;
+}
