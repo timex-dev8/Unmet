@@ -477,3 +477,15 @@
   border-radius: var(--radius-pill);
   padding: 3px 8px;
 }
+.options {
+  flex-wrap: wrap;
+}
+.depthHint {
+  flex: 1 1 220px;
+}
+@media (max-width: 520px) {
+  .depthHint {
+    text-align: left;
+    padding-left: 4px;
+  }
+}
