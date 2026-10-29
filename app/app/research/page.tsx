@@ -1,25 +1,27 @@
 import type { Metadata } from "next";
 import ResearchChat from "@/components/research/ResearchChat";
+import { getCard } from "@/lib/cards";
 import { exaConfigured } from "@/lib/exa";
 import { llmConfigured } from "@/lib/llm";
 import s from "@/components/research/research.module.css";
 
 export const metadata: Metadata = {
-  title: "Research · Unmet Studio",
+  title: "New research · Unmet Studio",
   description: "Describe a market. Unmet searches recent posts and turns real complaints into ideas, with sources.",
 };
 
-// ?q= starts a research (from Home or "Dig deeper"); ?new=1 starts a fresh chat.
+// ?q= starts a research right away; ?about=<slug> tells the AI which idea it's digging into.
 export const instant = false;
 
-export default async function ResearchPage({ searchParams }: PageProps<"/app/research">) {
-  const { q, new: fresh } = await searchParams;
+export default async function NewResearchPage({ searchParams }: PageProps<"/app/research">) {
+  const { q, about } = await searchParams;
+  const card = typeof about === "string" ? await getCard(about) : null;
   return (
     <div className={s.page}>
       <ResearchChat
         configured={llmConfigured() && exaConfigured()}
         initialQuery={typeof q === "string" ? q.slice(0, 500) : undefined}
-        startFresh={fresh === "1"}
+        about={card ? { slug: card.slug, headline: card.headline, summary: card.summary } : undefined}
       />
     </div>
   );

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Plus } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useInterests } from "@/lib/interests";
-import { useResearchChat } from "@/lib/research-store";
+import { useThreads } from "@/lib/research-store";
 import { useSaved } from "@/lib/saved";
 import { NAV, isActive } from "./nav";
 import s from "./shell.module.css";
@@ -13,9 +13,8 @@ import s from "./shell.module.css";
 export default function Sidebar() {
   const pathname = usePathname();
   const { saved } = useSaved();
-  const { messages } = useResearchChat();
+  const threads = useThreads().slice(0, 8);
   const { interests } = useInterests();
-  const lastTopic = messages.find((m) => m.role === "user")?.text;
 
   return (
     <aside className={s.side} aria-label="Studio">
@@ -23,7 +22,7 @@ export default function Sidebar() {
         <Logo size={24} />
       </Link>
 
-      <Link href="/app/research?new=1" className={`pill pill-dark ${s.newBtn}`}>
+      <Link href="/app/research" className={`pill pill-dark ${s.newBtn}`}>
         <Plus size={16} strokeWidth={2.4} aria-hidden="true" />
         New research
       </Link>
@@ -32,7 +31,12 @@ export default function Sidebar() {
         {NAV.map(({ href, label, Icon }) => {
           const on = isActive(pathname, href);
           return (
-            <Link key={href} href={href} className={`${s.navItem} ${on ? s.navOn : ""}`} aria-current={on ? "page" : undefined}>
+            <Link
+              key={href}
+              href={href}
+              className={`${s.navItem} ${on && pathname === href ? s.navOn : on ? s.navWithin : ""}`}
+              aria-current={on ? "page" : undefined}
+            >
               <Icon size={18} aria-hidden="true" />
               {label}
               {href === "/app/board" && saved.length > 0 && <span className={s.count}>{saved.length}</span>}
@@ -41,12 +45,20 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {lastTopic && (
+      {threads.length > 0 && (
         <>
           <p className={s.sideLabel}>Recent research</p>
-          <Link href="/app/research" className={s.thread}>
-            {lastTopic}
-          </Link>
+          <div className={s.threads}>
+            {threads.map((t) => {
+              const href = `/app/research/${t.id}`;
+              const on = pathname === href;
+              return (
+                <Link key={t.id} href={href} className={`${s.thread} ${on ? s.threadOn : ""}`} aria-current={on ? "page" : undefined}>
+                  {t.title}
+                </Link>
+              );
+            })}
+          </div>
         </>
       )}
 

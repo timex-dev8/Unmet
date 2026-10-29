@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import IdeaDetail from "./IdeaDetail";
-import { useResearchChat, findResearchCard } from "@/lib/research-store";
+import { findResearchCard, useThreads } from "@/lib/research-store";
 import { useSaved } from "@/lib/saved";
 import s from "./idea.module.css";
 
 // Ideas found in research chat aren't in the database yet, so we look for them in this browser.
 export default function LocalIdea({ slug }: { slug: string }) {
   const { saved } = useSaved();
-  const { messages } = useResearchChat(); // re-render once the stored chat loads
-  const card = saved.find((c) => c.slug === slug) ?? (messages.length ? findResearchCard(slug) : undefined);
+  const threads = useThreads(); // re-render once stored research loads
+  const card = saved.find((c) => c.slug === slug) ?? (threads.length ? findResearchCard(slug) : undefined);
 
   if (card) return <IdeaDetail card={card} backHref={card.fresh ? "/app/research" : "/app/feed"} backLabel={card.fresh ? "Research" : "Feed"} />;
 

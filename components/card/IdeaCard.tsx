@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
+import { digDeeperHref } from "@/lib/links";
 import type { Card } from "@/lib/types";
 import { ScoreBars, Sparkline, TrendBadge, windowLabel } from "./parts";
 import SaveButton from "./SaveButton";
@@ -37,10 +38,16 @@ export default function IdeaCard({ card }: { card: Card }) {
       <ScoreBars card={card} />
 
       <div className={f.bottom}>
-        <Link href={`/app/idea/${card.slug}`} className={f.details} draggable={false}>
-          See details and AI ideas
-          <ArrowRight size={16} aria-hidden="true" />
-        </Link>
+        <div className={f.links}>
+          <Link href={`/app/idea/${card.slug}`} className={f.details} draggable={false}>
+            Details and AI ideas
+            <ArrowRight size={16} aria-hidden="true" />
+          </Link>
+          <Link href={digDeeperHref(card)} className={f.details} draggable={false}>
+            <Sparkles size={15} aria-hidden="true" />
+            Dig deeper
+          </Link>
+        </div>
         <div className={s.actions}>
           <SaveButton card={card} />
           <SourcesSheet card={card} />

@@ -8,26 +8,24 @@ import { Sparkline, TrendBadge } from "@/components/card/parts";
 import SaveButton from "@/components/card/SaveButton";
 import { useInterests } from "@/lib/interests";
 import { forYou, rising } from "@/lib/rank";
-import { useResearchChat } from "@/lib/research-store";
+import { digDeeperHref, researchHref } from "@/lib/links";
+import { useThreads } from "@/lib/research-store";
 import { useSaved } from "@/lib/saved";
 import { CATEGORIES, type Card } from "@/lib/types";
 import s from "./home.module.css";
 
 const EXAMPLES = ["Freelance designers", "Barbershop owners", "Dog owners", "Small restaurants"];
 
-const researchHref = (q: string) => `/app/research?q=${encodeURIComponent(q)}`;
 
 export default function Home({ cards }: { cards: Card[] }) {
   const router = useRouter();
   const [input, setInput] = useState("");
   const { saved } = useSaved();
   const { interests, toggle, finishOnboarding } = useInterests();
-  const { messages } = useResearchChat();
+  const recent = useThreads().slice(0, 3);
 
   const picks = forYou(cards, { picked: interests.picked, skipped: interests.skipped, saved });
   const risingList = rising(cards);
-  const lastTopic = messages.find((m) => m.role === "user")?.text;
-  const lastIdeas = messages.flatMap((m) => m.cards ?? []).length;
   const matching = cards.filter((c) => interests.picked.includes(c.category)).length;
 
   function start(e: FormEvent) {
@@ -164,13 +162,18 @@ export default function Home({ cards }: { cards: Card[] }) {
             <h2 id="continue" className={s.h2}>
               Continue research
             </h2>
-            {lastTopic ? (
-              <Link href="/app/research" className={s.continueRow}>
-                <span>{lastTopic}</span>
-                <span className={s.muted}>
-                  {lastIdeas} {lastIdeas === 1 ? "idea" : "ideas"}
-                </span>
-              </Link>
+            {recent.length ? (
+              recent.map((t) => {
+                const ideas = t.messages.flatMap((m) => m.cards ?? []).length;
+                return (
+                  <Link key={t.id} href={`/app/research/${t.id}`} className={s.continueRow}>
+                    <span>{t.title}</span>
+                    <span className={s.muted}>
+                      {ideas} {ideas === 1 ? "idea" : "ideas"}
+                    </span>
+                  </Link>
+                );
+              })
             ) : (
               <p className={s.muted}>No research yet. Describe a market above to start one.</p>
             )}
@@ -224,7 +227,7 @@ function HomeCard({ card }: { card: Card }) {
       </div>
       <div className={s.cardActions}>
         <SaveButton card={card} />
-        <Link href={researchHref(`Dig deeper: ${card.headline}`)} className={s.dig}>
+        <Link href={digDeeperHref(card)} className={s.dig}>
           <Sparkles size={14} aria-hidden="true" />
           Dig deeper
         </Link>

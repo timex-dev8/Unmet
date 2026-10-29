@@ -1,14 +1,40 @@
-import { ArrowUpRight } from "lucide-react";
+import Link from "next/link";
+import { ArrowUpRight, Sparkles } from "lucide-react";
 import AppBar from "@/components/app/AppBar";
 import { AiSuggestions, CardTags, Quote, shortDate, sourceMeta, Sparkline, windowLabel } from "@/components/card/parts";
 import SaveButton from "@/components/card/SaveButton";
 import ShareButton from "@/components/card/ShareButton";
+import { digDeeperHref } from "@/lib/links";
 import type { Card } from "@/lib/types";
 import s from "./idea.module.css";
 
-// The full idea page. Used by /idea/[slug] for feed cards and, in the browser,
+// The full idea page. Used by /app/idea/[slug] for feed cards and, in the browser,
 // for ideas found in research chat (which aren't in the database yet).
 export default function IdeaDetail({ card, backHref = "/app/feed", backLabel = "Feed" }: { card: Card; backHref?: string; backLabel?: string }) {
+  return (
+    <div className={s.page}>
+      <div className={s.wrap}>
+        <AppBar variant="back" backHref={backHref} backLabel={backLabel} />
+        <IdeaSections card={card} />
+      </div>
+
+      <div className={s.bottomBar}>
+        <div className={s.bottomInner}>
+          <SaveButton card={card} label="Save idea" />
+          <Link href={digDeeperHref(card)} className={s.dig}>
+            <Sparkles size={16} aria-hidden="true" />
+            Dig deeper
+          </Link>
+          <ShareButton card={card} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Everything about an idea: header, evidence, sources, score reasons, AI ideas. Also used in the research side panel. */
+export function IdeaSections({ card, headingLevel = 1 }: { card: Card; headingLevel?: 1 | 2 }) {
+  const Title = headingLevel === 1 ? "h1" : "h2";
   const e = card.evidence;
   const yearly = e.days >= 365;
   const scores = [
@@ -18,13 +44,10 @@ export default function IdeaDetail({ card, backHref = "/app/feed", backLabel = "
   ] as const;
 
   return (
-    <div className={s.page}>
-      <div className={s.wrap}>
-        <AppBar variant="back" backHref={backHref} backLabel={backLabel} />
-
+    <>
         <header className={s.header}>
           <CardTags card={card} />
-          <h1 className={s.h1}>{card.headline}</h1>
+          <Title className={s.h1}>{card.headline}</Title>
           <p className={s.summary}>{card.summary}</p>
           <p className={s.who}>
             <strong>Who:</strong> {card.who}
@@ -117,14 +140,6 @@ export default function IdeaDetail({ card, backHref = "/app/feed", backLabel = "
             <AiSuggestions card={card} />
           </section>
         )}
-      </div>
-
-      <div className={s.bottomBar}>
-        <div className={s.bottomInner}>
-          <SaveButton card={card} label="Save idea" />
-          <ShareButton card={card} withLabel />
-        </div>
-      </div>
-    </div>
+    </>
   );
 }

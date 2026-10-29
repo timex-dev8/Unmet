@@ -169,6 +169,18 @@
 }
 .bottomInner > :last-child {
   flex: 0 0 auto;
-  padding: 0 22px;
   background: var(--white);
+}
+.dig {
+  flex: 1;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--tint);
+  color: var(--navy);
+  font-size: 15px;
+  font-weight: 600;
 }

@@ -117,3 +117,14 @@
     flex: 0 0 380px;
   }
 }
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+}
+@media (min-width: 900px) {
+  .links {
+    flex-direction: column;
+    gap: 0;
+  }
+}
