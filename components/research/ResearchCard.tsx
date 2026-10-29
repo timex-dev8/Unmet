@@ -55,6 +55,12 @@ export default function ResearchCard({
         <Sparkline values={e.weekly} width={72} height={24} />
       </div>
       <ScoreBars card={card} />
+      {card.competitors && card.competitors.length > 0 && (
+        <p className={s.cardCompetitors}>
+          Already tried by {card.competitors.slice(0, 3).map((c) => c.name).join(", ")}
+          {card.competitors.length > 3 ? ` +${card.competitors.length - 3}` : ""}
+        </p>
+      )}
       <div className={c.actions}>
         <SaveButton card={card} />
         <SourcesSheet card={card} />

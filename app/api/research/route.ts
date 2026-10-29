@@ -4,8 +4,8 @@ import { LlmError, llmConfigured } from "@/lib/llm";
 import { runResearch } from "@/lib/research";
 import type { ResearchEvent } from "@/lib/research-types";
 
-// Two AI calls (each may retry on a fallback model) plus web search.
-export const maxDuration = 120;
+// High mode runs several AI steps and searches; Vercel Hobby with Fluid compute allows up to 300s.
+export const maxDuration = 300;
 
 const Body = z.object({
   message: z.string().trim().min(2).max(500),
@@ -17,28 +17,32 @@ const Body = z.object({
     .array(z.object({ slug: z.string(), headline: z.string().max(200), summary: z.string().max(600) }))
     .max(12)
     .default([]),
-  includeReddit: z.boolean().default(false),
+  depth: z.enum(["low", "medium", "high"]).default("medium"),
 });
 
+// High mode costs about three normal researches, so it counts as three.
+const COST = { low: 1, medium: 1, high: 3 } as const;
+
 // Simple in-memory limits to protect the free tiers (per server instance; good enough for the demo).
-const PER_HOUR = 5;
+const PER_HOUR = 6;
 const hits = new Map<string, number[]>();
 let day = new Date().toDateString();
 let todayCount = 0;
 
-function limited(ip: string) {
+function limited(ip: string, cost: number) {
   const today = new Date().toDateString();
   if (today !== day) {
     day = today;
     todayCount = 0;
   }
   const cap = Number(process.env.RESEARCH_DAILY_CAP ?? 50);
-  if (todayCount >= cap) return "Unmet has reached today's research limit. Try again tomorrow.";
+  if (todayCount + cost > cap) return "Unmet has reached today's research limit. Try again tomorrow.";
   const now = Date.now();
   const recent = (hits.get(ip) ?? []).filter((t) => now - t < 3600_000);
-  if (recent.length >= PER_HOUR) return "You've run 5 researches this hour. Try again a bit later.";
-  hits.set(ip, [...recent, now]);
-  todayCount++;
+  if (recent.length + cost > PER_HOUR)
+    return cost > 1 ? "Not enough research left this hour for High. Try Medium, or wait a bit." : "You've used this hour's research. Try again a bit later.";
+  hits.set(ip, [...recent, ...Array(cost).fill(now)]);
+  todayCount += cost;
   return null;
 }
 
@@ -51,7 +55,7 @@ export async function POST(request: Request) {
   if (!parsed.success) return Response.json({ error: "Please type a question between 2 and 500 characters." }, { status: 400 });
 
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
-  const blocked = limited(ip);
+  const blocked = limited(ip, COST[parsed.data.depth]);
   if (blocked) return Response.json({ error: blocked }, { status: 429 });
 
   const encoder = new TextEncoder();

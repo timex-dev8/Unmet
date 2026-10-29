@@ -16,7 +16,7 @@ import {
   useThread,
   type ChatMessage,
 } from "@/lib/research-store";
-import type { ResearchEvent } from "@/lib/research-types";
+import type { Depth, ResearchEvent } from "@/lib/research-types";
 import { useSaved } from "@/lib/saved";
 import type { Card } from "@/lib/types";
 import ResearchCard from "./ResearchCard";
@@ -30,6 +30,12 @@ const EXAMPLES = [
 ];
 
 type Context = Pick<Card, "slug" | "headline" | "summary">;
+
+const DEPTHS: { id: Depth; label: string; hint: string }[] = [
+  { id: "low", label: "Low", hint: "Quick look · about 20 seconds" },
+  { id: "medium", label: "Medium", hint: "Web, forums, reviews, Q&A, App Store · about 45 seconds" },
+  { id: "high", label: "High", hint: "Every source + competitor check · 1–2 minutes" },
+];
 
 export default function ResearchChat({
   configured,
@@ -50,7 +56,7 @@ export default function ResearchChat({
   const thread = useThread(threadId);
   const messages = thread?.messages ?? [];
   const [input, setInput] = useState("");
-  const [includeReddit, setIncludeReddit] = useState(false);
+  const [depth, setDepth] = useState<Depth>("medium");
   const [openCard, setOpenCard] = useState<Card | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const busy = messages.some((m) => m.pending);
@@ -107,7 +113,7 @@ export default function ResearchChat({
       const res = await fetch("/api/research", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, history, cards, includeReddit }),
+        body: JSON.stringify({ message, history, cards, depth }),
       });
       if (!res.ok || !res.body) {
         const body = await res.json().catch(() => ({}));
@@ -129,7 +135,7 @@ export default function ResearchChat({
           const event = JSON.parse(line) as ResearchEvent;
           if (event.type === "step") patch(reply.id, (m) => ({ steps: [...(m.steps ?? []), event.label] }));
           else if (event.type === "result")
-            patch(reply.id, () => ({ text: event.answer, cards: event.cards, sourceCount: event.sourceCount, pending: false }));
+            patch(reply.id, () => ({ text: event.answer, cards: event.cards, sourceCount: event.sourceCount, mix: event.mix, pending: false }));
           else patch(reply.id, () => ({ text: event.message, error: true, pending: false }));
         }
       }
@@ -232,11 +238,22 @@ export default function ResearchChat({
             </button>
           </form>
           <div className={s.options}>
-            <label className={s.toggle}>
-              <input type="checkbox" checked={includeReddit} onChange={(e) => setIncludeReddit(e.target.checked)} />
-              <span className={s.switch} aria-hidden="true" />
-              Include Reddit
-            </label>
+            <div className={s.depth} role="radiogroup" aria-label="Research depth">
+              {DEPTHS.map((d) => (
+                <button
+                  key={d.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={depth === d.id}
+                  className={`${s.depthBtn} ${depth === d.id ? s.depthOn : ""}`}
+                  onClick={() => setDepth(d.id)}
+                  disabled={busy}
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
+            <span className={s.depthHint}>{DEPTHS.find((d) => d.id === depth)!.hint}</span>
           </div>
           {empty && configured && !about && (
             <div className={s.examples}>
@@ -343,7 +360,7 @@ function Reply({
       )}
       {!m.pending && !m.error && m.sourceCount ? (
         <p className={s.footnote}>
-          Based on {m.sourceCount} pages from the last 12 months. Quotes are checked word-for-word against their sources.
+          {m.mix ?? `Based on ${m.sourceCount} sources`}. Last 12 months only; every quote is checked against its source.
         </p>
       ) : null}
       {isLast && cards.length > 0 && (

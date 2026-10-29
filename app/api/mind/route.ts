@@ -2,6 +2,7 @@ import { z } from "zod/v4";
 import { getAllCards } from "@/lib/cards";
 import { generateJson, LlmError, llmConfigured } from "@/lib/llm";
 import type { MindConclusion } from "@/lib/mind-types";
+import { MIND_SYSTEM } from "@/lib/research/prompts";
 
 export const maxDuration = 60;
 
@@ -33,12 +34,6 @@ const Answer = z.object({
   nextStep: z.string().describe("One concrete, small next step, under 25 words"),
 });
 
-const SYSTEM = `You are Unmet's thinking partner for founders. You read someone's raw thoughts and tell them what they add up to.
-Rules:
-- Use only what is in their thoughts. Don't invent facts, numbers or market claims.
-- Group every thought into at most 5 themes; use the thought ids exactly as given.
-- Pick up to 4 claims or assumptions worth checking. Link a claim to an idea from the "Evidence-backed ideas" list only when it is clearly the same problem; otherwise leave ideaSlug empty.
-- Be direct and specific, like a sharp co-founder. Plain language, no hype.`;
 
 // Simple per-visitor limit to protect the free AI tier.
 const hits = new Map<string, number[]>();
@@ -62,7 +57,7 @@ export async function POST(request: Request) {
 
   try {
     const out = await generateJson(Answer, {
-      system: SYSTEM,
+      system: MIND_SYSTEM,
       timeoutMs: 30_000,
       prompt: `Thoughts:\n${thoughts.map((t) => `[${t.id}] ${t.text}`).join("\n")}\n\nEvidence-backed ideas:\n${ideas
         .map((c) => `${c.slug}: ${c.headline}. ${c.summary}`)

@@ -3,14 +3,22 @@ export type Category = (typeof CATEGORIES)[number];
 
 export type Trend = "rising" | "steady" | "falling";
 
+/** What kind of place a source is; first-hand places (forum, Q&A, review, issue) weigh most. */
+export type SourceKind = "forum" | "qa" | "review" | "app-review" | "issue" | "hn" | "news" | "blog";
+
 export type Source = {
   title: string;
   url: string;
   site: string; // e.g. "Hacker News"
+  kind?: SourceKind;
   points?: number;
   comments?: number;
+  engagement?: string; // e.g. "3 votes · 417 views", "1★ review"
   postedAt?: string; // ISO date
 };
+
+/** An existing product that already addresses the problem (found by the competitor check). */
+export type Competitor = { name: string; url: string; note?: string; mrr?: number };
 
 export type Score = {
   value: number; // 0–100
@@ -40,6 +48,7 @@ export type Card = {
   scores: { demand: Score; competition: Score; difficulty: Score };
   aiSuggestions: { title: string; text: string }[];
   sources: Source[];
+  competitors?: Competitor[];
   sample?: boolean; // placeholder content, shown with a "Sample" tag
   fresh?: boolean; // built on demand from a search
 };

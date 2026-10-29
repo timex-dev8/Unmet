@@ -38,6 +38,9 @@
   - Feed records skipped cards for ranking; Board lists saved ideas (stages next)
   - Design mockups: canvas "Unmet Studio" row (Home, Research, Board, Mind; desktop + phone)
 
+- [x] Research engine v2 (`lib/research/`): Low / Medium / High modes; plan → gather (Exa web + forums/review sites, Hacker News, Stack Exchange, App Store reviews, GitHub issues, TrustMRR) → quality filter (no vendor pages/listicles, nothing older than 12 months) → extract first-hand complaints (tolerant quote check) → group (≥3 sources from ≥2 sites in Medium/High) → scores from real signals → High: competitor check + strict review. Reddit removed entirely. Prompts in `lib/research/prompts.ts`.
+- [x] Home: "Startups growing now" from TrustMRR (needs `TRUSTMRR_API_KEY`, hidden without it)
+
 ## Not built yet
 - [ ] Studio step 2: research threads, desktop side panel, follow-up chips, "Dig deeper" with card context, "Add all to board"
 - [ ] Studio step 2b: Mind (thought capture + AI "what it adds up to" with evidence check)

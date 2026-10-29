@@ -13,6 +13,7 @@ export type ChatMessage = {
   steps?: string[];
   cards?: Card[];
   sourceCount?: number;
+  mix?: string;
   error?: boolean;
   pending?: boolean;
 };

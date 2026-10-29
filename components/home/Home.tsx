@@ -12,13 +12,14 @@ import { forYou, rising } from "@/lib/rank";
 import { digDeeperHref, researchHref } from "@/lib/links";
 import { useThreads } from "@/lib/research-store";
 import { useSaved } from "@/lib/saved";
+import type { Startup } from "@/lib/trustmrr";
 import { CATEGORIES, type Card } from "@/lib/types";
 import s from "./home.module.css";
 
 const EXAMPLES = ["Freelance designers", "Barbershop owners", "Dog owners", "Small restaurants"];
 
 
-export default function Home({ cards }: { cards: Card[] }) {
+export default function Home({ cards, startups = [] }: { cards: Card[]; startups?: Startup[] }) {
   const router = useRouter();
   const [input, setInput] = useState("");
   const { saved } = useSaved();
@@ -192,6 +193,35 @@ export default function Home({ cards }: { cards: Card[] }) {
           </section>
         </div>
       </div>
+
+      {startups.length > 0 && (
+        <section className={s.panel} aria-labelledby="growing">
+          <div className={s.sectionHead}>
+            <h2 id="growing" className={s.h2}>
+              Startups growing now
+            </h2>
+            <a href="https://trustmrr.com" target="_blank" rel="noopener noreferrer" className={s.headLink}>
+              Revenue verified by TrustMRR
+            </a>
+          </div>
+          <ul className={s.startups}>
+            {startups.map((st) => (
+              <li key={st.slug}>
+                <a href={st.url} target="_blank" rel="noopener noreferrer" className={s.startupRow}>
+                  <span className={s.startupMain}>
+                    <span className={s.startupName}>{st.name}</span>
+                    <span className={s.startupDesc}>{st.description}</span>
+                  </span>
+                  <span className={s.startupNums}>
+                    <span className={s.startupMrr}>${Math.round(st.mrr / 100).toLocaleString("en-US")}/mo</span>
+                    {st.growth != null && st.growth > 0 && <span className={s.growth}>+{st.growth}%</span>}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </main>
   );
 }

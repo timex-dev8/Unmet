@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowRight, ArrowUp, Sparkles } from "lucide-react";
-import type { Card, Trend } from "@/lib/types";
+import type { Card, SourceKind, Trend } from "@/lib/types";
 import s from "./card.module.css";
 
 export function windowLabel(days: number) {
@@ -11,11 +11,28 @@ export function shortDate(iso?: string) {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-/** "Hacker News · Oct 22, 2026 · 120 points · 40 comments" */
+const KIND_BADGE: Record<SourceKind, string> = {
+  forum: "Forum",
+  qa: "Q&A",
+  review: "Review",
+  "app-review": "App Store review",
+  issue: "GitHub issue",
+  hn: "Hacker News",
+  news: "News",
+  blog: "Blog",
+};
+
+/** Short label for what kind of place a source is ("Forum", "Q&A", "Review"…). */
+export function kindBadge(src: Card["sources"][number]) {
+  return src.kind ? KIND_BADGE[src.kind] : null;
+}
+
+/** "indiehackers.com · Oct 22, 2026 · 3 votes · 417 views" */
 export function sourceMeta(src: Card["sources"][number]) {
   return [
-    src.site,
+    src.kind === "hn" || src.kind === "app-review" ? "" : src.site,
     shortDate(src.postedAt),
+    src.engagement ?? "",
     src.points != null ? `${src.points} ${src.points === 1 ? "point" : "points"}` : "",
     src.comments != null ? `${src.comments} ${src.comments === 1 ? "comment" : "comments"}` : "",
   ]

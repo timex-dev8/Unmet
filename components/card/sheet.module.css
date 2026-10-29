@@ -92,3 +92,13 @@
   color: var(--muted);
   margin-top: 3px;
 }
+.badge {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--tint);
+  color: var(--navy);
+  font-size: 11px;
+  font-weight: 600;
+}

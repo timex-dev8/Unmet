@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight, Sparkles } from "lucide-react";
 import AppBar from "@/components/app/AppBar";
-import { AiSuggestions, CardTags, Quote, shortDate, sourceMeta, Sparkline, windowLabel } from "@/components/card/parts";
+import { AiSuggestions, CardTags, kindBadge, Quote, shortDate, sourceMeta, Sparkline, windowLabel } from "@/components/card/parts";
 import SaveButton from "@/components/card/SaveButton";
 import ShareButton from "@/components/card/ShareButton";
 import { digDeeperHref } from "@/lib/links";
@@ -98,7 +98,10 @@ export function IdeaSections({ card, headingLevel = 1 }: { card: Card; headingLe
                 <a href={src.url} target="_blank" rel="noopener noreferrer" className={s.source}>
                   <span>
                     <span className={s.sourceTitle}>{src.title}</span>
-                    <span className={s.meta}>{sourceMeta(src)}</span>
+                    <span className={s.meta}>
+                      {kindBadge(src) && <span className={s.badge}>{kindBadge(src)}</span>}
+                      {sourceMeta(src)}
+                    </span>
                   </span>
                   <ArrowUpRight size={18} aria-hidden="true" />
                 </a>
@@ -113,6 +116,31 @@ export function IdeaSections({ card, headingLevel = 1 }: { card: Card; headingLe
             </p>
           )}
         </section>
+
+        {card.competitors && card.competitors.length > 0 && (
+          <section className={s.section} aria-labelledby="competitors">
+            <h2 id="competitors" className={s.h2}>
+              Who already solves this
+            </h2>
+            <ul className={`${s.box} ${s.sources}`}>
+              {card.competitors.map((c) => (
+                <li key={c.url}>
+                  <a href={c.url} target="_blank" rel="noopener noreferrer" className={s.source}>
+                    <span>
+                      <span className={s.sourceTitle}>
+                        {c.name}
+                        {c.mrr ? <span className={s.mrr}>${Math.round(c.mrr / 100).toLocaleString("en-US")}/mo verified</span> : null}
+                      </span>
+                      {c.note && <span className={s.meta}>{c.note}</span>}
+                    </span>
+                    <ArrowUpRight size={18} aria-hidden="true" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <p className={s.note}>Found by a quick web search and TrustMRR (revenue verified by payment providers). Not a full market map.</p>
+          </section>
+        )}
 
         <section className={s.section} aria-labelledby="scores">
           <h2 id="scores" className={s.h2}>

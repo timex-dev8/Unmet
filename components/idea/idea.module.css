@@ -184,3 +184,24 @@
   font-size: 15px;
   font-weight: 600;
 }
+.badge {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--tint);
+  color: var(--navy);
+  font-size: 11px;
+  font-weight: 600;
+}
+.mrr {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  background: #eaf5eb;
+  color: #276228;
+  font-size: 12px;
+  font-weight: 600;
+  vertical-align: 1px;
+}
