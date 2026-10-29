@@ -99,3 +99,14 @@
 .chipOn svg {
   color: var(--white);
 }
+
+@media (min-width: 900px) {
+  .bar {
+    padding: 0 8px;
+    height: 64px;
+  }
+  .chips {
+    justify-content: center;
+    padding-bottom: 8px;
+  }
+}

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArrowUpRight } from "lucide-react";
 import AppBar from "@/components/app/AppBar";
-import { AiSuggestions, CardTags, Quote, Sparkline } from "@/components/card/parts";
+import { AiSuggestions, CardTags, Quote, shortDate, sourceMeta, Sparkline } from "@/components/card/parts";
 import SaveButton from "@/components/card/SaveButton";
 import ShareButton from "@/components/card/ShareButton";
 import { getAllSlugs, getCard } from "@/lib/cards";
@@ -54,7 +54,7 @@ export default async function IdeaPage({ params }: PageProps<"/idea/[slug]">) {
             <div className={s.stats}>
               <div>
                 <div className={s.stat}>{e.posts}</div>
-                <div className={s.meta}>posts</div>
+                <div className={s.meta}>mentions</div>
               </div>
               <div>
                 <div className={s.stat}>{e.threads}</div>
@@ -88,18 +88,19 @@ export default async function IdeaPage({ params }: PageProps<"/idea/[slug]">) {
                 <a href={src.url} target="_blank" rel="noopener noreferrer" className={s.source}>
                   <span>
                     <span className={s.sourceTitle}>{src.title}</span>
-                    <span className={s.meta}>
-                      {src.site}
-                      {src.points != null && ` · ${src.points} points`}
-                      {src.comments != null && ` · ${src.comments} comments`}
-                    </span>
+                    <span className={s.meta}>{sourceMeta(src)}</span>
                   </span>
                   <ArrowUpRight size={18} aria-hidden="true" />
                 </a>
               </li>
             ))}
           </ul>
-          {card.sample && <p className={s.note}>Sample card: the link opens a live Hacker News search.</p>}
+          {card.query && (
+            <p className={s.note}>
+              Recent {e.site} mentions of “{card.query.replaceAll('"', "")}”
+              {e.updatedAt ? `, pulled ${shortDate(e.updatedAt)}` : ""}.
+            </p>
+          )}
         </section>
 
         <section className={s.section} aria-labelledby="scores">

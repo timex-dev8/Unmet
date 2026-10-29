@@ -69,7 +69,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
                     <span className={s.resultTitle}>{card.headline}</span>
                     <span className={s.resultText}>{card.summary}</span>
                     <span className={s.resultMeta}>
-                      {card.evidence.posts} posts on {card.evidence.site}
+                      {card.evidence.posts} mentions on {card.evidence.site} · last {card.evidence.days} days
                     </span>
                   </Link>
                 </li>

@@ -35,7 +35,7 @@ export default function SavedList() {
                 <span className={s.itemTitle}>{card.headline}</span>
                 <span className={s.meta}>
                   <span className={card.trend === "rising" ? s.dot : `${s.dot} ${s.dotGray}`} aria-hidden="true" />
-                  {card.category} · {card.evidence.posts} posts · {card.trend === "rising" ? "Rising" : "Steady"}
+                  {card.category} · {card.evidence.posts} mentions · {card.trend === "rising" ? "Rising" : card.trend === "falling" ? "Falling" : "Steady"}
                 </span>
               </Link>
               <button

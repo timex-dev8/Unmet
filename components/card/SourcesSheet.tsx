@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { ArrowUpRight, Link2, X } from "lucide-react";
 import type { Card } from "@/lib/types";
+import { sourceMeta } from "./parts";
 import s from "./card.module.css";
 import sheet from "./sheet.module.css";
 
@@ -36,8 +37,9 @@ export default function SourcesSheet({ card }: { card: Card }) {
             </button>
           </div>
           <p className={sheet.note}>
-            {card.evidence.posts} posts on {card.evidence.site} in the last {card.evidence.days} days.
-            {card.sample && " Sample card: links open a live search."}
+            {card.evidence.posts} mentions
+            {card.query ? ` of “${card.query.replaceAll('"', "")}”` : ""} on {card.evidence.site} in the last{" "}
+            {card.evidence.days} days. Top recent ones:
           </p>
           <ul className={sheet.list}>
             {card.sources.map((src) => (
@@ -45,11 +47,7 @@ export default function SourcesSheet({ card }: { card: Card }) {
                 <a href={src.url} target="_blank" rel="noopener noreferrer" className={sheet.link}>
                   <span>
                     <span className={sheet.linkTitle}>{src.title}</span>
-                    <span className={sheet.meta}>
-                      {src.site}
-                      {src.points != null && ` · ${src.points} points`}
-                      {src.comments != null && ` · ${src.comments} comments`}
-                    </span>
+                    <span className={sheet.meta}>{sourceMeta(src)}</span>
                   </span>
                   <ArrowUpRight size={18} aria-hidden="true" />
                 </a>

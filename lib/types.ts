@@ -28,12 +28,14 @@ export type Card = {
   trend: Trend;
   quote: string; // under 15 words
   highlight: string; // the repeated phrase inside quote
+  query?: string; // what we searched the source for
   evidence: {
-    posts: number;
+    posts: number; // posts + comments mentioning the problem in the window
     threads: number;
     days: number;
     weekly: number[]; // mentions per week, oldest first (sparkline)
     site: string;
+    updatedAt?: string; // ISO date the numbers were pulled
   };
   scores: { demand: Score; competition: Score; difficulty: Score };
   aiSuggestions: { title: string; text: string }[];

@@ -2,48 +2,118 @@
   height: 100%;
   background: var(--white);
   border-radius: var(--radius-tile);
-  padding: 22px;
+  padding: 24px;
   box-shadow: 0 14px 32px -14px rgba(0, 0, 0, 0.18);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   overflow: hidden;
 }
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.sample {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: #8a4b00;
+  background: #fff4e5;
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+}
 .headline {
-  margin: 0 0 8px;
-  font-size: 28px;
+  margin: 0;
+  font-size: 30px;
   font-weight: 600;
   letter-spacing: -0.035em;
   line-height: 1.1;
 }
-.headline a:hover {
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 4px;
-}
 .summary {
   margin: 0;
-  font-size: 15px;
+  font-size: 17px;
   line-height: 1.47;
   color: var(--ink-2);
 }
-.actions {
+.evidence {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.evidenceText {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.evidenceText strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.bottom {
   margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.details {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  min-height: 44px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--link);
+}
+.details:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
-/* Shorter phones: drop extras so the evidence and the buttons always fit. */
-@media (max-height: 860px) {
-  .aiWrap li + li {
-    display: none;
-  }
-}
-@media (max-height: 760px) {
+@media (max-height: 700px) {
   .headline {
-    font-size: 25px;
+    font-size: 26px;
+  }
+  .summary {
+    font-size: 15px;
   }
 }
-@media (max-height: 690px) {
-  .aiWrap {
-    display: none;
+
+/* Desktop: a roomy card that sizes to its content. */
+@media (min-width: 900px) {
+  .card {
+    height: auto;
+    padding: 44px 48px 36px;
+    gap: 22px;
+    box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.22);
+  }
+  .headline {
+    font-size: 44px;
+    letter-spacing: -0.04em;
+    line-height: 1.05;
+  }
+  .summary {
+    font-size: 19px;
+  }
+  .evidenceText {
+    font-size: 16px;
+  }
+  .bottom {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 6px;
+  }
+  .bottom > :last-child {
+    flex: 0 0 380px;
   }
 }

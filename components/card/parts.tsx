@@ -2,6 +2,23 @@ import { ArrowDown, ArrowRight, ArrowUp, Sparkles } from "lucide-react";
 import type { Card, Trend } from "@/lib/types";
 import s from "./card.module.css";
 
+export function shortDate(iso?: string) {
+  if (!iso) return "";
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+/** "Hacker News · Oct 22, 2026 · 120 points · 40 comments" */
+export function sourceMeta(src: Card["sources"][number]) {
+  return [
+    src.site,
+    shortDate(src.postedAt),
+    src.points != null ? `${src.points} ${src.points === 1 ? "point" : "points"}` : "",
+    src.comments != null ? `${src.comments} ${src.comments === 1 ? "comment" : "comments"}` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 export function CardTags({ card }: { card: Card }) {
   return (
     <div className={s.tagRow}>
@@ -79,7 +96,7 @@ export function EvidenceBox({ card }: { card: Card }) {
       </div>
       <div className={s.evidenceNumbers}>
         <div>
-          <span className={s.count}>{e.posts} posts</span>
+          <span className={s.count}>{e.posts} mentions</span>
           <span className={s.countSub}> · {e.days} days</span>
         </div>
         <Sparkline values={e.weekly} />

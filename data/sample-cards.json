@@ -5,22 +5,85 @@
     "summary": "Teams rerun failing tests until they pass. Nobody knows which tests are flaky or who should fix them.",
     "who": "Small engineering teams without a platform engineer",
     "category": "Dev tools",
-    "trend": "rising",
+    "trend": "falling",
     "quote": "Half our CI time is rerunning flaky tests.",
     "highlight": "rerunning flaky tests",
-    "evidence": { "posts": 27, "threads": 4, "days": 60, "weekly": [1, 2, 1, 3, 3, 4, 5, 6, 6], "site": "Hacker News" },
+    "evidence": {
+      "posts": 14,
+      "threads": 1,
+      "days": 60,
+      "weekly": [
+        0,
+        3,
+        4,
+        1,
+        0,
+        2,
+        1,
+        2,
+        1
+      ],
+      "site": "Hacker News",
+      "updatedAt": "2026-10-29T19:43:42.000Z"
+    },
     "scores": {
-      "demand": { "value": 78, "label": "High", "basis": "data", "reason": "27 posts, rising for 6 weeks" },
-      "competition": { "value": 50, "label": "Medium", "basis": "ai", "reason": "A few tools exist, mostly for big teams" },
-      "difficulty": { "value": 45, "label": "Medium", "basis": "ai", "reason": "Needs CI integrations to be useful" }
+      "demand": {
+        "value": 47,
+        "label": "Medium",
+        "basis": "data",
+        "reason": "14 mentions in 60 days, falling"
+      },
+      "competition": {
+        "value": 50,
+        "label": "Medium",
+        "basis": "ai",
+        "reason": "A few tools exist, mostly for big teams"
+      },
+      "difficulty": {
+        "value": 45,
+        "label": "Medium",
+        "basis": "ai",
+        "reason": "Needs CI integrations to be useful"
+      }
     },
     "aiSuggestions": [
-      { "title": "Owner tagging", "text": "Assign each flaky test to whoever last touched it." },
-      { "title": "Waste report", "text": "A weekly email of minutes lost to reruns." },
-      { "title": "Auto-quarantine", "text": "Skip known-flaky tests so merges stop blocking." }
+      {
+        "title": "Owner tagging",
+        "text": "Assign each flaky test to whoever last touched it."
+      },
+      {
+        "title": "Waste report",
+        "text": "A weekly email of minutes lost to reruns."
+      },
+      {
+        "title": "Auto-quarantine",
+        "text": "Skip known-flaky tests so merges stop blocking."
+      }
     ],
-    "sources": [{ "title": "Search Hacker News: flaky tests", "url": "https://hn.algolia.com/?q=flaky%20tests", "site": "Hacker News" }],
-    "sample": true
+    "sources": [
+      {
+        "title": "Show HN: VoiceGremlin, a SaaS tool for automated tests against AI phone agents",
+        "url": "https://news.ycombinator.com/item?id=49995804",
+        "site": "Hacker News",
+        "points": 3,
+        "comments": 1,
+        "postedAt": "2026-10-07T17:16:36Z"
+      },
+      {
+        "title": "Comment on “The Mythical Man-Month in the Age of AI”",
+        "url": "https://news.ycombinator.com/item?id=50272045",
+        "site": "Hacker News",
+        "postedAt": "2026-10-28T11:44:47Z"
+      },
+      {
+        "title": "Comment on “Code is clay now”",
+        "url": "https://news.ycombinator.com/item?id=50189480",
+        "site": "Hacker News",
+        "postedAt": "2026-10-22T00:24:36Z"
+      }
+    ],
+    "sample": true,
+    "query": "flaky tests"
   },
   {
     "slug": "pet-medication-prices",
@@ -28,21 +91,79 @@
     "summary": "Owners pay very different prices for the same prescription. There is no simple way to compare pharmacies or track refills.",
     "who": "Pet owners with animals on long-term medication",
     "category": "Money",
-    "trend": "rising",
+    "trend": "steady",
     "quote": "I still can’t tell which pharmacy is cheapest.",
     "highlight": "which pharmacy is cheapest",
-    "evidence": { "posts": 19, "threads": 3, "days": 60, "weekly": [1, 1, 2, 2, 2, 3, 3, 4, 4], "site": "Hacker News" },
+    "evidence": {
+      "posts": 4,
+      "threads": 0,
+      "days": 60,
+      "weekly": [
+        1,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "site": "Hacker News",
+      "updatedAt": "2026-10-29T19:43:42.000Z"
+    },
     "scores": {
-      "demand": { "value": 80, "label": "High", "basis": "data", "reason": "19 posts, steady growth" },
-      "competition": { "value": 55, "label": "Medium", "basis": "ai", "reason": "Coupon sites exist, no clear tracker" },
-      "difficulty": { "value": 30, "label": "Low", "basis": "ai", "reason": "Price data and reminders are simple to start" }
+      "demand": {
+        "value": 36,
+        "label": "Low",
+        "basis": "data",
+        "reason": "4 mentions in 60 days, steady"
+      },
+      "competition": {
+        "value": 55,
+        "label": "Medium",
+        "basis": "ai",
+        "reason": "Coupon sites exist, no clear tracker"
+      },
+      "difficulty": {
+        "value": 30,
+        "label": "Low",
+        "basis": "ai",
+        "reason": "Price data and reminders are simple to start"
+      }
     },
     "aiSuggestions": [
-      { "title": "Price tracker", "text": "Compare one prescription across pharmacies." },
-      { "title": "Refill reminders", "text": "Ping owners before a refill runs out." }
+      {
+        "title": "Price tracker",
+        "text": "Compare one prescription across pharmacies."
+      },
+      {
+        "title": "Refill reminders",
+        "text": "Ping owners before a refill runs out."
+      }
     ],
-    "sources": [{ "title": "Search Hacker News: pet medication prices", "url": "https://hn.algolia.com/?q=pet%20medication", "site": "Hacker News" }],
-    "sample": true
+    "sources": [
+      {
+        "title": "Comment on “The gap in shared understanding of LLM capability is widening”",
+        "url": "https://news.ycombinator.com/item?id=50051188",
+        "site": "Hacker News",
+        "postedAt": "2026-10-12T03:52:42Z"
+      },
+      {
+        "title": "Comment on “Bill to Ban Private Equity from Owning Medical Practices”",
+        "url": "https://news.ycombinator.com/item?id=49782880",
+        "site": "Hacker News",
+        "postedAt": "2026-09-21T03:55:07Z"
+      },
+      {
+        "title": "Comment on “I have a theory that software drives people insane”",
+        "url": "https://news.ycombinator.com/item?id=49649249",
+        "site": "Hacker News",
+        "postedAt": "2026-09-10T19:46:25Z"
+      }
+    ],
+    "sample": true,
+    "query": "pet medication"
   },
   {
     "slug": "deposit-deductions",
@@ -50,21 +171,79 @@
     "summary": "Landlords keep part of the deposit with vague reasons. Renters lack the photos and paperwork to push back.",
     "who": "Renters moving out of an apartment",
     "category": "Home",
-    "trend": "steady",
+    "trend": "rising",
     "quote": "They kept $600 and I had no move-in photos.",
     "highlight": "no move-in photos",
-    "evidence": { "posts": 12, "threads": 3, "days": 60, "weekly": [2, 1, 2, 1, 2, 1, 1, 1, 1], "site": "Hacker News" },
+    "evidence": {
+      "posts": 20,
+      "threads": 0,
+      "days": 60,
+      "weekly": [
+        2,
+        1,
+        0,
+        7,
+        1,
+        3,
+        3,
+        2,
+        1
+      ],
+      "site": "Hacker News",
+      "updatedAt": "2026-10-29T19:43:42.000Z"
+    },
     "scores": {
-      "demand": { "value": 60, "label": "Medium", "basis": "data", "reason": "12 posts, steady" },
-      "competition": { "value": 40, "label": "Low", "basis": "ai", "reason": "Few tools focus on move-out disputes" },
-      "difficulty": { "value": 35, "label": "Low", "basis": "ai", "reason": "A guided photo checklist is a small app" }
+      "demand": {
+        "value": 51,
+        "label": "Medium",
+        "basis": "data",
+        "reason": "20 mentions in 60 days, rising"
+      },
+      "competition": {
+        "value": 40,
+        "label": "Low",
+        "basis": "ai",
+        "reason": "Few tools focus on move-out disputes"
+      },
+      "difficulty": {
+        "value": 35,
+        "label": "Low",
+        "basis": "ai",
+        "reason": "A guided photo checklist is a small app"
+      }
     },
     "aiSuggestions": [
-      { "title": "Move-in kit", "text": "A timestamped room-by-room photo checklist." },
-      { "title": "Dispute letter", "text": "Generate a letter citing local deposit rules." }
+      {
+        "title": "Move-in kit",
+        "text": "A timestamped room-by-room photo checklist."
+      },
+      {
+        "title": "Dispute letter",
+        "text": "Generate a letter citing local deposit rules."
+      }
     ],
-    "sources": [{ "title": "Search Hacker News: security deposit", "url": "https://hn.algolia.com/?q=security%20deposit", "site": "Hacker News" }],
-    "sample": true
+    "sources": [
+      {
+        "title": "Comment on “Jailbreaking the Switch 2”",
+        "url": "https://news.ycombinator.com/item?id=50205074",
+        "site": "Hacker News",
+        "postedAt": "2026-10-23T06:15:26Z"
+      },
+      {
+        "title": "Comment on “Airbnb bans making guests do dishes and take out the trash”",
+        "url": "https://news.ycombinator.com/item?id=50190797",
+        "site": "Hacker News",
+        "postedAt": "2026-10-22T03:23:08Z"
+      },
+      {
+        "title": "Comment on “Visa, Mastercard, Major Banks Facing New Litigation over 'Anticompetitive' Fees”",
+        "url": "https://news.ycombinator.com/item?id=49997711",
+        "site": "Hacker News",
+        "postedAt": "2026-10-07T19:33:06Z"
+      }
+    ],
+    "sample": true,
+    "query": "security deposit"
   },
   {
     "slug": "lost-meeting-decisions",
@@ -72,21 +251,85 @@
     "summary": "Teams agree on something in a call, then nobody can find what was decided. The same debate happens again a week later.",
     "who": "Remote teams with many recurring meetings",
     "category": "Work",
-    "trend": "rising",
+    "trend": "falling",
     "quote": "We re-decide the same thing every sprint.",
     "highlight": "re-decide the same thing",
-    "evidence": { "posts": 22, "threads": 5, "days": 60, "weekly": [1, 2, 2, 2, 3, 3, 3, 3, 3], "site": "Hacker News" },
+    "evidence": {
+      "posts": 20,
+      "threads": 9,
+      "days": 60,
+      "weekly": [
+        0,
+        9,
+        2,
+        0,
+        3,
+        0,
+        3,
+        2,
+        1
+      ],
+      "site": "Hacker News",
+      "updatedAt": "2026-10-29T19:43:42.000Z"
+    },
     "scores": {
-      "demand": { "value": 72, "label": "High", "basis": "data", "reason": "22 posts across 5 threads" },
-      "competition": { "value": 75, "label": "High", "basis": "ai", "reason": "Many AI note-takers already exist" },
-      "difficulty": { "value": 40, "label": "Medium", "basis": "ai", "reason": "Needs calendar and chat integrations" }
+      "demand": {
+        "value": 51,
+        "label": "Medium",
+        "basis": "data",
+        "reason": "20 mentions in 60 days, falling"
+      },
+      "competition": {
+        "value": 75,
+        "label": "High",
+        "basis": "ai",
+        "reason": "Many AI note-takers already exist"
+      },
+      "difficulty": {
+        "value": 40,
+        "label": "Medium",
+        "basis": "ai",
+        "reason": "Needs calendar and chat integrations"
+      }
     },
     "aiSuggestions": [
-      { "title": "Decision log", "text": "Pull only decisions, not full notes, into one list." },
-      { "title": "Re-debate alert", "text": "Flag when a topic was already decided." }
+      {
+        "title": "Decision log",
+        "text": "Pull only decisions, not full notes, into one list."
+      },
+      {
+        "title": "Re-debate alert",
+        "text": "Flag when a topic was already decided."
+      }
     ],
-    "sources": [{ "title": "Search Hacker News: meeting decisions", "url": "https://hn.algolia.com/?q=meeting%20decisions", "site": "Hacker News" }],
-    "sample": true
+    "sources": [
+      {
+        "title": "Show HN: Keen Bean – Mac meeting notes that draft the spec while you talk",
+        "url": "https://news.ycombinator.com/item?id=49584880",
+        "site": "Hacker News",
+        "points": 11,
+        "comments": 5,
+        "postedAt": "2026-09-06T09:53:12Z"
+      },
+      {
+        "title": "EP-1: our first local model that summarises meeting notes",
+        "url": "https://news.ycombinator.com/item?id=49627792",
+        "site": "Hacker News",
+        "points": 3,
+        "comments": 3,
+        "postedAt": "2026-09-09T15:04:03Z"
+      },
+      {
+        "title": "Meeting Notes Takers",
+        "url": "https://news.ycombinator.com/item?id=50191578",
+        "site": "Hacker News",
+        "points": 3,
+        "comments": 2,
+        "postedAt": "2026-10-22T05:38:07Z"
+      }
+    ],
+    "sample": true,
+    "query": "\"meeting notes\""
   },
   {
     "slug": "dev-laptop-setup",
@@ -97,18 +340,82 @@
     "trend": "steady",
     "quote": "Onboarding docs were wrong in five places.",
     "highlight": "docs were wrong",
-    "evidence": { "posts": 16, "threads": 4, "days": 60, "weekly": [2, 2, 1, 2, 2, 2, 2, 1, 2], "site": "Hacker News" },
+    "evidence": {
+      "posts": 66,
+      "threads": 5,
+      "days": 60,
+      "weekly": [
+        3,
+        8,
+        10,
+        6,
+        10,
+        8,
+        5,
+        9,
+        7
+      ],
+      "site": "Hacker News",
+      "updatedAt": "2026-10-29T19:43:42.000Z"
+    },
     "scores": {
-      "demand": { "value": 62, "label": "Medium", "basis": "data", "reason": "16 posts, steady" },
-      "competition": { "value": 65, "label": "Medium", "basis": "ai", "reason": "Dev containers and scripts partly solve it" },
-      "difficulty": { "value": 55, "label": "Medium", "basis": "ai", "reason": "Many operating systems and stacks to cover" }
+      "demand": {
+        "value": 62,
+        "label": "Medium",
+        "basis": "data",
+        "reason": "66 mentions in 60 days, steady"
+      },
+      "competition": {
+        "value": 65,
+        "label": "Medium",
+        "basis": "ai",
+        "reason": "Dev containers and scripts partly solve it"
+      },
+      "difficulty": {
+        "value": 55,
+        "label": "Medium",
+        "basis": "ai",
+        "reason": "Many operating systems and stacks to cover"
+      }
     },
     "aiSuggestions": [
-      { "title": "Setup recorder", "text": "Record a working machine and replay it on a new one." },
-      { "title": "Docs checker", "text": "Run setup docs in CI so they never go stale." }
+      {
+        "title": "Setup recorder",
+        "text": "Record a working machine and replay it on a new one."
+      },
+      {
+        "title": "Docs checker",
+        "text": "Run setup docs in CI so they never go stale."
+      }
     ],
-    "sources": [{ "title": "Search Hacker News: developer onboarding", "url": "https://hn.algolia.com/?q=developer%20onboarding", "site": "Hacker News" }],
-    "sample": true
+    "sources": [
+      {
+        "title": "We gave AI agents a mobile dev environment",
+        "url": "https://news.ycombinator.com/item?id=50198812",
+        "site": "Hacker News",
+        "points": 4,
+        "comments": 0,
+        "postedAt": "2026-10-22T17:52:31Z"
+      },
+      {
+        "title": "Before It's Lost – Rebuilding the Sega Saturn's Dev Environment on a Modern PC",
+        "url": "https://news.ycombinator.com/item?id=49562779",
+        "site": "Hacker News",
+        "points": 2,
+        "comments": 0,
+        "postedAt": "2026-09-04T10:36:45Z"
+      },
+      {
+        "title": "Ultimate dev environment for Playwright NixOS VM tests",
+        "url": "https://news.ycombinator.com/item?id=49639764",
+        "site": "Hacker News",
+        "points": 1,
+        "comments": 0,
+        "postedAt": "2026-09-10T07:32:01Z"
+      }
+    ],
+    "sample": true,
+    "query": "\"dev environment\""
   },
   {
     "slug": "scattered-receipts",
@@ -119,18 +426,78 @@
     "trend": "rising",
     "quote": "I spend a whole weekend digging up receipts.",
     "highlight": "digging up receipts",
-    "evidence": { "posts": 14, "threads": 3, "days": 60, "weekly": [1, 1, 1, 1, 2, 2, 2, 2, 2], "site": "Hacker News" },
+    "evidence": {
+      "posts": 29,
+      "threads": 2,
+      "days": 60,
+      "weekly": [
+        1,
+        2,
+        2,
+        8,
+        4,
+        2,
+        4,
+        1,
+        5
+      ],
+      "site": "Hacker News",
+      "updatedAt": "2026-10-29T19:43:42.000Z"
+    },
     "scores": {
-      "demand": { "value": 65, "label": "Medium", "basis": "data", "reason": "14 posts, rising toward tax season" },
-      "competition": { "value": 60, "label": "Medium", "basis": "ai", "reason": "Expense apps exist but need manual work" },
-      "difficulty": { "value": 40, "label": "Medium", "basis": "ai", "reason": "Email access and parsing are the hard part" }
+      "demand": {
+        "value": 54,
+        "label": "Medium",
+        "basis": "data",
+        "reason": "29 mentions in 60 days, rising"
+      },
+      "competition": {
+        "value": 60,
+        "label": "Medium",
+        "basis": "ai",
+        "reason": "Expense apps exist but need manual work"
+      },
+      "difficulty": {
+        "value": 40,
+        "label": "Medium",
+        "basis": "ai",
+        "reason": "Email access and parsing are the hard part"
+      }
     },
     "aiSuggestions": [
-      { "title": "Inbox sweep", "text": "Find every receipt in email and tag it by category." },
-      { "title": "Missing check", "text": "Spot recurring charges with no receipt." }
+      {
+        "title": "Inbox sweep",
+        "text": "Find every receipt in email and tag it by category."
+      },
+      {
+        "title": "Missing check",
+        "text": "Spot recurring charges with no receipt."
+      }
     ],
-    "sources": [{ "title": "Search Hacker News: receipts taxes", "url": "https://hn.algolia.com/?q=receipts%20taxes", "site": "Hacker News" }],
-    "sample": true
+    "sources": [
+      {
+        "title": "Show HN: Where does my tax go? A UK tax receipt calculator (2026/27)",
+        "url": "https://news.ycombinator.com/item?id=50230038",
+        "site": "Hacker News",
+        "points": 2,
+        "comments": 0,
+        "postedAt": "2026-10-25T10:23:12Z"
+      },
+      {
+        "title": "Comment on “Wealth Inequality in America drawn to scale”",
+        "url": "https://news.ycombinator.com/item?id=50271772",
+        "site": "Hacker News",
+        "postedAt": "2026-10-28T11:18:09Z"
+      },
+      {
+        "title": "Comment on “France asked ISPs to prepare temporary DNS blocks for major social platforms”",
+        "url": "https://news.ycombinator.com/item?id=50231088",
+        "site": "Hacker News",
+        "postedAt": "2026-10-25T12:59:49Z"
+      }
+    ],
+    "sample": true,
+    "query": "receipts taxes"
   },
   {
     "slug": "sleep-data-no-action",
@@ -138,20 +505,75 @@
     "summary": "People collect months of sleep data but don’t know what to change. The scores feel arbitrary.",
     "who": "People who wear a sleep or fitness tracker",
     "category": "Health",
-    "trend": "steady",
+    "trend": "falling",
     "quote": "Great, a score of 72. Now what?",
     "highlight": "Now what?",
-    "evidence": { "posts": 11, "threads": 2, "days": 60, "weekly": [1, 2, 1, 1, 1, 2, 1, 1, 1], "site": "Hacker News" },
+    "evidence": {
+      "posts": 18,
+      "threads": 1,
+      "days": 60,
+      "weekly": [
+        0,
+        3,
+        7,
+        1,
+        2,
+        0,
+        3,
+        1,
+        1
+      ],
+      "site": "Hacker News",
+      "updatedAt": "2026-10-29T19:43:42.000Z"
+    },
     "scores": {
-      "demand": { "value": 55, "label": "Medium", "basis": "data", "reason": "11 posts, steady" },
-      "competition": { "value": 70, "label": "High", "basis": "ai", "reason": "Tracker makers add coaching features" },
-      "difficulty": { "value": 50, "label": "Medium", "basis": "ai", "reason": "Needs data exports from several devices" }
+      "demand": {
+        "value": 50,
+        "label": "Medium",
+        "basis": "data",
+        "reason": "18 mentions in 60 days, falling"
+      },
+      "competition": {
+        "value": 70,
+        "label": "High",
+        "basis": "ai",
+        "reason": "Tracker makers add coaching features"
+      },
+      "difficulty": {
+        "value": 50,
+        "label": "Medium",
+        "basis": "ai",
+        "reason": "Needs data exports from several devices"
+      }
     },
     "aiSuggestions": [
-      { "title": "One-change coach", "text": "Suggest one experiment per week and measure it." }
+      {
+        "title": "One-change coach",
+        "text": "Suggest one experiment per week and measure it."
+      }
     ],
-    "sources": [{ "title": "Search Hacker News: sleep tracker", "url": "https://hn.algolia.com/?q=sleep%20tracker", "site": "Hacker News" }],
-    "sample": true
+    "sources": [
+      {
+        "title": "Comment on “New Withings Users Must Pay $99/Year for Apple Health Syncing”",
+        "url": "https://news.ycombinator.com/item?id=50118945",
+        "site": "Hacker News",
+        "postedAt": "2026-10-16T14:40:58Z"
+      },
+      {
+        "title": "Comment on “ADHD as a circadian rhythm disorder: evidence and implications for chronotherapy (2025)”",
+        "url": "https://news.ycombinator.com/item?id=50013432",
+        "site": "Hacker News",
+        "postedAt": "2026-10-08T22:39:42Z"
+      },
+      {
+        "title": "Comment on “California farmers are struggling to sell grapes as demand for wine drops”",
+        "url": "https://news.ycombinator.com/item?id=49890359",
+        "site": "Hacker News",
+        "postedAt": "2026-09-29T09:21:09Z"
+      }
+    ],
+    "sample": true,
+    "query": "sleep tracker"
   },
   {
     "slug": "contractor-quotes",
@@ -159,21 +581,79 @@
     "summary": "Homeowners get quotes that are hard to compare and grow once work starts. They can’t tell a fair price from padding.",
     "who": "Homeowners planning a repair or renovation",
     "category": "Home",
-    "trend": "steady",
+    "trend": "rising",
     "quote": "The final bill was double the quote.",
     "highlight": "double the quote",
-    "evidence": { "posts": 13, "threads": 3, "days": 60, "weekly": [2, 1, 1, 2, 1, 2, 1, 2, 1], "site": "Hacker News" },
+    "evidence": {
+      "posts": 9,
+      "threads": 0,
+      "days": 60,
+      "weekly": [
+        0,
+        1,
+        0,
+        2,
+        2,
+        0,
+        2,
+        1,
+        1
+      ],
+      "site": "Hacker News",
+      "updatedAt": "2026-10-29T19:43:42.000Z"
+    },
     "scores": {
-      "demand": { "value": 60, "label": "Medium", "basis": "data", "reason": "13 posts, steady" },
-      "competition": { "value": 45, "label": "Medium", "basis": "ai", "reason": "Marketplaces exist, few compare line items" },
-      "difficulty": { "value": 45, "label": "Medium", "basis": "ai", "reason": "Needs local price data to be trusted" }
+      "demand": {
+        "value": 43,
+        "label": "Medium",
+        "basis": "data",
+        "reason": "9 mentions in 60 days, rising"
+      },
+      "competition": {
+        "value": 45,
+        "label": "Medium",
+        "basis": "ai",
+        "reason": "Marketplaces exist, few compare line items"
+      },
+      "difficulty": {
+        "value": 45,
+        "label": "Medium",
+        "basis": "ai",
+        "reason": "Needs local price data to be trusted"
+      }
     },
     "aiSuggestions": [
-      { "title": "Quote checker", "text": "Upload a quote, see line items that look high." },
-      { "title": "Change-order log", "text": "Track every price change with a signature." }
+      {
+        "title": "Quote checker",
+        "text": "Upload a quote, see line items that look high."
+      },
+      {
+        "title": "Change-order log",
+        "text": "Track every price change with a signature."
+      }
     ],
-    "sources": [{ "title": "Search Hacker News: contractor quote", "url": "https://hn.algolia.com/?q=contractor%20quote", "site": "Hacker News" }],
-    "sample": true
+    "sources": [
+      {
+        "title": "Comment on “NASA’s Mars Sample Return mission is dead”",
+        "url": "https://news.ycombinator.com/item?id=49794502",
+        "site": "Hacker News",
+        "postedAt": "2026-09-21T22:52:16Z"
+      },
+      {
+        "title": "Comment on “NASA’s Mars Sample Return mission is dead”",
+        "url": "https://news.ycombinator.com/item?id=49793726",
+        "site": "Hacker News",
+        "postedAt": "2026-09-21T21:31:22Z"
+      },
+      {
+        "title": "Comment on “U.S. appeals court upholds designation of Anthropic as supply chain risk”",
+        "url": "https://news.ycombinator.com/item?id=49857093",
+        "site": "Hacker News",
+        "postedAt": "2026-09-26T14:45:15Z"
+      }
+    ],
+    "sample": true,
+    "query": "contractor quote"
   },
   {
     "slug": "research-tab-overload",
@@ -181,21 +661,81 @@
     "summary": "People keep tabs open as a to-do list and lose them in a crash. Bookmarks become a graveyard nobody reads.",
     "who": "Students, researchers and knowledge workers",
     "category": "Productivity",
-    "trend": "rising",
+    "trend": "steady",
     "quote": "My browser is my to-do list and it crashed.",
     "highlight": "my to-do list",
-    "evidence": { "posts": 24, "threads": 5, "days": 60, "weekly": [2, 2, 2, 3, 2, 3, 3, 3, 4], "site": "Hacker News" },
+    "evidence": {
+      "posts": 9,
+      "threads": 1,
+      "days": 60,
+      "weekly": [
+        1,
+        0,
+        4,
+        0,
+        0,
+        1,
+        0,
+        0,
+        3
+      ],
+      "site": "Hacker News",
+      "updatedAt": "2026-10-29T19:43:42.000Z"
+    },
     "scores": {
-      "demand": { "value": 74, "label": "High", "basis": "data", "reason": "24 posts across 5 threads" },
-      "competition": { "value": 70, "label": "High", "basis": "ai", "reason": "Many tab managers, few stick" },
-      "difficulty": { "value": 35, "label": "Low", "basis": "ai", "reason": "A browser extension is a small first step" }
+      "demand": {
+        "value": 43,
+        "label": "Medium",
+        "basis": "data",
+        "reason": "9 mentions in 60 days, steady"
+      },
+      "competition": {
+        "value": 70,
+        "label": "High",
+        "basis": "ai",
+        "reason": "Many tab managers, few stick"
+      },
+      "difficulty": {
+        "value": 35,
+        "label": "Low",
+        "basis": "ai",
+        "reason": "A browser extension is a small first step"
+      }
     },
     "aiSuggestions": [
-      { "title": "Tab to task", "text": "Turn a tab into a task with a reason to return." },
-      { "title": "Weekly sweep", "text": "Close stale tabs and summarize what was in them." }
+      {
+        "title": "Tab to task",
+        "text": "Turn a tab into a task with a reason to return."
+      },
+      {
+        "title": "Weekly sweep",
+        "text": "Close stale tabs and summarize what was in them."
+      }
     ],
-    "sources": [{ "title": "Search Hacker News: too many tabs", "url": "https://hn.algolia.com/?q=too%20many%20tabs", "site": "Hacker News" }],
-    "sample": true
+    "sources": [
+      {
+        "title": "Show HN: ZenTabTimer, an HTML timer where browser favicon is the timer",
+        "url": "https://news.ycombinator.com/item?id=49721889",
+        "site": "Hacker News",
+        "points": 1,
+        "comments": 1,
+        "postedAt": "2026-09-16T03:51:01Z"
+      },
+      {
+        "title": "Comment on “Overgrown, when plants invade your abandoned tabs”",
+        "url": "https://news.ycombinator.com/item?id=50242081",
+        "site": "Hacker News",
+        "postedAt": "2026-10-26T11:40:44Z"
+      },
+      {
+        "title": "Comment on “Overgrown, when plants invade your abandoned tabs”",
+        "url": "https://news.ycombinator.com/item?id=50240738",
+        "site": "Hacker News",
+        "postedAt": "2026-10-26T08:22:53Z"
+      }
+    ],
+    "sample": true,
+    "query": "\"too many tabs\""
   },
   {
     "slug": "freelance-late-invoices",
@@ -206,17 +746,75 @@
     "trend": "rising",
     "quote": "I hate sending the third payment reminder.",
     "highlight": "third payment reminder",
-    "evidence": { "posts": 18, "threads": 4, "days": 60, "weekly": [1, 1, 2, 2, 2, 2, 3, 3, 2], "site": "Hacker News" },
+    "evidence": {
+      "posts": 6,
+      "threads": 1,
+      "days": 60,
+      "weekly": [
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        2,
+        1
+      ],
+      "site": "Hacker News",
+      "updatedAt": "2026-10-29T19:43:42.000Z"
+    },
     "scores": {
-      "demand": { "value": 70, "label": "High", "basis": "data", "reason": "18 posts, rising" },
-      "competition": { "value": 60, "label": "Medium", "basis": "ai", "reason": "Invoicing apps send basic reminders" },
-      "difficulty": { "value": 30, "label": "Low", "basis": "ai", "reason": "Email sequences are simple to build" }
+      "demand": {
+        "value": 40,
+        "label": "Medium",
+        "basis": "data",
+        "reason": "6 mentions in 60 days, rising"
+      },
+      "competition": {
+        "value": 60,
+        "label": "Medium",
+        "basis": "ai",
+        "reason": "Invoicing apps send basic reminders"
+      },
+      "difficulty": {
+        "value": 30,
+        "label": "Low",
+        "basis": "ai",
+        "reason": "Email sequences are simple to build"
+      }
     },
     "aiSuggestions": [
-      { "title": "Polite autopilot", "text": "Escalating reminders in the freelancer’s own tone." },
-      { "title": "Late-payer score", "text": "Warn before taking work from slow payers." }
+      {
+        "title": "Polite autopilot",
+        "text": "Escalating reminders in the freelancer’s own tone."
+      },
+      {
+        "title": "Late-payer score",
+        "text": "Warn before taking work from slow payers."
+      }
     ],
-    "sources": [{ "title": "Search Hacker News: late invoices", "url": "https://hn.algolia.com/?q=late%20invoices", "site": "Hacker News" }],
-    "sample": true
+    "sources": [
+      {
+        "title": "Comment on “Meta’s new commercial terms will allow the scraping of news sites: experts”",
+        "url": "https://news.ycombinator.com/item?id=50114740",
+        "site": "Hacker News",
+        "postedAt": "2026-10-16T06:14:06Z"
+      },
+      {
+        "title": "Comment on “How Amazon pushes up prices all across the Internet”",
+        "url": "https://news.ycombinator.com/item?id=50111837",
+        "site": "Hacker News",
+        "postedAt": "2026-10-15T23:35:12Z"
+      },
+      {
+        "title": "Comment on “Find a Reddit post where your SaaS can help. AI writes the comment”",
+        "url": "https://news.ycombinator.com/item?id=50062612",
+        "site": "Hacker News",
+        "postedAt": "2026-10-12T20:31:36Z"
+      }
+    ],
+    "sample": true,
+    "query": "unpaid invoices"
   }
 ]

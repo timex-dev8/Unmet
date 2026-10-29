@@ -133,3 +133,76 @@
   opacity: 1;
   transform: translate(-50%, 0);
 }
+
+.sideNav,
+.keyHint {
+  display: none;
+}
+
+/* Desktop: one calm, centered card with plain arrows beside it. */
+@media (min-width: 900px) {
+  .screen {
+    max-width: 1120px;
+    padding: 0 24px;
+  }
+  .stage {
+    margin: 8px 0 0;
+  }
+  .peek {
+    display: none;
+  }
+  .cardWrap {
+    inset: 0;
+    margin: auto;
+    width: min(720px, 100% - 160px);
+    height: fit-content;
+    max-height: 100%;
+  }
+  .end {
+    inset: 0;
+    margin: auto;
+    width: min(720px, 100% - 160px);
+    height: 360px;
+  }
+  .sideNav {
+    position: absolute;
+    top: 50%;
+    left: calc(50% + min(360px, 50% - 80px) + 24px);
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .sideNav button {
+    width: 48px;
+    height: 48px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--white);
+    color: var(--ink);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 14px -6px rgba(0, 0, 0, 0.2);
+    transition: transform 0.12s ease;
+  }
+  .sideNav button:hover:not(:disabled) {
+    transform: scale(1.06);
+  }
+  .sideNav button:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+  .footer {
+    width: min(720px, 100% - 160px);
+    margin: 0 auto;
+    padding: 0;
+  }
+  .touchHint {
+    display: none;
+  }
+  .keyHint {
+    display: inline;
+  }
+}

@@ -10,7 +10,7 @@ import {
   useTransform,
   type PanInfo,
 } from "motion/react";
-import { Bookmark, ChevronUp, RotateCcw } from "lucide-react";
+import { Bookmark, ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
 import IdeaCard from "@/components/card/IdeaCard";
 import { useSaved } from "@/lib/saved";
 import type { Card } from "@/lib/types";
@@ -145,6 +145,18 @@ export default function SwipeFeed({ cards }: { cards: Card[] }) {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Desktop: plain previous / next buttons beside the card */}
+        {card && (
+          <div className={s.sideNav}>
+            <button type="button" onClick={() => go(-1)} disabled={index === 0} aria-label="Previous idea">
+              <ChevronUp size={22} aria-hidden="true" />
+            </button>
+            <button type="button" onClick={() => go(1)} aria-label="Next idea">
+              <ChevronDown size={22} aria-hidden="true" />
+            </button>
+          </div>
+        )}
       </div>
 
       <div className={s.footer}>
@@ -152,7 +164,8 @@ export default function SwipeFeed({ cards }: { cards: Card[] }) {
           <>
             <button type="button" className={s.navBtn} onClick={() => go(1)}>
               <ChevronUp size={16} aria-hidden="true" />
-              {hintSeen ? "Next" : "Swipe up for next · right to save"}
+              <span className={s.touchHint}>{hintSeen ? "Next" : "Swipe up for next · right to save"}</span>
+              <span className={s.keyHint}>Next · or use ↑ ↓ and S to save</span>
             </button>
             <span className={s.counter} aria-live="polite">
               {index + 1} of {cards.length}
