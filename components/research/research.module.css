@@ -184,8 +184,8 @@
   margin: 0;
   font-size: 15px;
   line-height: 1.45;
-  padding-left: 12px;
-  border-left: 3px solid var(--tint);
+  font-style: italic;
+  color: var(--ink-2);
 }
 .cardEvidence {
   display: flex;
