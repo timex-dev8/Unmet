@@ -377,3 +377,23 @@
     display: inline;
   }
 }
+.stageCounts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.stageCount {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--gray);
+  font-size: 11px;
+  color: var(--muted);
+}
+.stageCount b {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink);
+}

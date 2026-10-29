@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, ArrowUp, Check, Sparkles } from "lucide-react";
 import { Sparkline, TrendBadge } from "@/components/card/parts";
 import SaveButton from "@/components/card/SaveButton";
+import { entryFor, STAGES, useBoard } from "@/lib/board";
 import { useInterests } from "@/lib/interests";
 import { forYou, rising } from "@/lib/rank";
 import { digDeeperHref, researchHref } from "@/lib/links";
@@ -21,6 +22,7 @@ export default function Home({ cards }: { cards: Card[] }) {
   const router = useRouter();
   const [input, setInput] = useState("");
   const { saved } = useSaved();
+  const board = useBoard();
   const { interests, toggle, finishOnboarding } = useInterests();
   const recent = useThreads().slice(0, 3);
 
@@ -145,6 +147,15 @@ export default function Home({ cards }: { cards: Card[] }) {
               </Link>
             </div>
             {saved.length ? (
+              <>
+              <div className={s.stageCounts}>
+                {STAGES.map((st) => (
+                  <div key={st.id} className={s.stageCount}>
+                    <b>{saved.filter((c) => entryFor(board, c.slug).stage === st.id).length}</b>
+                    {st.label}
+                  </div>
+                ))}
+              </div>
               <ul className={s.miniList}>
                 {saved.slice(0, 3).map((c) => (
                   <li key={c.slug}>
@@ -153,6 +164,7 @@ export default function Home({ cards }: { cards: Card[] }) {
                 ))}
                 {saved.length > 3 && <li className={s.muted}>+{saved.length - 3} more</li>}
               </ul>
+              </>
             ) : (
               <p className={s.muted}>Save ideas from the feed or research and they collect here.</p>
             )}

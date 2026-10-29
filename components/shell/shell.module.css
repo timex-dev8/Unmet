@@ -66,7 +66,7 @@
   height: var(--shell-bottom);
   padding: 4px 4px env(safe-area-inset-bottom);
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   background: rgba(251, 251, 253, 0.92);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   backdrop-filter: blur(20px) saturate(180%);
@@ -248,5 +248,16 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 .navWithin {
+  color: var(--ink);
+}
+/* both are buttons that open the command palette */
+.searchField,
+.searchIcon {
+  font: inherit;
+  cursor: pointer;
+}
+.searchIcon {
+  border: 0;
+  background: none;
   color: var(--ink);
 }

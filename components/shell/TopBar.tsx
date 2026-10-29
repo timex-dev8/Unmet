@@ -1,40 +1,41 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import Logo from "@/components/Logo";
+import CommandPalette from "./CommandPalette";
 import s from "./shell.module.css";
 
-// Search lives here for now; ⌘K / Ctrl+K jumps to it from anywhere in the studio.
+// The search bar opens the command palette; ⌘K / Ctrl+K opens it from anywhere in the studio.
 export default function TopBar() {
-  const router = useRouter();
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        router.push("/app/search");
+        setOpen((o) => !o);
       }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [router]);
+  }, []);
 
   return (
     <header className={s.top}>
       <Link href="/app" className={s.topBrand} aria-label="Unmet home">
         <Logo size={24} />
       </Link>
-      <Link href="/app/search" className={s.searchField}>
+      <button type="button" className={s.searchField} onClick={() => setOpen(true)}>
         <Search size={16} aria-hidden="true" />
-        <span>Search ideas</span>
+        <span>Search ideas, research and actions</span>
         <kbd className={s.kbd}>⌘K</kbd>
-      </Link>
-      <Link href="/app/search" className={s.searchIcon} aria-label="Search ideas">
+      </button>
+      <button type="button" className={s.searchIcon} onClick={() => setOpen(true)} aria-label="Search">
         <Search size={21} aria-hidden="true" />
-      </Link>
+      </button>
+      <CommandPalette open={open} onClose={() => setOpen(false)} />
     </header>
   );
 }
