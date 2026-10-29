@@ -34,6 +34,9 @@ function jsonSchemaFor(schema: z.ZodType) {
 // or a call is too slow, we retry once on a lighter free model.
 const FALLBACK_MODEL = process.env.LLM_FALLBACK_MODEL || "gemini-3.5-flash-lite";
 
+const BUSY_COOLDOWN_MS = 5 * 60_000;
+const busyUntil = new Map<string, number>();
+
 const isBusy = (msg: string) => /\b(429|503)\b|RESOURCE_EXHAUSTED|UNAVAILABLE|high demand|quota|overloaded/i.test(msg);
 const isTimeout = (err: unknown) => err instanceof Error && /abort|timeout/i.test(`${err.name} ${err.message}`);
 
@@ -45,7 +48,10 @@ export async function generateJson<T>(
   const provider = process.env.LLM_PROVIDER ?? "gemini";
   if (provider !== "gemini") throw new LlmError(`LLM_PROVIDER "${provider}" is not supported yet`, "not_configured");
 
-  const models = [...new Set([process.env.LLM_MODEL!, FALLBACK_MODEL])];
+  const all = [...new Set([process.env.LLM_MODEL!, FALLBACK_MODEL])];
+  // Skip a model that was busy in the last few minutes, unless it's the only one left.
+  const models = all.filter((m) => (busyUntil.get(m) ?? 0) < Date.now());
+  if (models.length === 0) models.push(all[all.length - 1]);
   let text: string | undefined;
   let lastError = "";
 
@@ -72,6 +78,7 @@ export async function generateJson<T>(
       if (!isBusy(lastError) && !isTimeout(err)) {
         throw new LlmError(`AI request failed: ${lastError.slice(0, 200)}`, "failed");
       }
+      busyUntil.set(model, Date.now() + BUSY_COOLDOWN_MS);
     }
   }
   if (text === undefined) {
