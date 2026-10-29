@@ -7,11 +7,27 @@ import { kindOf } from "./quality";
 // High mode: for the top problems, look for products that already solve them, on the web
 // and among TrustMRR's revenue-verified startups. Competition then becomes a checked number.
 
-const LISTICLE = /\b\d+\s+(best|top)\b|alternatives|\bvs\.?\s|review|guide|how to/i;
+const LISTICLE = /\b\d+\s+(best|top)\b|alternatives|\bvs\.?\s|review|guide|how to|%|\bwhy\b|\bstop\b|template|lessons/i;
 const STOP = new Set(["their", "about", "which", "there", "would", "could", "people", "every", "after", "before", "without"]);
 const keywords = (s: string) => new Set(s.toLowerCase().split(/[^a-z]+/).filter((w) => w.length > 4 && !STOP.has(w)));
 
-const productName = (title: string) => title.split(/\s[|–—-]\s|:\s/)[0].trim().slice(0, 40);
+// A product page is a homepage or a shallow page (example.com/ or example.com/features), not an article.
+const isProductPage = (url: string) => {
+  try {
+    return new URL(url).pathname.split("/").filter(Boolean).length <= 1;
+  } catch {
+    return false;
+  }
+};
+
+// Use the short brand part of the title; fall back to the domain name when the title reads like a sentence.
+function productName(title: string, site: string) {
+  const parts = title.split(/\s[|–—-]\s|:\s/).map((p) => p.trim()).filter(Boolean);
+  const short = parts.find((p) => p.split(/\s+/).length <= 3);
+  if (short) return short.slice(0, 40);
+  const label = site.split(".").slice(-2, -1)[0] ?? site;
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
 
 export async function findCompetitors(card: Card, startups: Startup[]): Promise<Competitor[]> {
   const since = new Date(Date.now() - 3 * 365 * 86400_000).toISOString();
@@ -20,9 +36,9 @@ export async function findCompetitors(card: Card, startups: Startup[]): Promise<
   const web: Competitor[] = [];
   for (const p of pages) {
     const kind = kindOf(p.site, p.url);
-    if (kind !== "blog" || LISTICLE.test(p.title) || seen.has(p.site)) continue;
+    if (kind !== "blog" || !isProductPage(p.url) || LISTICLE.test(p.title) || seen.has(p.site)) continue;
     seen.add(p.site);
-    web.push({ name: productName(p.title), url: p.url, note: p.text.slice(0, 120) || undefined });
+    web.push({ name: productName(p.title, p.site), url: p.url, note: p.text.slice(0, 120) || undefined });
     if (web.length >= 4) break;
   }
 

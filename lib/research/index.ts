@@ -187,7 +187,9 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   const earlyCount = cards.filter((c) => c.signal === "early").length;
   const notes = [
     grouped.answer,
-    earlyCount ? `${earlyCount === cards.length ? "All" : earlyCount} of these ${earlyCount === 1 ? "is an early signal" : "are early signals"}, backed by only two sources.` : "",
+    earlyCount
+      ? `${earlyCount === cards.length ? "All" : earlyCount} of these ${earlyCount === 1 ? "is an early signal" : "are early signals"}: backed by only two sources, or by posts from a single site.`
+      : "",
     dropped > 0 ? `${dropped} more ${dropped === 1 ? "problem was" : "problems were"} left out for having too little independent evidence.` : "",
     grouped.notFound,
   ].filter(Boolean);
