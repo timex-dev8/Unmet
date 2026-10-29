@@ -95,7 +95,8 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
         includeDomains: COMMUNITY_DOMAINS,
       }),
     })),
-    { name: NAMES.hn, run: searchHN(plan.hnQuery, since, cfg.high ? 15 : 10) },
+    // Hacker News rarely discusses consumer topics (pets, salons…), so it only joins those in High.
+    ...(plan.segment !== "consumer" || cfg.high ? [{ name: NAMES.hn, run: searchHN(plan.hnQuery, since, cfg.high ? 15 : 10) }] : []),
     ...(useStack ? [{ name: NAMES.stackexchange, run: searchStackExchange(plan.stackQuery, plan.stackSites, since) }] : []),
     ...(useApps ? [{ name: NAMES.appstore, run: searchAppReviews(plan.appTerms, since) }] : []),
     ...(useGithub ? [{ name: NAMES.github, run: searchGithubIssues(plan.githubPhrase, since) }] : []),
@@ -181,6 +182,17 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
         card.scores.competition = { value: c.value, label: c.value >= 67 ? "High" : c.value >= 40 ? "Medium" : "Low", basis: "data", reason: c.reason };
       }),
     );
+  }
+
+  if (cards.length === 0) {
+    emit({
+      type: "result",
+      answer: `I read ${sources.length} recent sources and found ${extracted.complaints.length} first-hand complaints about “${plan.topic}”, but none came up in two different sources yet, so there’s no card.${req.depth === "high" ? " Try a more specific audience." : " Try Medium or High to search more places."}`,
+      cards: [],
+      sourceCount: sources.length,
+      mix: mixLine(sources, now),
+    });
+    return;
   }
 
   const dropped = problems.length - cards.length;
