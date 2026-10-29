@@ -23,8 +23,8 @@ const PlanSchema = z.object({
   topic: z.string().describe("Short topic, 2-5 words, e.g. 'barbershop owners'"),
   searches: z
     .array(z.object({ query: z.string(), objective: z.string() }))
-    .max(3)
-    .describe("Web searches that would surface first-hand complaints. Empty when mode is 'answer'."),
+    .max(4) // asked for 2; tolerate a bit more and trim in code rather than fail the request
+    .describe("Exactly 2 web searches that would surface first-hand complaints. Empty when mode is 'answer'."),
   answer: z.string().describe("Only for mode 'answer': reply using only the ideas already found. Otherwise empty."),
 });
 
@@ -32,7 +32,7 @@ const PLAN_SYSTEM = `You plan research for Unmet, a tool that finds real complai
 Decide the mode:
 - "search" when the user names a market, audience or problem space that needs fresh evidence.
 - "answer" when the user asks about ideas already found in this conversation (for example "compare #1 and #2", "which is easiest"). Answer only from those ideas; if they don't cover the question, choose "search" instead.
-For "search", write up to 3 searches phrased like a search box entry, aimed at places people complain: forums, reviews, community posts, Q&A sites, blogs by practitioners.
+For "search", write 2 different searches phrased like a search box entry, aimed at places people complain: forums, reviews, community posts, Q&A sites, blogs by practitioners.
 Each objective says what to rank first (first-hand frustrations, workarounds, things people wish existed) and what to skip (marketing pages, listicles, vendor sales copy).`;
 
 // ---------- Step 3: group and write ----------
@@ -191,7 +191,8 @@ export async function runResearch(req: ResearchRequest, emit: Emit) {
 
   const now = Math.floor(Date.now() / 1000);
   const since = now - WINDOW_DAYS * DAY;
-  const searches = plan.searches.length ? plan.searches : [{ query: req.message, objective: "First-hand complaints and unmet needs" }];
+  // Each Exa search costs money, so cap it at 2 per research.
+  const searches = (plan.searches.length ? plan.searches : [{ query: req.message, objective: "First-hand complaints and unmet needs" }]).slice(0, 2);
 
   emit({ type: "step", label: `Searching the web: ${searches.map((s) => `“${s.query}”`).join(", ")}` });
   const results = await Promise.allSettled([
