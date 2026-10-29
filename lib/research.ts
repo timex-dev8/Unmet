@@ -182,7 +182,7 @@ export async function runResearch(req: ResearchRequest, emit: Emit) {
   ]
     .filter(Boolean)
     .join("\n\n");
-  const plan = await generateJson(PlanSchema, { system: PLAN_SYSTEM, prompt: context });
+  const plan = await generateJson(PlanSchema, { system: PLAN_SYSTEM, prompt: context, timeoutMs: 15_000 });
 
   if (plan.mode === "answer" && req.cards.length) {
     emit({ type: "result", answer: plan.answer, cards: [], sourceCount: 0 });
@@ -224,6 +224,7 @@ export async function runResearch(req: ResearchRequest, emit: Emit) {
 
   emit({ type: "step", label: "Grouping complaints into problems" });
   const written = await generateJson(WriteSchema, {
+    timeoutMs: 45_000,
     system: WRITE_SYSTEM,
     prompt: `Topic: ${plan.topic}\nUser asked: ${req.message}\n\nSources:\n${sources
       .map((s) => `[${s.id}] ${s.title} (${s.site}${s.postedAt ? `, ${s.postedAt.slice(0, 10)}` : ""})\n${s.text}`)

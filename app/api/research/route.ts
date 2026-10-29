@@ -4,7 +4,8 @@ import { LlmError, llmConfigured } from "@/lib/llm";
 import { runResearch } from "@/lib/research";
 import type { ResearchEvent } from "@/lib/research-types";
 
-export const maxDuration = 60;
+// Two AI calls (each may retry on a fallback model) plus web search.
+export const maxDuration = 120;
 
 const Body = z.object({
   message: z.string().trim().min(2).max(500),

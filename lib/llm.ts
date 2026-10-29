@@ -1,5 +1,5 @@
 import "server-only";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { z } from "zod/v4";
 
 // One small wrapper for every AI call. Provider and model come from env, so switching is one line.
@@ -30,30 +30,52 @@ function jsonSchemaFor(schema: z.ZodType) {
   return rest;
 }
 
+// Free-tier models get busy ("high demand", 503) or rate-limited (429). When that happens,
+// or a call is too slow, we retry once on a lighter free model.
+const FALLBACK_MODEL = process.env.LLM_FALLBACK_MODEL || "gemini-3.5-flash-lite";
+
+const isBusy = (msg: string) => /\b(429|503)\b|RESOURCE_EXHAUSTED|UNAVAILABLE|high demand|quota|overloaded/i.test(msg);
+const isTimeout = (err: unknown) => err instanceof Error && /abort|timeout/i.test(`${err.name} ${err.message}`);
+
 /** Asks the model for JSON matching `schema`; the reply is validated before it is returned. */
-export async function generateJson<T>(schema: z.ZodType<T>, opts: { system: string; prompt: string }): Promise<T> {
+export async function generateJson<T>(
+  schema: z.ZodType<T>,
+  opts: { system: string; prompt: string; timeoutMs?: number },
+): Promise<T> {
   const provider = process.env.LLM_PROVIDER ?? "gemini";
   if (provider !== "gemini") throw new LlmError(`LLM_PROVIDER "${provider}" is not supported yet`, "not_configured");
 
+  const models = [...new Set([process.env.LLM_MODEL!, FALLBACK_MODEL])];
   let text: string | undefined;
-  try {
-    const res = await gemini().models.generateContent({
-      model: process.env.LLM_MODEL!,
-      contents: opts.prompt,
-      config: {
-        systemInstruction: opts.system,
-        responseMimeType: "application/json",
-        responseJsonSchema: jsonSchemaFor(schema),
-        temperature: 0.3,
-      },
-    });
-    text = res.text;
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    if (/429|RESOURCE_EXHAUSTED|quota/i.test(msg)) {
-      throw new LlmError("The free AI tier is busy. Try again in a minute.", "rate_limited");
+  let lastError = "";
+
+  for (const model of models) {
+    try {
+      const res = await gemini().models.generateContent({
+        model,
+        contents: opts.prompt,
+        config: {
+          systemInstruction: opts.system,
+          responseMimeType: "application/json",
+          responseJsonSchema: jsonSchemaFor(schema),
+          temperature: 0.3,
+          // Thinking makes answers slow; these are extraction tasks, so keep it light.
+          thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+          abortSignal: AbortSignal.timeout(opts.timeoutMs ?? 22_000),
+        },
+      });
+      text = res.text;
+      break;
+    } catch (err) {
+      lastError = err instanceof Error ? err.message : String(err);
+      console.warn(`[llm] ${model} failed:`, lastError.slice(0, 200));
+      if (!isBusy(lastError) && !isTimeout(err)) {
+        throw new LlmError(`AI request failed: ${lastError.slice(0, 200)}`, "failed");
+      }
     }
-    throw new LlmError(`AI request failed: ${msg.slice(0, 200)}`, "failed");
+  }
+  if (text === undefined) {
+    throw new LlmError("The free AI models are busy right now. Try again in a minute.", "rate_limited");
   }
 
   let raw: unknown;
