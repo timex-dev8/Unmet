@@ -11,6 +11,14 @@ import s from "./shell.module.css";
 // The search bar opens the command palette; ⌘K / Ctrl+K opens it from anywhere in the studio.
 export default function TopBar() {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 4);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -24,7 +32,7 @@ export default function TopBar() {
   }, []);
 
   return (
-    <header className={s.top}>
+    <header className={`${s.top} ${scrolled ? s.topScrolled : ""}`}>
       <Link href="/app" className={s.topBrand} aria-label="Unmet home">
         <Logo size={24} />
       </Link>

@@ -38,9 +38,18 @@
   justify-content: space-between;
   gap: 12px;
   padding: 0 8px 0 16px;
-  background: rgba(235, 242, 251, 0.72);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  backdrop-filter: blur(20px) saturate(160%);
+  /* Clear at the top of the page; frosted paper with a hairline once the content scrolls under it */
+  background: transparent;
+  box-shadow: 0 1px 0 transparent;
+  transition:
+    background var(--t-med) var(--ease),
+    box-shadow var(--t-med) var(--ease);
+}
+.topScrolled {
+  background: rgba(247, 245, 239, 0.86);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 1px 0 var(--line);
 }
 .topBrand {
   display: inline-flex;
@@ -80,7 +89,7 @@
   padding: 4px 4px env(safe-area-inset-bottom);
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  background: rgba(255, 255, 255, 0.86);
+  background: rgba(247, 245, 239, 0.9);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
   backdrop-filter: blur(20px) saturate(160%);
   box-shadow: 0 -1px 0 var(--line);
@@ -205,8 +214,9 @@
     display: flex;
     flex-direction: column;
     padding: 20px 16px;
-    /* no surface of its own: the page gradient runs behind it (grouping by space, not lines) */
-    background: transparent;
+    /* a slightly deeper paper with a sand hairline: the frame, quieter than the content */
+    background: #f2efe7;
+    box-shadow: 1px 0 0 var(--line);
   }
   .tabs,
   .topBrand,

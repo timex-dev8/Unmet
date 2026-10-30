@@ -2,7 +2,9 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { ChevronDown, Gauge } from "lucide-react";
+import Link from "next/link";
+import { ChevronDown, Gauge, Lock } from "lucide-react";
+import { useLowOnly } from "@/lib/auth";
 import { DEPTHS, type Depth } from "@/lib/research-types";
 import DepthSlider from "./DepthSlider";
 import s from "./depthSlider.module.css";
@@ -22,10 +24,23 @@ export default function DepthPicker({
   placement?: "up" | "down";
 }) {
   const [open, setOpen] = useState(false);
+  const [blocked, setBlocked] = useState(false);
+  // Guests (no account) research on Low only; Medium and High need a free account.
+  const lowOnly = useLowOnly();
+  const shown = lowOnly ? "low" : value;
+  const pick = (d: Depth) => {
+    if (lowOnly && d !== "low") {
+      setBlocked(true);
+      onChange("low");
+      return;
+    }
+    setBlocked(false);
+    onChange(d);
+  };
   const root = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
   const popId = useId();
-  const level = DEPTHS.find((d) => d.id === value)!;
+  const level = DEPTHS.find((d) => d.id === shown)!;
 
   useEffect(() => {
     if (!open) return;
@@ -77,7 +92,16 @@ export default function DepthPicker({
             exit={{ opacity: 0, scale: 0.96, y }}
             transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
           >
-            <DepthSlider value={value} onChange={onChange} detail />
+            <DepthSlider value={shown} onChange={pick} detail />
+            {lowOnly && (
+              <p className={`${s.lock} ${blocked ? s.lockOn : ""}`}>
+                <Lock size={13} aria-hidden="true" />
+                <span>
+                  Medium and High need a free account.{" "}
+                  <Link href={`/welcome?next=${encodeURIComponent(typeof window === "undefined" ? "/app" : location.pathname)}`}>Sign in</Link>
+                </span>
+              </p>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

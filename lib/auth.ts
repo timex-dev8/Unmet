@@ -16,6 +16,7 @@ function start() {
   started = true;
   supabase().auth.onAuthStateChange((_event, session) => {
     current = session?.user ?? null;
+    if (current) setGuest(false); // signing in ends guest mode (the guest's data merges into the account)
     listeners.forEach((l) => l());
   });
 }
@@ -32,6 +33,57 @@ export function useUser() {
     () => (authConfigured ? current : null),
     () => undefined,
   );
+}
+
+// ---------------------------------------------------------------------------
+// Guest mode: chosen on /welcome, remembered in this browser. Guests can use everything except
+// deeper research (Medium and High), which app/api/research refuses without an account.
+
+const GUEST_KEY = "unmet:guest";
+const guestListeners = new Set<() => void>();
+const readGuest = () => {
+  try {
+    return localStorage.getItem(GUEST_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+function setGuest(on: boolean) {
+  try {
+    if (on) localStorage.setItem(GUEST_KEY, "1");
+    else localStorage.removeItem(GUEST_KEY);
+  } catch {
+    // storage blocked: guest mode lasts for this visit
+  }
+  guestListeners.forEach((l) => l());
+}
+
+export const continueAsGuest = () => setGuest(true);
+
+/** undefined while the page is still hydrating. */
+export function useGuest() {
+  return useSyncExternalStore(
+    (l) => {
+      guestListeners.add(l);
+      return () => void guestListeners.delete(l);
+    },
+    readGuest,
+    () => undefined,
+  );
+}
+
+/** Guests (no account) research on Low only; Medium and High need a free account. */
+export function useLowOnly() {
+  const user = useUser();
+  const guest = useGuest();
+  return authConfigured && !user && guest !== false;
+}
+
+/** Headers for our own API routes: the access token tells the server this is a full account. */
+export async function authHeaders(): Promise<Record<string, string>> {
+  if (!authConfigured) return {};
+  const token = await accessToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 /** Where to come back to after Google or the email link. */

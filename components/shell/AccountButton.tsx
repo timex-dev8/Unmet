@@ -11,6 +11,7 @@ import {
   signOut,
   signUpWithPassword,
   updatePassword,
+  useGuest,
   useUser,
 } from "@/lib/auth";
 import { authConfigured } from "@/lib/supabase/client";
@@ -35,6 +36,7 @@ const noop = () => () => {};
 // Sign in / account. `variant="side"` is the sidebar row; "icon" is the phone top bar button.
 export default function AccountButton({ variant }: { variant: "side" | "icon" }) {
   const user = useUser();
+  const guest = useGuest();
   const status = useSyncStatus();
   const ref = useRef<HTMLDialogElement>(null);
   const failed = useSyncExternalStore(noop, signinFailed, () => false);
@@ -63,8 +65,8 @@ export default function AccountButton({ variant }: { variant: "side" | "icon" })
         <button type="button" className={s.side} onClick={open}>
           {user ? <span className={s.avatar}>{initial}</span> : <CircleUserRound size={20} aria-hidden="true" />}
           <span className={s.sideText}>
-            <span className={s.sideName}>{user ? name : "Sign in"}</span>
-            <span className={s.sideSub}>{user ? STATUS_LABEL[status] : "Sync across your devices"}</span>
+            <span className={s.sideName}>{user ? name : guest ? "Guest" : "Sign in"}</span>
+            <span className={s.sideSub}>{user ? STATUS_LABEL[status] : guest ? "Sign in for deeper research" : "Sync across your devices"}</span>
           </span>
         </button>
       ) : (
@@ -105,7 +107,7 @@ export default function AccountButton({ variant }: { variant: "side" | "icon" })
 type Mode = "password" | "link";
 type Sent = { title: string; text: string } | null;
 
-function SignInForm({ id, failed }: { id: string; failed: boolean }) {
+export function SignInForm({ id, failed }: { id: string; failed: boolean }) {
   const [mode, setMode] = useState<Mode>("password");
   const [creating, setCreating] = useState(false); // password mode: sign in vs create account
   const [email, setEmail] = useState("");

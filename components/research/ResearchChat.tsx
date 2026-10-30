@@ -10,6 +10,7 @@ import { IdeaSections } from "@/components/idea/IdeaDetail";
 import { digDeeperHref } from "@/lib/links";
 import { createThread, newId, updateThread, useStoreReady, useThread, type ChatMessage } from "@/lib/research-store";
 import type { Depth, ResearchEvent } from "@/lib/research-types";
+import { authHeaders, useLowOnly } from "@/lib/auth";
 import { useSaved } from "@/lib/saved";
 import type { Card } from "@/lib/types";
 import DepthPicker from "./DepthPicker";
@@ -49,6 +50,7 @@ export default function ResearchChat({
   const messages = thread?.messages ?? [];
   const [input, setInput] = useState("");
   const [depth, setDepth] = useState<Depth>(initialDepth ?? "medium");
+  const lowOnly = useLowOnly(); // guests research on Low only
   const [openCard, setOpenCard] = useState<Card | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const busy = messages.some((m) => m.pending);
@@ -104,8 +106,8 @@ export default function ResearchChat({
     try {
       const res = await fetch("/api/research", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, history, cards, depth }),
+        headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+        body: JSON.stringify({ message, history, cards, depth: lowOnly ? "low" : depth }),
       });
       if (!res.ok || !res.body) {
         const body = await res.json().catch(() => ({}));

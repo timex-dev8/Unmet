@@ -5,6 +5,7 @@ import { exaConfigured } from "@/lib/exa";
 import { LlmError, llmConfigured } from "@/lib/llm";
 import { runResearch } from "@/lib/research";
 import { recordHit, usage, visitorId } from "@/lib/research/store";
+import { db, supabaseConfigured } from "@/lib/supabase/server";
 import type { ResearchEvent } from "@/lib/research-types";
 
 // High mode runs several AI steps and searches; Vercel Hobby with Fluid compute allows up to 300s.
@@ -48,6 +49,13 @@ export async function POST(request: Request) {
 
   const parsed = Body.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "Please type a question between 2 and 500 characters." }, { status: 400 });
+
+  // Guests (no account) can use everything except deeper research: Medium and High need an account.
+  if (parsed.data.depth !== "low" && supabaseConfigured()) {
+    const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+    const { data } = token ? await db().auth.getUser(token) : { data: { user: null } };
+    if (!data.user) return Response.json({ error: "Medium and High research need a free account. Sign in, or use Low." }, { status: 403 });
+  }
 
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
   const blocked = await limited(ip, COST[parsed.data.depth]);

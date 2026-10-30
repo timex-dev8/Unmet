@@ -7,6 +7,7 @@ import { ArrowUp, Sparkles } from "lucide-react";
 import SaveButton from "@/components/card/SaveButton";
 import DepthPicker from "@/components/research/DepthPicker";
 import { entryFor, useBoard } from "@/lib/board";
+import { useLowOnly } from "@/lib/auth";
 import { useInterests } from "@/lib/interests";
 import { digDeeperHref } from "@/lib/links";
 import { forYou, profileKeywords, rising } from "@/lib/rank";
@@ -15,17 +16,17 @@ import type { Depth } from "@/lib/research-types";
 import { useSaved } from "@/lib/saved";
 import type { Startup } from "@/lib/trustmrr";
 import type { Card } from "@/lib/types";
-import { InterestsEditor, Niches } from "./Interests";
+import { Niches } from "./Interests";
 import s from "./home.module.css";
 
 export default function Home({ cards, startups = [] }: { cards: Card[]; startups?: Startup[] }) {
   const router = useRouter();
   const [input, setInput] = useState("");
   const [depth, setDepth] = useState<Depth>("medium");
-  const [editing, setEditing] = useState(false);
   const { saved } = useSaved();
   const board = useBoard();
   const { interests } = useInterests();
+  const lowOnly = useLowOnly();
   const threads = useThreads();
 
   const picks = forYou(cards, { picked: interests.picked, skipped: interests.skipped, saved, keywords: profileKeywords(interests) });
@@ -34,12 +35,11 @@ export default function Home({ cards, startups = [] }: { cards: Card[]; startups
   const lastIdeas = lastThread ? lastThread.messages.flatMap((m) => m.cards ?? []).length : 0;
   const advanced = saved.filter((c) => entryFor(board, c.slug).stage !== "spotted").length;
   const startup = startups[0];
-  const showInterests = !interests.onboarded || editing;
 
   function start(e: FormEvent) {
     e.preventDefault();
     const q = input.trim();
-    if (q) router.push(`/app/research?q=${encodeURIComponent(q)}&depth=${depth}`);
+    if (q) router.push(`/app/research?q=${encodeURIComponent(q)}&depth=${lowOnly ? "low" : depth}`);
   }
 
   return (
@@ -67,29 +67,18 @@ export default function Home({ cards, startups = [] }: { cards: Card[]; startups
         </form>
       </section>
 
-      {showInterests ? (
-        <InterestsEditor onDone={() => setEditing(false)} style={stagger(2)} />
-      ) : (
-        interests.profile && (
-          <section className="rise" style={stagger(2)} aria-labelledby="niches-title">
-            <h2 id="niches-title" className={`${s.h2} ${s.nichesTitle}`}>
-              Your niches
-            </h2>
-            <Niches />
-          </section>
-        )
-      )}
+      <section className="rise" style={stagger(2)} aria-labelledby="niches-title">
+        <h2 id="niches-title" className={`${s.h2} ${s.nichesTitle}`}>
+          Your niches
+        </h2>
+        <Niches />
+      </section>
 
       <section aria-labelledby="for-you">
         <div className={s.sectionHead}>
           <h2 id="for-you" className={s.h2}>
             For you
           </h2>
-          {!showInterests && (
-            <button type="button" className={s.linkBtn} onClick={() => setEditing(true)}>
-              Edit interests
-            </button>
-          )}
         </div>
         <div className={s.cards}>
           {picks.map((card, i) => (

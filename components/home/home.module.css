@@ -408,3 +408,50 @@
   font-size: 13px;
   color: var(--muted);
 }
+.nicheEdit {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.nicheEdit:hover {
+  color: var(--ink);
+}
+.setup {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  border-radius: 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.setup > span:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.setup strong {
+  font-size: 17px;
+  font-weight: 500;
+}
+.setup span span {
+  font-size: 14px;
+  color: var(--muted);
+}
+.setupGo {
+  flex: none;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--white);
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 500;
+}

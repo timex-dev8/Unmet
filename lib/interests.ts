@@ -72,6 +72,13 @@ export function toggleWatch(niche: string) {
   write({ ...cur, watched: watched.includes(niche) ? watched.filter((n) => n !== niche) : [...watched, niche].slice(-10) });
 }
 
+/** Onboarding: save the profile, the niches picked to follow, and mark onboarding done. */
+export function completeOnboarding(profile: Profile | null, watched: string[]) {
+  const cur = getSnapshot();
+  const picked = profile?.category && !cur.picked.includes(profile.category) ? [...cur.picked, profile.category] : cur.picked;
+  write({ ...cur, profile: profile ?? cur.profile, watched: [...new Set(watched)].slice(-10), picked, onboarded: true });
+}
+
 /** Called by the feed when someone swipes past a card without saving it. */
 export function markSkipped(slug: string) {
   const cur = getSnapshot();

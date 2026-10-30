@@ -1,7 +1,7 @@
 import { z } from "zod/v4";
 import { db, supabaseConfigured } from "@/lib/supabase/server";
 
-// Signed-in people can add a niche they watch to the daily feed research (feed_topics, origin
+// Anyone (guests too) can add a niche they watch to the daily feed research (feed_topics, origin
 // "user"). Capped, so watching can't run up search costs: at most MAX_USER_TOPICS user niches.
 
 const Body = z.object({ niche: z.string().trim().min(3).max(60) });
@@ -9,10 +9,6 @@ const MAX_USER_TOPICS = 60;
 
 export async function POST(request: Request) {
   if (!supabaseConfigured()) return Response.json({ error: "Not available yet." }, { status: 503 });
-  const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-  const { data: auth } = token ? await db().auth.getUser(token) : { data: { user: null } };
-  if (!auth.user) return Response.json({ error: "Sign in to have Unmet research this niche every few days." }, { status: 401 });
-
   const parsed = Body.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "Describe the niche in a few words." }, { status: 400 });
   const niche = parsed.data.niche.toLowerCase().replace(/\s+/g, " ");
