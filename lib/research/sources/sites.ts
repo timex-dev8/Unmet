@@ -1,6 +1,6 @@
 // Approved lists of places where people describe problems first-hand.
 
-/** Community and review sites searched through Exa (`includeDomains`). Reddit is deliberately absent. */
+/** Community and review sites searched through Exa (`includeDomains`). Reddit has its own search (lib/research/index.ts). */
 export const COMMUNITY_DOMAINS = [
   "indiehackers.com",
   "producthunt.com",

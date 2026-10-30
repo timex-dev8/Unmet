@@ -38,7 +38,7 @@
   - Feed records skipped cards for ranking; Board lists saved ideas (stages next)
   - Design mockups: canvas "Unmet Studio" row (Home, Research, Board, Mind; desktop + phone)
 
-- [x] Research engine v2 (`lib/research/`): Low / Medium / High modes; plan → gather (Exa web + forums/review sites, Hacker News, Stack Exchange, App Store reviews, GitHub issues, TrustMRR) → quality filter (no vendor pages/listicles, nothing older than 12 months) → extract first-hand complaints (tolerant quote check) → group (≥3 sources from ≥2 sites in Medium/High) → scores from real signals → High: competitor check + strict review. Reddit removed entirely. Prompts in `lib/research/prompts.ts`.
+- [x] Research engine v2 (`lib/research/`): Low / Medium / High modes; plan → gather (Exa web + forums/review sites + Reddit, Hacker News, Stack Exchange, App Store reviews, GitHub issues, TrustMRR) → quality filter (no vendor pages/listicles, nothing older than 12 months) → extract first-hand complaints (tolerant quote check) → group (≥3 sources from ≥2 sites in Medium/High) → scores from real signals → High: competitor check + strict review. Reddit is searched through Exa on every level (1 / 2 / 3 queries), never scraped directly. Prompts in `lib/research/prompts.ts`.
 - [x] Home: "Startups growing now" from TrustMRR (needs `TRUSTMRR_API_KEY`, hidden without it)
 
 ## Not built yet

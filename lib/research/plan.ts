@@ -33,7 +33,7 @@ export type Plan = z.infer<typeof PlanSchema>;
 
 // Search operators don't help Exa's plain-language search; strip any the model adds.
 const plain = (q: string) =>
-  q.replace(/\bsite:\S+/gi, "").replace(/\b(OR|AND)\b/g, " ").replace(/["()]/g, "").replace(/\breddit\b/gi, "").replace(/\s+/g, " ").trim();
+  q.replace(/\bsite:\S+/gi, "").replace(/\b(OR|AND)\b/g, " ").replace(/["()]/g, "").replace(/\s+/g, " ").trim();
 
 export async function makePlan(req: ResearchRequest): Promise<Plan> {
   const prompt = [

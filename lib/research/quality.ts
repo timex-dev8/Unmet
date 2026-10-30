@@ -7,12 +7,13 @@ import type { SourceKind } from "@/lib/types";
 const DAY = 86400_000;
 
 // Social networks, video, and "we analyzed Reddit for you" aggregators: not first-hand evidence.
+// (Reddit itself is kept: its posts are first-hand.)
 const DROP_DOMAIN =
-  /(^|\.)(reddit\.com|linkedin\.com|facebook\.com|instagram\.com|tiktok\.com|pinterest\.com|youtube\.com|x\.com|twitter\.com|gummysearch\.com|painonsocial\.com|ideabrowser\.com|explodingtopics\.com|redditinsights\.\w+)$/;
+  /(^|\.)(linkedin\.com|facebook\.com|instagram\.com|tiktok\.com|pinterest\.com|youtube\.com|x\.com|twitter\.com|gummysearch\.com|painonsocial\.com|ideabrowser\.com|explodingtopics\.com|redditinsights\.\w+)$/;
 
 // Listicles, comparisons and vendor buying guides re-package problems instead of reporting them.
 const LISTICLE =
-  /\b\d+\s+(best|top|common|biggest|ways|tips|tools|apps|alternatives|mistakes|reasons|challenges|problems|pain\s*points|examples)\b|ultimate guide|complete guide|how to choose|buyer'?s guide|\bvs\.?\s|pricing|found on reddit|\breddit\b/i;
+  /\b\d+\s+(best|top|common|biggest|ways|tips|tools|apps|alternatives|mistakes|reasons|challenges|problems|pain\s*points|examples)\b|ultimate guide|complete guide|how to choose|buyer'?s guide|\bvs\.?\s|pricing|found on reddit/i;
 
 export function kindOf(site: string, url: string): SourceKind {
   if (site === "news.ycombinator.com") return "hn";
@@ -20,7 +21,7 @@ export function kindOf(site: string, url: string): SourceKind {
   if (/(^|\.)(stackexchange\.com|stackoverflow\.com|superuser\.com|serverfault\.com|askubuntu\.com|quora\.com)$/.test(site)) return "qa";
   if (/(^|\.)(g2\.com|capterra\.com|getapp\.com|trustpilot\.com|softwareadvice\.com)$/.test(site)) return "review";
   if (site === "github.com") return /\/(issues|discussions)\//.test(url) ? "issue" : "blog";
-  if (/(^|\.)(indiehackers\.com|producthunt\.com|lobste\.rs|dev\.to)$/.test(site) || /^(community|forum|forums|discuss|discourse)\./.test(site))
+  if (/(^|\.)(reddit\.com|indiehackers\.com|producthunt\.com|lobste\.rs|dev\.to)$/.test(site) || /^(community|forum|forums|discuss|discourse)\./.test(site))
     return "forum";
   if (
     /(^|\.)(techcrunch\.com|theverge\.com|nytimes\.com|wsj\.com|bbc\.co\.uk|bbc\.com|cnbc\.com|reuters\.com|bloomberg\.com|theguardian\.com|forbes\.com|businessinsider\.com|axios\.com|wired\.com|arstechnica\.com)$/.test(
@@ -83,7 +84,7 @@ export function filterSources(sources: Omit<ResearchSource, "id">[], windowDays:
 }
 
 // No single service may crowd out the rest (App Store reviews can flood a business topic).
-const ORIGIN_CAP: Partial<Record<ResearchSource["origin"], number>> = { appstore: 8, hn: 10, stackexchange: 8, github: 8 };
+const ORIGIN_CAP: Partial<Record<ResearchSource["origin"], number>> = { reddit: 14, appstore: 8, hn: 10, stackexchange: 8, github: 8 };
 
 /** Picks the best sources while keeping every service represented (round-robin by origin). */
 export function pickDiverse(sources: ResearchSource[], max: number): ResearchSource[] {

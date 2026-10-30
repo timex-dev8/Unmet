@@ -24,6 +24,8 @@ type Config = {
   exaType: "lite" | "auto";
   openAngles: number;
   communityAngles: number;
+  /** Exa searches restricted to reddit.com. */
+  reddit: number;
   fullText: boolean;
   stack: boolean;
   apps: boolean;
@@ -36,13 +38,14 @@ type Config = {
 };
 
 const DEPTH: Record<Depth, Config> = {
-  low: { exaType: "lite", openAngles: 2, communityAngles: 0, fullText: false, stack: false, apps: false, github: false, maxSources: 24, batchSize: 12, minSources: 2, minSites: 1, high: false },
-  medium: { exaType: "auto", openAngles: 2, communityAngles: 2, fullText: true, stack: true, apps: true, github: false, maxSources: 45, batchSize: 10, minSources: 3, minSites: 2, high: false },
-  high: { exaType: "auto", openAngles: 4, communityAngles: 2, fullText: true, stack: true, apps: true, github: true, maxSources: 70, batchSize: 10, minSources: 3, minSites: 2, high: true },
+  low: { exaType: "lite", openAngles: 2, communityAngles: 0, reddit: 1, fullText: false, stack: false, apps: false, github: false, maxSources: 24, batchSize: 12, minSources: 2, minSites: 1, high: false },
+  medium: { exaType: "auto", openAngles: 2, communityAngles: 2, reddit: 2, fullText: true, stack: true, apps: true, github: false, maxSources: 45, batchSize: 10, minSources: 3, minSites: 2, high: false },
+  high: { exaType: "auto", openAngles: 4, communityAngles: 2, reddit: 3, fullText: true, stack: true, apps: true, github: true, maxSources: 70, batchSize: 10, minSources: 3, minSites: 2, high: true },
 };
 
 const NAMES: Record<ResearchSource["origin"], string> = {
   web: "the web",
+  reddit: "Reddit",
   hn: "Hacker News",
   stackexchange: "Stack Exchange",
   appstore: "App Store reviews",
@@ -80,6 +83,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   const community = cfg.communityAngles
     ? [plan.communityQuery, ...plan.angles.filter((a) => a.type === "review" || a.type === "wish").map((a) => a.query)].slice(0, cfg.communityAngles)
     : [];
+  const reddit = [...new Set([plan.communityQuery, ...plan.angles.map((a) => a.query)])].filter(Boolean).slice(0, cfg.reddit);
   const useApps = cfg.apps && plan.segment !== "developer" && plan.appTerms.length > 0;
   const useStack = cfg.stack && plan.stackSites.length > 0 && plan.stackQuery.length > 0;
   const useGithub = cfg.github && plan.segment !== "consumer" && plan.githubPhrase.length > 0;
@@ -93,6 +97,16 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
         type: "auto",
         fullText: cfg.fullText,
         includeDomains: COMMUNITY_DOMAINS,
+      }),
+    })),
+    ...reddit.map((q) => ({
+      name: NAMES.reddit,
+      run: searchWeb(q, `First-hand Reddit posts and comments where ${plan.audience} describe their own problems, frustrations and workarounds.`, {
+        since: sinceIso,
+        type: "auto",
+        fullText: cfg.fullText,
+        includeDomains: ["reddit.com"],
+        origin: "reddit",
       }),
     })),
     // Hacker News rarely discusses consumer topics (pets, salons…), so it only joins those in High.

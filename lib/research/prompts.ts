@@ -25,7 +25,7 @@ For "search", plan like an experienced user researcher:
 - githubPhrase: a 2–4 word exact phrase for GitHub issues, only for developer topics.
 - trustmrrCategory: the closest category from the allowed list, or empty.
 
-Never use search operators (site:, OR, quotes, minus signs). Never mention Reddit.
+Never use search operators (site:, OR, quotes, minus signs). The communityQuery is also used to search Reddit, so phrase it the way people there would describe the problem.
 
 Example. Request: "I want to solve problems for barbershops"
 angles: pain "barbers losing income from last-minute cancellations and no-shows"; wish "app for barbers to collect deposits without awkwardness"; switching "barbers leaving booking apps because of fees"; review "barber booking app one star review problems"
