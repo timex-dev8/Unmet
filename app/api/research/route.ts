@@ -2,6 +2,7 @@ import { z } from "zod/v4";
 import { exaConfigured } from "@/lib/exa";
 import { LlmError, llmConfigured } from "@/lib/llm";
 import { runResearch } from "@/lib/research";
+import { recordHit, usage, visitorId } from "@/lib/research/store";
 import type { ResearchEvent } from "@/lib/research-types";
 
 // High mode runs several AI steps and searches; Vercel Hobby with Fluid compute allows up to 300s.
@@ -23,26 +24,18 @@ const Body = z.object({
 // High mode costs about three normal researches, so it counts as three.
 const COST = { low: 1, medium: 1, high: 3 } as const;
 
-// Simple in-memory limits to protect the free tiers (per server instance; good enough for the demo).
+// Limits that protect the free tiers: 6 per visitor per hour, RESEARCH_DAILY_CAP for everyone per day.
+// Counted in Supabase, so they hold across server restarts (lib/research/store.ts).
 const PER_HOUR = 6;
-const hits = new Map<string, number[]>();
-let day = new Date().toDateString();
-let todayCount = 0;
 
-function limited(ip: string, cost: number) {
-  const today = new Date().toDateString();
-  if (today !== day) {
-    day = today;
-    todayCount = 0;
-  }
+async function limited(ip: string, cost: number) {
+  const visitor = visitorId(ip);
+  const used = await usage(visitor);
   const cap = Number(process.env.RESEARCH_DAILY_CAP ?? 50);
-  if (todayCount + cost > cap) return "Unmet has reached today's research limit. Try again tomorrow.";
-  const now = Date.now();
-  const recent = (hits.get(ip) ?? []).filter((t) => now - t < 3600_000);
-  if (recent.length + cost > PER_HOUR)
+  if (used.today + cost > cap) return "Unmet has reached today's research limit. Try again tomorrow.";
+  if (used.hour + cost > PER_HOUR)
     return cost > 1 ? "Not enough research left this hour for High. Try Medium, or wait a bit." : "You've used this hour's research. Try again a bit later.";
-  hits.set(ip, [...recent, ...Array(cost).fill(now)]);
-  todayCount += cost;
+  await recordHit(visitor, cost);
   return null;
 }
 
@@ -55,7 +48,7 @@ export async function POST(request: Request) {
   if (!parsed.success) return Response.json({ error: "Please type a question between 2 and 500 characters." }, { status: 400 });
 
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
-  const blocked = limited(ip, COST[parsed.data.depth]);
+  const blocked = await limited(ip, COST[parsed.data.depth]);
   if (blocked) return Response.json({ error: blocked }, { status: 429 });
 
   const encoder = new TextEncoder();

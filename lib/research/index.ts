@@ -9,6 +9,7 @@ import { extractComplaints } from "./extract";
 import { critique, groupComplaints } from "./group";
 import { makePlan } from "./plan";
 import { filterSources, pickDiverse } from "./quality";
+import { getCached, saveIdeas, setCached } from "./store";
 import { COMMUNITY_DOMAINS } from "./sources/sites";
 import { searchAppReviews } from "./sources/appstore";
 import { searchGithubIssues } from "./sources/github";
@@ -52,17 +53,14 @@ const NAMES: Record<ResearchSource["origin"], string> = {
   github: "GitHub issues",
 };
 
-// In-memory cache per server instance (Supabase later).
-const cache = new Map<string, { at: number; value: Extract<ResearchEvent, { type: "result" }> }>();
-const CACHE_MS = 6 * 3600 * 1000;
-
 export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent) => void) {
   const cfg = DEPTH[req.depth];
   const isFirst = req.history.length === 0;
   const key = `${req.depth}:${req.message.toLowerCase().replace(/\s+/g, " ").trim()}`;
-  const hit = isFirst ? cache.get(key) : undefined;
-  if (hit && Date.now() - hit.at < CACHE_MS) {
-    emit({ ...hit.value, cached: true });
+  // Same first question at the same depth in the last 6 hours: answer from the cache (lib/research/store.ts).
+  const hit = isFirst ? await getCached(key) : null;
+  if (hit) {
+    emit({ ...hit, cached: true });
     return;
   }
 
@@ -234,7 +232,8 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   ].filter(Boolean);
 
   const result = { type: "result" as const, answer: notes.join(" "), cards, sourceCount: sources.length, mix: mixLine(sources, now) };
-  if (isFirst && cards.length) cache.set(key, { at: Date.now(), value: result });
+  // Save before answering so a share link works the moment the cards appear.
+  await Promise.all([isFirst && cards.length ? setCached(key, result) : null, saveIdeas(cards)]);
   console.log(`[research] ${req.depth} "${plan.topic}": ${raw.length} found, ${sources.length} kept, ${extracted.complaints.length} complaints, ${cards.length} cards`);
   emit(result);
 }

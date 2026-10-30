@@ -112,3 +112,38 @@ create policy "public read linked items" on raw_items for select
     select 1 from card_sources cs join cards c on c.id = cs.card_id
     where cs.raw_item_id = raw_items.id and c.published
   ));
+
+-- ---------------------------------------------------------------------------
+-- Stage 2, step 1: research that survives server restarts (no login needed).
+-- The server writes with the service-role key (bypasses RLS); browsers can only read shared ideas.
+
+-- Finished research results, so the same first question is instant and free (6 hours).
+create table if not exists research_cache (
+  key text primary key,               -- depth + normalized question
+  result jsonb not null,
+  created_at timestamptz not null default now()
+);
+
+-- One row per research run, for the hourly per-visitor limit and the daily cap.
+create table if not exists research_hits (
+  id bigint generated always as identity primary key,
+  visitor text not null,              -- SHA-256 of the IP, never the IP itself
+  cost int not null,
+  at timestamptz not null default now()
+);
+create index if not exists research_hits_visitor_idx on research_hits (visitor, at desc);
+create index if not exists research_hits_at_idx on research_hits (at desc);
+
+-- Ideas found by research, so their share links work for anyone.
+create table if not exists ideas (
+  slug text primary key,
+  card jsonb not null,
+  created_at timestamptz not null default now()
+);
+
+alter table research_cache enable row level security;
+alter table research_hits enable row level security;
+alter table ideas enable row level security;
+
+drop policy if exists "public read ideas" on ideas;
+create policy "public read ideas" on ideas for select using (true);
