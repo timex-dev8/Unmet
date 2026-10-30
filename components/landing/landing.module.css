@@ -54,6 +54,7 @@
   min-height: 44px;
 }
 .links {
+  position: relative;
   display: none;
   gap: 4px;
   font-size: 15px;
@@ -61,13 +62,14 @@
 }
 .links a {
   position: relative;
-  isolation: isolate;
   display: inline-flex;
   align-items: center;
   height: 40px;
   padding: 0 16px;
   border-radius: 12px;
-  transition: opacity var(--t-fast) var(--ease);
+  transition:
+    opacity var(--t-fast) var(--ease),
+    color var(--t-med) var(--ease);
 }
 .links a:hover {
   opacity: 0.75;
@@ -75,20 +77,34 @@
 .links .linkOn:hover {
   opacity: 1;
 }
-/* The glass bubble behind the current section's link; it glides between links */
+/* The glass bubble behind the current section's link: tinted glass (never white), measured
+   from the link so it wraps the text exactly, and gliding to the next link */
 .bubble {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.12));
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 40px;
+  border-radius: 12px;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(20, 50, 170, 0.22), rgba(20, 50, 170, 0.12));
   box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.85),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.35),
-    0 4px 12px -4px rgba(20, 50, 140, 0.35);
+    inset 0 1px 1px rgba(255, 255, 255, 0.55),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.22),
+    0 4px 12px -6px rgba(20, 50, 140, 0.4);
+  transition:
+    transform 0.45s var(--ease),
+    width 0.45s var(--ease),
+    opacity var(--t-med) var(--ease);
 }
 .navLight .bubble {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(240, 243, 250, 0.8));
+  background: linear-gradient(180deg, rgba(45, 92, 242, 0.14), rgba(28, 56, 234, 0.07));
   box-shadow:
-    inset 0 1px 1px #fff,
-    inset 0 0 0 1px rgba(25, 25, 29, 0.08),
-    0 4px 12px -4px rgba(40, 60, 140, 0.3);
+    inset 0 1px 1px rgba(255, 255, 255, 0.9),
+    inset 0 0 0 1px rgba(28, 56, 234, 0.12),
+    0 4px 12px -6px rgba(28, 56, 234, 0.3);
+}
+.navLight .linkOn {
+  color: var(--primary);
 }
 .navRight {
   display: flex;
@@ -182,7 +198,7 @@
   opacity: 0.7;
 }
 .sheetOn {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.12));
+  background: linear-gradient(180deg, rgba(20, 50, 170, 0.3), rgba(20, 50, 170, 0.16));
   box-shadow:
     inset 0 1px 1px rgba(255, 255, 255, 0.85),
     inset 0 0 0 1px rgba(255, 255, 255, 0.35);

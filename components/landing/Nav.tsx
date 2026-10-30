@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronRight, Menu, X } from "lucide-react";
 import Logo from "@/components/Logo";
-import Highlight from "@/components/motion/Highlight";
 import LiquidGlass from "@/components/motion/LiquidGlass";
 import s from "./landing.module.css";
 
@@ -20,6 +19,8 @@ export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [current, setCurrent] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const links = useRef<HTMLDivElement>(null);
+  const [bubble, setBubble] = useState<{ x: number; w: number } | null>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -42,6 +43,18 @@ export default function Nav() {
     return () => io.disconnect();
   }, []);
 
+  // The bubble is measured from the current link itself, so it always wraps the text exactly
+  // (a shared-layout animation drifts inside the fixed bar while the page scrolls).
+  useLayoutEffect(() => {
+    const measure = () => {
+      const a = current ? links.current?.querySelector<HTMLElement>(`a[href="#${current}"]`) : null;
+      setBubble(a ? { x: a.offsetLeft, w: a.offsetWidth } : null);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [current]);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
@@ -59,10 +72,14 @@ export default function Nav() {
             <Logo tone={light ? "dark" : "light"} size={24} />
           </Link>
 
-          <div className={s.links}>
+          <div ref={links} className={s.links}>
+            <span
+              className={s.bubble}
+              style={{ opacity: bubble ? 1 : 0, width: bubble?.w ?? 0, transform: `translateX(${bubble?.x ?? 0}px)` }}
+              aria-hidden="true"
+            />
             {sections.map((l) => (
               <a key={l.id} href={`#${l.id}`} className={current === l.id ? s.linkOn : ""} aria-current={current === l.id ? "location" : undefined}>
-                {current === l.id && <Highlight id="landing-nav" className={s.bubble} />}
                 {l.label}
               </a>
             ))}
