@@ -1,4 +1,6 @@
+import { after } from "next/server";
 import { z } from "zod/v4";
+import { addToFeed } from "@/lib/feed";
 import { exaConfigured } from "@/lib/exa";
 import { LlmError, llmConfigured } from "@/lib/llm";
 import { runResearch } from "@/lib/research";
@@ -54,9 +56,17 @@ export async function POST(request: Request) {
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
-      const emit = (e: ResearchEvent) => controller.enqueue(encoder.encode(JSON.stringify(e) + "\n"));
+      const found: ResearchEvent[] = [];
+      const emit = (e: ResearchEvent) => {
+        if (e.type === "result" && !e.cached) found.push(e);
+        controller.enqueue(encoder.encode(JSON.stringify(e) + "\n"));
+      };
       try {
         await runResearch(parsed.data, emit);
+        // Problems strong enough for everyone's feed are added after the answer is sent
+        // (cards hold only public sources, never who asked).
+        const cards = found.flatMap((e) => (e.type === "result" ? e.cards : []));
+        if (cards.length) after(() => addToFeed(cards, parsed.data.message.slice(0, 80)).catch(() => 0));
       } catch (err) {
         const message =
           err instanceof LlmError || err instanceof Error ? err.message : "Something went wrong. Please try again.";

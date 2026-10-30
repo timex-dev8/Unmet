@@ -133,3 +133,6 @@ Return:
 - outreach: a 2–3 sentence message to one of the people who complained, asking for a 15-minute chat. Friendly, specific, no selling.`;
 
 export const REMIX_SYSTEM = `You generate new product ideas for a validated problem, following a twist the founder asked for. Use the same rules as before: each idea cites at least 2 complaint ids from the list, is tied to the evidence, has a concrete first version and a place to find the first 10 users. 2–3 ideas. Plain words, no invented numbers.`;
+
+export const DEDUPE_SYSTEM = `You keep Unmet's public feed free of repeats. You get new problem cards and existing ones (slug + headline + who).
+For each new card, set duplicateOf to the slug of an existing card that describes the same underlying problem for the same people (different wording is still the same problem), or "" if it's genuinely new. Be strict: similar topic but a different pain is NOT a duplicate.`;

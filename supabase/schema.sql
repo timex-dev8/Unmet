@@ -171,3 +171,33 @@ drop policy if exists "own rows: update" on user_data;
 create policy "own rows: update" on user_data for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
 drop policy if exists "own rows: delete" on user_data;
 create policy "own rows: delete" on user_data for delete to authenticated using (user_id = auth.uid());
+
+-- ---------------------------------------------------------------------------
+-- Stage 3: the live feed. A daily job researches niches; only problems that pass the
+-- feed bar (lib/feed/bar.ts) land here. Duplicates are merged, stale cards drop out.
+
+create table if not exists feed_cards (
+  slug text primary key,
+  card jsonb not null,
+  topic text not null,
+  category text not null,
+  score int not null default 0,          -- demand, for ordering
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()  -- bumped when new evidence is merged in
+);
+create index if not exists feed_cards_rank_idx on feed_cards (score desc, updated_at desc);
+create index if not exists feed_cards_category_idx on feed_cards (category);
+
+-- Which niches the daily job researches, and when each last ran.
+create table if not exists feed_topics (
+  topic text primary key,
+  origin text not null default 'seed' check (origin in ('seed', 'user')),
+  last_run timestamptz,
+  cards_found int not null default 0
+);
+
+alter table feed_cards enable row level security;
+alter table feed_topics enable row level security;
+
+drop policy if exists "public read feed" on feed_cards;
+create policy "public read feed" on feed_cards for select using (true);
