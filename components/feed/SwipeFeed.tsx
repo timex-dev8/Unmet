@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import {
   AnimatePresence,
@@ -12,7 +12,8 @@ import {
 } from "motion/react";
 import { Bookmark, ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
 import IdeaCard from "@/components/card/IdeaCard";
-import { markSkipped } from "@/lib/interests";
+import { markSkipped, useInterests } from "@/lib/interests";
+import { profileKeywords, textMatch } from "@/lib/rank";
 import { useSaved } from "@/lib/saved";
 import type { Card } from "@/lib/types";
 import s from "./feed.module.css";
@@ -24,7 +25,13 @@ const SWIPE_DISTANCE = 100;
 const SWIPE_VELOCITY = 600;
 const HINT_KEY = "unmet:hint-seen";
 
-export default function SwipeFeed({ cards }: { cards: Card[] }) {
+export default function SwipeFeed({ cards: input }: { cards: Card[] }) {
+  // Problems matching what this person told Unmet (and the niches they watch) come first.
+  const { interests } = useInterests();
+  const cards = useMemo(() => {
+    const keywords = profileKeywords(interests);
+    return keywords.length ? [...input].sort((a, b) => textMatch(b, keywords) - textMatch(a, keywords)) : input;
+  }, [input, interests]);
   const [index, setIndex] = useState(0);
   const [dir, setDir] = useState<Dir>(1);
   const [toast, setToast] = useState("");

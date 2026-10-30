@@ -25,7 +25,10 @@ export async function searchDiscourse(query: string, sinceIso: string): Promise<
   const results = await Promise.allSettled(
     DISCOURSE_FORUMS.map(async (host) => {
       const params = new URLSearchParams({ q: `${query} after:${after}` });
-      const res = await fetch(`https://${host}/search.json?${params}`, { signal: AbortSignal.timeout(7000), headers: { Accept: "application/json" } });
+      const res = await fetch(`https://${host}/search.json?${params}`, {
+        signal: AbortSignal.timeout(7000),
+        headers: { Accept: "application/json" },
+      });
       if (!res.ok) return [];
       const { posts = [], topics = [] } = (await res.json()) as { posts?: Post[]; topics?: Topic[] };
       const byId = new Map(topics.map((t) => [t.id, t]));

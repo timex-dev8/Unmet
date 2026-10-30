@@ -13,10 +13,5 @@ export function passesFeedBar(card: Card, now = Date.now()) {
   const sites = new Set(card.sources.map((s) => s.site));
   const firstHand = card.sources.filter((s) => s.kind && FIRST_HAND.includes(s.kind)).length;
   const newest = Math.max(0, ...card.sources.map((s) => (s.postedAt ? Date.parse(s.postedAt) : 0)));
-  return (
-    card.sources.length >= MIN_SOURCES &&
-    sites.size >= MIN_SITES &&
-    firstHand >= MIN_FIRST_HAND &&
-    now - newest < MAX_AGE_DAYS * 86400_000
-  );
+  return card.sources.length >= MIN_SOURCES && sites.size >= MIN_SITES && firstHand >= MIN_FIRST_HAND && now - newest < MAX_AGE_DAYS * 86400_000;
 }

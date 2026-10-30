@@ -86,6 +86,12 @@ function friendly(message: string) {
   return message;
 }
 
+/** The signed-in person's access token, for our own API routes that act on their behalf. */
+export async function accessToken() {
+  const { data } = await supabase().auth.getSession();
+  return data.session?.access_token ?? null;
+}
+
 export async function signOut() {
   await supabase().auth.signOut();
 }

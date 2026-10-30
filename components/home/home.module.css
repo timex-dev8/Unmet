@@ -313,3 +313,98 @@
     transform: none;
   }
 }
+
+/* Plain-language interests ("I'm a nurse") and watched niches */
+.profileForm {
+  width: 100%;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.profileInput {
+  flex: 1 1 260px;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--gray);
+  font: inherit;
+  font-size: 16px;
+  color: var(--ink);
+  outline: 0;
+  transition: box-shadow var(--t-fast) var(--ease);
+}
+.profileInput:focus {
+  box-shadow: 0 0 0 3px var(--tint);
+}
+.formError {
+  margin: 0;
+  font-size: 14px;
+  color: var(--early-ink);
+}
+.orPick {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.nichesTitle {
+  margin-bottom: 14px;
+}
+.niches {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.niche {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 4px 4px 16px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+}
+.nicheName {
+  font-size: 15px;
+  font-weight: 500;
+}
+.nicheName:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.watch {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--gray);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition:
+    background var(--t-fast) var(--ease),
+    color var(--t-fast) var(--ease);
+}
+.watchOn {
+  background: var(--ink);
+  color: var(--white);
+}
+.nicheNote {
+  width: 100%;
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}

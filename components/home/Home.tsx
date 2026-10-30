@@ -3,18 +3,19 @@
 import { useState, type CSSProperties, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowUp, Check, Sparkles } from "lucide-react";
+import { ArrowUp, Sparkles } from "lucide-react";
 import SaveButton from "@/components/card/SaveButton";
 import DepthPicker from "@/components/research/DepthPicker";
 import { entryFor, useBoard } from "@/lib/board";
 import { useInterests } from "@/lib/interests";
 import { digDeeperHref } from "@/lib/links";
-import { forYou, rising } from "@/lib/rank";
+import { forYou, profileKeywords, rising } from "@/lib/rank";
 import { useThreads } from "@/lib/research-store";
 import type { Depth } from "@/lib/research-types";
 import { useSaved } from "@/lib/saved";
 import type { Startup } from "@/lib/trustmrr";
-import { CATEGORIES, type Card } from "@/lib/types";
+import type { Card } from "@/lib/types";
+import { InterestsEditor, Niches } from "./Interests";
 import s from "./home.module.css";
 
 export default function Home({ cards, startups = [] }: { cards: Card[]; startups?: Startup[] }) {
@@ -24,10 +25,10 @@ export default function Home({ cards, startups = [] }: { cards: Card[]; startups
   const [editing, setEditing] = useState(false);
   const { saved } = useSaved();
   const board = useBoard();
-  const { interests, toggle, finishOnboarding } = useInterests();
+  const { interests } = useInterests();
   const threads = useThreads();
 
-  const picks = forYou(cards, { picked: interests.picked, skipped: interests.skipped, saved });
+  const picks = forYou(cards, { picked: interests.picked, skipped: interests.skipped, saved, keywords: profileKeywords(interests) });
   const top = rising(cards, 1)[0];
   const lastThread = threads[0];
   const lastIdeas = lastThread ? lastThread.messages.flatMap((m) => m.cards ?? []).length : 0;
@@ -66,33 +67,17 @@ export default function Home({ cards, startups = [] }: { cards: Card[]; startups
         </form>
       </section>
 
-      {showInterests && (
-        <section className={`${s.interests} rise`} style={stagger(2)} aria-labelledby="interests-title">
-          <h2 id="interests-title" className={s.h2}>
-            {interests.onboarded ? "Your interests" : "What do you care about?"}
-          </h2>
-          <div className={s.chips}>
-            {CATEGORIES.map((c) => {
-              const on = interests.picked.includes(c);
-              return (
-                <button key={c} type="button" className={s.chip} aria-pressed={on} onClick={() => toggle(c)}>
-                  {c}
-                  {on && <Check size={14} strokeWidth={2.8} className={s.check} aria-hidden="true" />}
-                </button>
-              );
-            })}
-          </div>
-          <button
-            type="button"
-            className="pill pill-dark"
-            onClick={() => {
-              finishOnboarding();
-              setEditing(false);
-            }}
-          >
-            Done
-          </button>
-        </section>
+      {showInterests ? (
+        <InterestsEditor onDone={() => setEditing(false)} style={stagger(2)} />
+      ) : (
+        interests.profile && (
+          <section className="rise" style={stagger(2)} aria-labelledby="niches-title">
+            <h2 id="niches-title" className={`${s.h2} ${s.nichesTitle}`}>
+              Your niches
+            </h2>
+            <Niches />
+          </section>
+        )
       )}
 
       <section aria-labelledby="for-you">

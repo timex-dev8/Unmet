@@ -136,3 +136,10 @@ export const REMIX_SYSTEM = `You generate new product ideas for a validated prob
 
 export const DEDUPE_SYSTEM = `You keep Unmet's public feed free of repeats. You get new problem cards and existing ones (slug + headline + who).
 For each new card, set duplicateOf to the slug of an existing card that describes the same underlying problem for the same people (different wording is still the same problem), or "" if it's genuinely new. Be strict: similar topic but a different pain is NOT a duplicate.`;
+
+export const PROFILE_SYSTEM = `Someone told Unmet, in their own words, what they know well or who they want to build for. Turn it into a profile Unmet uses to find problems for them.
+- audiences: 2–4 specific groups of people they could serve ("night-shift hospital nurses", "home health aides").
+- keywords: 6–12 words or short phrases those people use when they complain online (their jargon, tools, tasks).
+- niches: 3 niches to research, each phrased as a group of people (2–5 words), specific enough to have shared problems.
+- category: the closest from the list.
+Stay close to what they said; don't drift into unrelated markets.`;
