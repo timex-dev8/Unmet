@@ -5,6 +5,7 @@ import { generateJson } from "@/lib/llm";
 import type { Card, Idea, IdeaLens } from "@/lib/types";
 import type { Complaint } from "./extract";
 import { IDEAS_SYSTEM } from "./prompts";
+import { productName } from "./competitors";
 import { kindOf } from "./quality";
 
 // The idea engine: turns a validated problem into product ideas through fixed lenses
@@ -96,7 +97,7 @@ export async function checkBuilt({ idea, query }: Drafted) {
   const pages = await searchProducts(query || idea.pitch, since).catch(() => []);
   const hit = pages.find((p) => kindOf(p.site, p.url) === "blog" && isProductPage(p.url));
   if (!hit) return;
-  idea.similar = { name: hit.title.split(/\s[|–—-]\s|:\s/)[0].slice(0, 40) || hit.site, url: hit.url, note: hit.text.slice(0, 120) || undefined };
+  idea.similar = { name: productName(hit.title, hit.site), url: hit.url, note: hit.text.slice(0, 120) || undefined };
   idea.score = Math.max(10, idea.score - 10);
 }
 

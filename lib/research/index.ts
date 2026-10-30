@@ -13,6 +13,8 @@ import { filterSources, pickDiverse } from "./quality";
 import { getCached, saveIdeas, setCached } from "./store";
 import { COMMUNITY_DOMAINS } from "./sources/sites";
 import { searchAppReviews } from "./sources/appstore";
+import { searchBluesky } from "./sources/bluesky";
+import { searchDiscourse } from "./sources/discourse";
 import { searchGithubIssues } from "./sources/github";
 import { searchStackExchange } from "./sources/stackexchange";
 
@@ -52,6 +54,8 @@ const NAMES: Record<ResearchSource["origin"], string> = {
   stackexchange: "Stack Exchange",
   appstore: "App Store reviews",
   github: "GitHub issues",
+  bluesky: "Bluesky",
+  discourse: "community forums",
 };
 
 export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent) => void) {
@@ -85,6 +89,8 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   const reddit = [...new Set([plan.communityQuery, ...plan.angles.map((a) => a.query)])].filter(Boolean).slice(0, cfg.reddit);
   const useApps = cfg.apps && plan.segment !== "developer" && plan.appTerms.length > 0;
   const useStack = cfg.stack && plan.stackSites.length > 0 && plan.stackQuery.length > 0;
+  // Discourse forums are about products and tools, so they fit business and developer topics.
+  const useDiscourse = cfg.stack && plan.segment !== "consumer";
   const useGithub = cfg.github && plan.segment !== "consumer" && plan.githubPhrase.length > 0;
 
   const jobs: { name: string; run: Promise<Omit<ResearchSource, "id">[]> }[] = [
@@ -110,6 +116,9 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     })),
     // Hacker News rarely discusses consumer topics (pets, salons…), so it only joins those in High.
     ...(plan.segment !== "consumer" || cfg.high ? [{ name: NAMES.hn, run: searchHN(plan.hnQuery, since, cfg.high ? 15 : 10) }] : []),
+    // Bluesky on every level: free, fast, real people. It matches keywords, so use short queries.
+    { name: NAMES.bluesky, run: searchBluesky([plan.hnQuery, plan.communityQuery.split(" ").slice(0, 4).join(" ")], sinceIso) },
+    ...(useDiscourse ? [{ name: NAMES.discourse, run: searchDiscourse(plan.hnQuery, sinceIso) }] : []),
     ...(useStack ? [{ name: NAMES.stackexchange, run: searchStackExchange(plan.stackQuery, plan.stackSites, since) }] : []),
     ...(useApps ? [{ name: NAMES.appstore, run: searchAppReviews(plan.appTerms, since) }] : []),
     ...(useGithub ? [{ name: NAMES.github, run: searchGithubIssues(plan.githubPhrase, since) }] : []),

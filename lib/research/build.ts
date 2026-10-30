@@ -54,6 +54,7 @@ export const KIND_LABEL: Record<SourceKind, [string, string]> = {
   review: ["review", "reviews"],
   "app-review": ["App Store review", "App Store reviews"],
   issue: ["GitHub issue", "GitHub issues"],
+  social: ["Bluesky post", "Bluesky posts"],
   hn: ["Hacker News post", "Hacker News posts"],
   news: ["news article", "news articles"],
   blog: ["blog post", "blog posts"],

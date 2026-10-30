@@ -21,7 +21,7 @@ const isProductPage = (url: string) => {
 };
 
 // Use the short brand part of the title; fall back to the domain name when the title reads like a sentence.
-function productName(title: string, site: string) {
+export function productName(title: string, site: string) {
   const parts = title.split(/\s[|–—-]\s|:\s/).map((p) => p.trim()).filter(Boolean);
   const short = parts.find((p) => p.split(/\s+/).length <= 3 && !/^(how|why|what|the)\b/i.test(p));
   if (short) return short.slice(0, 40);

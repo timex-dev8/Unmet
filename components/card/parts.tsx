@@ -17,6 +17,7 @@ const KIND_BADGE: Record<SourceKind, string> = {
   review: "Review",
   "app-review": "App Store review",
   issue: "GitHub issue",
+  social: "Bluesky",
   hn: "Hacker News",
   news: "News",
   blog: "Blog",

@@ -2,7 +2,7 @@ import type { Card, SourceKind } from "@/lib/types";
 
 // The feed's evidence bar, stricter than research: a problem only reaches everyone's feed when
 // several independent people describe it first-hand, on several sites, recently.
-const FIRST_HAND: SourceKind[] = ["forum", "qa", "review", "app-review", "issue"];
+const FIRST_HAND: SourceKind[] = ["forum", "qa", "review", "app-review", "issue", "social"];
 const MIN_SOURCES = 4;
 const MIN_SITES = 3;
 const MIN_FIRST_HAND = 2;

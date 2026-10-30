@@ -39,6 +39,7 @@ const KIND_WEIGHT: Record<SourceKind, number> = {
   review: 1,
   hn: 1,
   "app-review": 0.9,
+  social: 0.85,
   issue: 0.9,
   blog: 0.5,
   news: 0.4,
@@ -64,7 +65,7 @@ export function filterSources(sources: Omit<ResearchSource, "id">[], windowDays:
       rejected.untrusted++;
       continue;
     }
-    if (s.text.length < (kind === "app-review" ? 60 : 120)) {
+    if (s.text.length < (kind === "app-review" || kind === "social" ? 60 : 120)) {
       rejected.thin++;
       continue;
     }
@@ -84,7 +85,7 @@ export function filterSources(sources: Omit<ResearchSource, "id">[], windowDays:
 }
 
 // No single service may crowd out the rest (App Store reviews can flood a business topic).
-const ORIGIN_CAP: Partial<Record<ResearchSource["origin"], number>> = { reddit: 14, appstore: 8, hn: 10, stackexchange: 8, github: 8 };
+const ORIGIN_CAP: Partial<Record<ResearchSource["origin"], number>> = { reddit: 14, appstore: 8, hn: 10, stackexchange: 8, github: 8, bluesky: 10, discourse: 8 };
 
 /** Picks the best sources while keeping every service represented (round-robin by origin). */
 export function pickDiverse(sources: ResearchSource[], max: number): ResearchSource[] {

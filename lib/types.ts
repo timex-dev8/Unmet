@@ -4,7 +4,7 @@ export type Category = (typeof CATEGORIES)[number];
 export type Trend = "rising" | "steady" | "falling";
 
 /** What kind of place a source is; first-hand places (forum, Q&A, review, issue) weigh most. */
-export type SourceKind = "forum" | "qa" | "review" | "app-review" | "issue" | "hn" | "news" | "blog";
+export type SourceKind = "forum" | "qa" | "review" | "app-review" | "issue" | "social" | "hn" | "news" | "blog";
 
 export type Source = {
   title: string;

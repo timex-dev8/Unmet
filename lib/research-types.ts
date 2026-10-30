@@ -9,7 +9,7 @@ export type ResearchSource = {
   site: string;
   postedAt?: string;
   text: string; // page text the AI reads and quotes are checked against
-  origin: "web" | "reddit" | "hn" | "stackexchange" | "appstore" | "github";
+  origin: "web" | "reddit" | "hn" | "stackexchange" | "appstore" | "github" | "bluesky" | "discourse";
   kind?: SourceKind;
   engagement?: { score: number; label: string };
   weight?: number; // quality × freshness, set by the quality filter
