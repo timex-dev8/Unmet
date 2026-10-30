@@ -24,7 +24,7 @@ type Config = {
   exaType: "lite" | "auto";
   openAngles: number;
   communityAngles: number;
-  /** Exa searches restricted to reddit.com. */
+  /** Exa searches restricted to reddit.com. Off (0) for now: Exa returns no Reddit text, so these came back empty. */
   reddit: number;
   fullText: boolean;
   stack: boolean;
@@ -38,9 +38,9 @@ type Config = {
 };
 
 const DEPTH: Record<Depth, Config> = {
-  low: { exaType: "lite", openAngles: 2, communityAngles: 0, reddit: 1, fullText: false, stack: false, apps: false, github: false, maxSources: 24, batchSize: 12, minSources: 2, minSites: 1, high: false },
-  medium: { exaType: "auto", openAngles: 2, communityAngles: 2, reddit: 2, fullText: true, stack: true, apps: true, github: false, maxSources: 45, batchSize: 10, minSources: 3, minSites: 2, high: false },
-  high: { exaType: "auto", openAngles: 4, communityAngles: 2, reddit: 3, fullText: true, stack: true, apps: true, github: true, maxSources: 70, batchSize: 10, minSources: 3, minSites: 2, high: true },
+  low: { exaType: "lite", openAngles: 2, communityAngles: 0, reddit: 0, fullText: false, stack: false, apps: false, github: false, maxSources: 24, batchSize: 12, minSources: 2, minSites: 1, high: false },
+  medium: { exaType: "auto", openAngles: 2, communityAngles: 2, reddit: 0, fullText: true, stack: true, apps: true, github: false, maxSources: 45, batchSize: 10, minSources: 3, minSites: 2, high: false },
+  high: { exaType: "auto", openAngles: 4, communityAngles: 2, reddit: 0, fullText: true, stack: true, apps: true, github: true, maxSources: 70, batchSize: 10, minSources: 3, minSites: 2, high: true },
 };
 
 const NAMES: Record<ResearchSource["origin"], string> = {
