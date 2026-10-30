@@ -165,13 +165,13 @@
   flex: 1;
   min-height: 44px;
   border: 0;
-  border-radius: var(--radius-pill);
+  border-radius: 12px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 500;
   background: var(--gray);
   color: var(--ink);
   cursor: pointer;
@@ -184,12 +184,22 @@
   transform: scale(0.97);
 }
 .actPrimary {
-  background: var(--primary);
+  background: var(--glossy);
+  box-shadow: var(--glossy-shadow);
   color: var(--white);
 }
 .actSaved {
-  background: var(--blue);
-  color: var(--white);
+  background: var(--tint);
+  color: var(--primary);
+}
+/* The small Save on Home cards */
+.actSmall {
+  flex: none;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  gap: 6px;
 }
 .iconBtn {
   flex: none;

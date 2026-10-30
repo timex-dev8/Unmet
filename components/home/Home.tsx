@@ -3,13 +3,12 @@
 import { useState, type CSSProperties, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowUp, Sparkles } from "lucide-react";
+import { ArrowUp } from "lucide-react";
 import SaveButton from "@/components/card/SaveButton";
 import DepthPicker from "@/components/research/DepthPicker";
 import { entryFor, useBoard } from "@/lib/board";
 import { useLowOnly } from "@/lib/auth";
 import { useInterests } from "@/lib/interests";
-import { digDeeperHref } from "@/lib/links";
 import { forYou, profileKeywords, rising } from "@/lib/rank";
 import { useThreads } from "@/lib/research-store";
 import type { Depth } from "@/lib/research-types";
@@ -43,7 +42,7 @@ export default function Home({ cards, startups = [] }: { cards: Card[]; startups
   }
 
   return (
-    <main className={s.home}>
+    <main className={s.home} data-wash>
       <section className={`${s.hero} rise`}>
         <h1 className={s.title}>What do you want to explore?</h1>
         <p className={s.lede}>Name a market or a product. Unmet finds what people complain about and turns it into ideas worth building.</p>
@@ -68,7 +67,7 @@ export default function Home({ cards, startups = [] }: { cards: Card[]; startups
       </section>
 
       <section className="rise" style={stagger(2)} aria-labelledby="niches-title">
-        <h2 id="niches-title" className={`${s.h2} ${s.nichesTitle}`}>
+        <h2 id="niches-title" className={`fade-text ${s.h2} ${s.nichesTitle}`}>
           Your niches
         </h2>
         <Niches />
@@ -76,7 +75,7 @@ export default function Home({ cards, startups = [] }: { cards: Card[]; startups
 
       <section aria-labelledby="for-you">
         <div className={s.sectionHead}>
-          <h2 id="for-you" className={s.h2}>
+          <h2 id="for-you" className={`fade-text ${s.h2}`}>
             For you
           </h2>
         </div>
@@ -89,7 +88,7 @@ export default function Home({ cards, startups = [] }: { cards: Card[]; startups
 
       <section className={s.tiles} aria-label="At a glance">
         {top && (
-          <Link href={`/app/idea/${top.card.slug}`} className={`${s.tile} rise`} style={stagger(4)}>
+          <Link href={`/app/idea/${top.card.slug}`} className={`${s.tile} ${s.tileBlue} rise`} style={stagger(4)}>
             <span className={s.tileLabel}>Rising this week</span>
             <span className={s.tileBig}>+{top.growth}%</span>
             <span className={s.tileText}>{top.card.headline}</span>
@@ -126,8 +125,11 @@ export default function Home({ cards, startups = [] }: { cards: Card[]; startups
 /** Delay for the shared `.rise` entrance (40ms per step, see globals.css). */
 const stagger = (i: number) => ({ "--i": i }) as CSSProperties;
 
+const VERDICT = { strong: "Strong opportunity", maybe: "Worth a closer look", weak: "Weak signal so far" } as const;
+
 function HomeCard({ card, i }: { card: Card; i: number }) {
   const e = card.evidence;
+  const sites = new Set(card.sources.map((x) => x.site)).size || 1;
   return (
     <article className={`${s.card} rise`} style={stagger(i)}>
       <div className={s.cardBody}>
@@ -139,14 +141,14 @@ function HomeCard({ card, i }: { card: Card; i: number }) {
           <Link href={`/app/idea/${card.slug}`}>{card.headline}</Link>
         </h3>
         <p className={s.evidence}>
-          <strong>{e.posts} mentions</strong> · {e.site}
+          {e.threads ? `${e.threads} sources on ${sites} ${sites === 1 ? "site" : "sites"}` : `${e.posts} mentions · ${e.site}`}
+          {card.report ? ` · ${VERDICT[card.report.verdict]}` : ""}
           {card.sample ? " · sample" : ""}
         </p>
         <div className={s.cardActions}>
-          <SaveButton card={card} />
-          <Link href={digDeeperHref(card)} className={s.dig}>
-            <Sparkles size={14} aria-hidden="true" />
-            Dig deeper
+          <SaveButton card={card} small />
+          <Link href={`/app/idea/${card.slug}`} className={s.more}>
+            See ideas →
           </Link>
         </div>
       </div>

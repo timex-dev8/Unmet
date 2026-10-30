@@ -5,13 +5,22 @@ import { useSaved } from "@/lib/saved";
 import type { Card } from "@/lib/types";
 import s from "./card.module.css";
 
-export default function SaveButton({ card, label = "Save" }: { card: Card; label?: string }) {
+export default function SaveButton({ card, label = "Save", small = false }: { card: Card; label?: string; small?: boolean }) {
   const { isSaved, toggle } = useSaved();
   const saved = isSaved(card.slug);
   return (
-    <button type="button" onClick={() => toggle(card)} aria-pressed={saved} className={`${s.act} ${saved ? s.actSaved : s.actPrimary}`}>
+    <button
+      type="button"
+      onClick={() => toggle(card)}
+      aria-pressed={saved}
+      className={`${s.act} ${saved ? s.actSaved : s.actPrimary} ${small ? s.actSmall : ""}`}
+    >
       {/* keyed so the icon and label re-enter (pop / fade) each time the state flips */}
-      {saved ? <BookmarkCheck key="on" size={17} className={s.iconPop} aria-hidden="true" /> : <Bookmark key="off" size={17} aria-hidden="true" />}
+      {saved ? (
+        <BookmarkCheck key="on" size={small ? 15 : 17} className={s.iconPop} aria-hidden="true" />
+      ) : (
+        <Bookmark key="off" size={small ? 15 : 17} aria-hidden="true" />
+      )}
       <span key={saved ? "saved" : "save"} className={s.labelFade}>
         {saved ? "Saved" : label}
       </span>

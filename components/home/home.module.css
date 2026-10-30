@@ -1,4 +1,4 @@
-/* Home (DESIGN.md): one question, a few white cards, one row of tiles. Space, not lines. */
+/* Home (DESIGN.md "v3"): the question on a sky wash, white cards with hairline rings, blue and mist tiles. */
 .home {
   max-width: 1080px;
   margin: 0 auto;
@@ -8,9 +8,10 @@
   gap: 48px;
 }
 .h2 {
+  display: inline-block;
   margin: 0;
-  font-size: 24px;
-  font-weight: 600;
+  font-size: 26px;
+  font-weight: 500;
   letter-spacing: -0.02em;
 }
 .sectionHead {
@@ -43,11 +44,10 @@
 }
 .title {
   margin: 0;
-  max-width: 14ch;
-  font-size: clamp(40px, 6vw, 64px);
-  font-weight: 600;
-  letter-spacing: -0.03em;
+  font-size: clamp(40px, 5.4vw, 60px);
+  letter-spacing: -0.01em;
   line-height: 1;
+  text-wrap: balance;
 }
 .lede {
   margin: 16px 0 32px;
@@ -58,18 +58,24 @@
 }
 .composer {
   position: relative; /* anchors the depth popover on phones */
-  width: min(640px, 100%);
+  width: min(680px, 100%);
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 8px 8px 8px 22px;
   background: var(--surface);
-  border-radius: var(--radius-pill);
-  box-shadow: var(--shadow-float);
+  border-radius: 18px;
+  box-shadow:
+    0 1px 2px rgba(25, 25, 29, 0.05),
+    0 24px 50px -24px rgba(70, 110, 220, 0.45),
+    inset 0 0 0 1px #e6e8f0;
   transition: box-shadow 0.2s ease;
 }
 .composer:focus-within {
-  box-shadow: 0 0 0 4px var(--tint), var(--shadow-float);
+  box-shadow:
+    0 0 0 4px var(--tint),
+    0 24px 50px -24px rgba(70, 110, 220, 0.45),
+    inset 0 0 0 1px #c9d3f5;
 }
 .input {
   flex: 1;
@@ -87,23 +93,26 @@
 }
 .send {
   flex: none;
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border: 0;
-  border-radius: 50%;
-  background: var(--primary);
+  border-radius: 12px;
+  background: var(--glossy);
+  box-shadow: var(--glossy-shadow);
   color: var(--white);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease;
 }
 .send:active {
   transform: scale(0.95);
 }
 .send:disabled {
-  opacity: 0.2;
+  opacity: 0.35;
   cursor: default;
 }
 
@@ -177,12 +186,17 @@
   display: flex;
   flex-direction: column;
   background: var(--surface);
-  border-radius: 24px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 20px;
+  box-shadow: inset 0 0 0 1px #eceef4;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-float);
+  box-shadow:
+    inset 0 0 0 1px #eceef4,
+    0 24px 50px -28px rgba(70, 110, 220, 0.4);
 }
 .cardBody {
   flex: 1;
@@ -192,16 +206,21 @@
   padding: 24px;
 }
 .meta {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--gray);
   font-size: 13px;
   font-weight: 500;
-  color: var(--muted);
+  color: #4b5563;
 }
 .cardTitle {
   margin: 0;
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+  font-family: var(--font-serif);
+  font-size: 25px;
+  font-weight: 500;
+  line-height: 1.08;
+  text-wrap: pretty;
 }
 .cardTitle a:hover {
   text-decoration: underline;
@@ -219,24 +238,25 @@
 }
 .cardActions {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 14px;
+  margin-top: 6px;
 }
-.dig {
-  flex: 1;
-  min-height: 44px;
+.more {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  border-radius: var(--radius-pill);
-  background: var(--gray);
-  color: var(--ink);
-  font-size: 15px;
+  min-height: 36px;
+  padding: 0 4px;
+  font-size: 14px;
   font-weight: 500;
-  white-space: nowrap;
+  color: var(--link);
+}
+.more:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
-/* Tiles: same white surface as the cards, a big number, one line of context */
+/* Tiles: one blue (what's rising), the rest pale mist; a big serif number, one line of context */
 .tiles {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -246,15 +266,24 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  min-height: 148px;
-  padding: 20px;
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.6);
-  transition: background 0.2s ease, transform 0.2s ease;
+  min-height: 150px;
+  padding: 22px;
+  border-radius: 20px;
+  background: var(--mist);
+  box-shadow: inset 0 0 0 1px var(--mist-line);
+  transition: transform 0.2s ease;
 }
 .tile:hover {
-  background: var(--surface);
   transform: translateY(-2px);
+}
+.tileBlue {
+  background: var(--blue-card);
+  box-shadow: none;
+  color: var(--white);
+}
+.tileBlue .tileLabel,
+.tileBlue .tileText {
+  color: rgba(255, 255, 255, 0.88);
 }
 .tileLabel {
   font-size: 13px;
@@ -262,13 +291,14 @@
   color: var(--muted);
 }
 .tileBig {
-  font-size: 28px;
-  font-weight: 600;
-  letter-spacing: -0.03em;
+  font-family: var(--font-serif);
+  font-size: 40px;
+  font-weight: 500;
+  line-height: 1;
 }
 .tileMid {
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.02em;
   line-height: 1.2;
   display: -webkit-box;
@@ -278,7 +308,7 @@
 }
 .tileText {
   margin-top: auto;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.35;
   color: var(--muted);
   display: -webkit-box;
@@ -289,8 +319,14 @@
 
 @media (min-width: 900px) {
   .home {
-    padding: 96px 48px 96px;
-    gap: 80px;
+    padding: 72px 64px 96px;
+    gap: 64px;
+  }
+  .cards {
+    gap: 20px;
+  }
+  .tiles {
+    gap: 20px;
   }
   .cards {
     display: grid;
@@ -367,10 +403,12 @@
 .niche {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 4px 4px 16px;
-  border-radius: var(--radius-pill);
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 5px 0 16px;
+  border-radius: 999px;
   background: var(--surface);
+  box-shadow: inset 0 0 0 1px #e6e8f0;
 }
 .nicheName {
   font-size: 15px;
@@ -381,7 +419,7 @@
   text-underline-offset: 3px;
 }
 .watch {
-  min-height: 36px;
+  min-height: 32px;
   padding: 0 12px;
   border: 0;
   border-radius: var(--radius-pill);
@@ -399,7 +437,7 @@
     color var(--t-fast) var(--ease);
 }
 .watchOn {
-  background: var(--ink);
+  background: var(--primary);
   color: var(--white);
 }
 .nicheNote {
@@ -426,9 +464,9 @@
   justify-content: space-between;
   gap: 16px;
   padding: 20px 24px;
-  border-radius: 24px;
-  background: var(--surface);
-  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--mist);
+  box-shadow: inset 0 0 0 1px var(--mist-line);
 }
 .setup > span:first-child {
   display: flex;
@@ -447,8 +485,9 @@
   flex: none;
   min-height: 40px;
   padding: 0 16px;
-  border-radius: 999px;
-  background: var(--primary);
+  border-radius: 10px;
+  background: var(--glossy);
+  box-shadow: var(--glossy-shadow);
   color: var(--white);
   display: inline-flex;
   align-items: center;
