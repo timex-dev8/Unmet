@@ -297,3 +297,48 @@
     transform: rotate(360deg);
   }
 }
+
+/* Password / Email link switch (the white pill glides, components/motion/Highlight.tsx) */
+.modes {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--gray);
+}
+.mode {
+  position: relative;
+  isolation: isolate;
+  min-height: 38px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color var(--t-med) var(--ease);
+}
+.modeOn {
+  color: var(--ink);
+}
+.modePill {
+  background: var(--white);
+  box-shadow: 0 1px 3px rgba(31, 32, 37, 0.12);
+}
+.links {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: -4px;
+}
+.links .textBtn {
+  font-size: 14px;
+}
+.links .textBtn:only-child {
+  margin: 0 auto;
+}

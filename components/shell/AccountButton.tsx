@@ -1,8 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
-import { CircleUserRound, LoaderCircle, LogOut, Mail, X } from "lucide-react";
-import { sendEmailLink, signInWithGoogle, signOut, useUser } from "@/lib/auth";
+import { Check, CircleUserRound, LoaderCircle, LogOut, Mail, X } from "lucide-react";
+import Highlight from "@/components/motion/Highlight";
+import {
+  sendEmailLink,
+  sendPasswordReset,
+  signInWithGoogle,
+  signInWithPassword,
+  signOut,
+  signUpWithPassword,
+  updatePassword,
+  useUser,
+} from "@/lib/auth";
 import { authConfigured } from "@/lib/supabase/client";
 import { useSyncStatus } from "@/lib/sync";
 import s from "./account.module.css";
@@ -17,6 +27,9 @@ const STATUS_LABEL = { off: "", syncing: "Syncing…", synced: "Synced", error: 
 // Read once, so removing the parameter from the address bar doesn't hide the message.
 let failedAtLoad: boolean | undefined;
 const signinFailed = () => (failedAtLoad ??= new URL(window.location.href).searchParams.get("signin") === "failed");
+// Same for arriving from a "reset your password" email (?reset=1).
+let resetAtLoad: boolean | undefined;
+const resetLink = () => (resetAtLoad ??= new URL(window.location.href).searchParams.get("reset") === "1");
 const noop = () => () => {};
 
 // Sign in / account. `variant="side"` is the sidebar row; "icon" is the phone top bar button.
@@ -25,15 +38,18 @@ export default function AccountButton({ variant }: { variant: "side" | "icon" })
   const status = useSyncStatus();
   const ref = useRef<HTMLDialogElement>(null);
   const failed = useSyncExternalStore(noop, signinFailed, () => false);
+  const reset = useSyncExternalStore(noop, resetLink, () => false);
+  const [resetDone, setResetDone] = useState(false);
 
-  // Coming back from a failed sign-in: reopen the sheet with a note, and tidy the address bar.
+  // Coming back from a failed sign-in or a password-reset email: open the sheet, tidy the address bar.
   useEffect(() => {
-    if (variant !== "side" || !failed) return; // one sheet is enough
+    if (variant !== "side" || !(failed || reset)) return; // one sheet is enough
     const url = new URL(window.location.href);
     url.searchParams.delete("signin");
+    url.searchParams.delete("reset");
     window.history.replaceState(null, "", url);
     ref.current?.showModal();
-  }, [variant, failed]);
+  }, [variant, failed, reset]);
 
   if (!authConfigured) return null;
 
@@ -68,7 +84,15 @@ export default function AccountButton({ variant }: { variant: "side" | "icon" })
         <button type="button" className={s.close} onClick={() => ref.current?.close()} aria-label="Close">
           <X size={18} aria-hidden="true" />
         </button>
-        {user ? (
+        {user && reset && !resetDone && variant === "side" ? (
+          <NewPassword
+            id={`acct-${variant}`}
+            onDone={() => {
+              setResetDone(true);
+              ref.current?.close();
+            }}
+          />
+        ) : user ? (
           <SignedIn id={`acct-${variant}`} email={name} initial={initial} status={STATUS_LABEL[status]} />
         ) : (
           <SignInForm id={`acct-${variant}`} failed={failed} />
@@ -78,68 +102,85 @@ export default function AccountButton({ variant }: { variant: "side" | "icon" })
   );
 }
 
+type Mode = "password" | "link";
+type Sent = { title: string; text: string } | null;
+
 function SignInForm({ id, failed }: { id: string; failed: boolean }) {
+  const [mode, setMode] = useState<Mode>("password");
+  const [creating, setCreating] = useState(false); // password mode: sign in vs create account
   const [email, setEmail] = useState("");
-  const [state, setState] = useState<"idle" | "google" | "sending" | "sent">("idle");
-  const [error, setError] = useState(failed ? "That sign-in link didn't work. Links expire, and must be opened on this device. Try again." : "");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState<"" | "google" | "submit" | "reset">("");
+  const [sent, setSent] = useState<Sent>(null);
+  const [error, setError] = useState(failed ? "That link didn't work. Links expire, and must be opened on this device. Try again." : "");
 
-  async function google() {
+  async function run(kind: "google" | "submit" | "reset", task: () => Promise<void>) {
     setError("");
-    setState("google");
+    setBusy(kind);
     try {
-      await signInWithGoogle(); // leaves the page on success
+      await task();
     } catch (err) {
-      setState("idle");
-      setError(err instanceof Error ? err.message : "Google sign-in isn't available right now.");
+      setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+    } finally {
+      setBusy("");
     }
   }
 
-  async function sendLink(e: FormEvent) {
+  const address = email.trim();
+  const submit = (e: FormEvent) => {
     e.preventDefault();
-    setError("");
-    setState("sending");
-    try {
-      await sendEmailLink(email.trim());
-      setState("sent");
-    } catch (err) {
-      setState("idle");
-      const msg = err instanceof Error ? err.message : "";
-      setError(
-        /rate|security purposes/i.test(msg) ? "Too many emails just now. Wait a minute and try again." : msg || "Couldn't send the link. Try again.",
-      );
-    }
-  }
+    void run("submit", async () => {
+      if (mode === "link") {
+        await sendEmailLink(address);
+        setSent({ title: "Check your inbox", text: `We sent a sign-in link to ${address}. Open it on this device to finish signing in.` });
+      } else if (creating) {
+        const mustConfirm = await signUpWithPassword(address, password);
+        if (mustConfirm)
+          setSent({ title: "Confirm your email", text: `We sent a link to ${address}. Open it on this device, and your account is ready.` });
+      } else {
+        await signInWithPassword(address, password); // the sheet switches to "signed in" by itself
+      }
+    });
+  };
+  const forgot = () => {
+    if (!address) return setError("Type your email above first, then tap “Forgot password?” again.");
+    void run("reset", async () => {
+      await sendPasswordReset(address);
+      setSent({ title: "Check your inbox", text: `We sent a link to ${address}. Open it on this device to choose a new password.` });
+    });
+  };
 
-  if (state === "sent") {
+  if (sent) {
     return (
       <div className={s.body}>
         <span className={s.badge}>
           <Mail size={22} aria-hidden="true" />
         </span>
         <h2 id={id} className={s.title}>
-          Check your inbox
+          {sent.title}
         </h2>
-        <p className={s.sub}>
-          We sent a sign-in link to <strong>{email}</strong>. Open it on this device to finish signing in.
-        </p>
-        <button type="button" className={s.textBtn} onClick={() => setState("idle")}>
-          Use a different email
+        <p className={s.sub}>{sent.text}</p>
+        <button type="button" className={s.textBtn} onClick={() => setSent(null)}>
+          Back
         </button>
       </div>
     );
   }
 
+  const title = mode === "password" && creating ? "Create your account" : "Sign in to Unmet";
+  const action = mode === "link" ? "Email me a link" : creating ? "Create account" : "Sign in";
+
   return (
     <div className={s.body}>
       <h2 id={id} className={s.title}>
-        Sign in to Unmet
+        {title}
       </h2>
-      <p className={s.sub}>Get a sign-in link by email. Your research, board and saved ideas then follow you to every device.</p>
+      <p className={s.sub}>Your research, board and saved ideas follow you to every device.</p>
 
       {GOOGLE_ENABLED && (
         <>
-          <button type="button" className={s.google} onClick={google} disabled={state !== "idle"}>
-            {state === "google" ? <LoaderCircle size={18} className={s.spin} aria-hidden="true" /> : <GoogleLogo />}
+          <button type="button" className={s.google} onClick={() => void run("google", signInWithGoogle)} disabled={!!busy}>
+            {busy === "google" ? <LoaderCircle size={18} className={s.spin} aria-hidden="true" /> : <GoogleLogo />}
             Continue with Google
           </button>
           <div className={s.or}>
@@ -148,7 +189,26 @@ function SignInForm({ id, failed }: { id: string; failed: boolean }) {
         </>
       )}
 
-      <form className={s.form} onSubmit={sendLink}>
+      <div className={s.modes} role="tablist" aria-label="How to sign in">
+        {(["password", "link"] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            role="tab"
+            aria-selected={mode === m}
+            className={`${s.mode} ${mode === m ? s.modeOn : ""}`}
+            onClick={() => {
+              setMode(m);
+              setError("");
+            }}
+          >
+            {mode === m && <Highlight id={`auth-mode-${id}`} className={s.modePill} />}
+            {m === "password" ? "Password" : "Email link"}
+          </button>
+        ))}
+      </div>
+
+      <form className={s.form} onSubmit={submit}>
         <label htmlFor={`${id}-email`} className="sr-only">
           Email
         </label>
@@ -163,18 +223,130 @@ function SignInForm({ id, failed }: { id: string; failed: boolean }) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-        <button type="submit" className="pill pill-dark" disabled={state !== "idle" || !email.trim()}>
-          {state === "sending" && <LoaderCircle size={17} className={s.spin} aria-hidden="true" />}
-          Email me a link
+        {mode === "password" && (
+          <>
+            <label htmlFor={`${id}-password`} className="sr-only">
+              Password
+            </label>
+            <input
+              id={`${id}-password`}
+              type="password"
+              required
+              minLength={creating ? 8 : undefined}
+              autoComplete={creating ? "new-password" : "current-password"}
+              placeholder={creating ? "Password (8+ characters)" : "Password"}
+              className={s.input}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </>
+        )}
+        <button type="submit" className="pill pill-dark" disabled={!!busy || !address || (mode === "password" && !password)}>
+          {busy === "submit" && <LoaderCircle size={17} className={s.spin} aria-hidden="true" />}
+          {action}
         </button>
       </form>
+
+      {mode === "password" && (
+        <div className={s.links}>
+          {!creating && (
+            <button type="button" className={s.textBtn} onClick={forgot} disabled={!!busy}>
+              {busy === "reset" ? "Sending…" : "Forgot password?"}
+            </button>
+          )}
+          <button
+            type="button"
+            className={s.textBtn}
+            onClick={() => {
+              setCreating((c) => !c);
+              setError("");
+            }}
+          >
+            {creating ? "Have an account? Sign in" : "New here? Create an account"}
+          </button>
+        </div>
+      )}
 
       {error && (
         <p className={s.error} role="alert">
           {error}
         </p>
       )}
-      <p className={s.fine}>No password. Without an account, Unmet keeps everything in this browser only.</p>
+      <p className={s.fine}>Without an account, Unmet keeps everything in this browser only.</p>
+    </div>
+  );
+}
+
+/** Opened from the "reset your password" email (lands on /app?reset=1, already signed in). */
+function NewPassword({ id, onDone }: { id: string; onDone: () => void }) {
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [done, setDone] = useState(false);
+
+  if (done) {
+    return (
+      <div className={s.body}>
+        <span className={s.badge}>
+          <Check size={22} aria-hidden="true" />
+        </span>
+        <h2 id={id} className={s.title}>
+          Password updated
+        </h2>
+        <p className={s.sub}>Use it next time you sign in, on any device.</p>
+        <button type="button" className="pill pill-dark" onClick={onDone}>
+          Done
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className={s.body}>
+      <h2 id={id} className={s.title}>
+        Set a new password
+      </h2>
+      <p className={s.sub}>At least 8 characters.</p>
+      <form
+        className={s.form}
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setError("");
+          setBusy(true);
+          try {
+            await updatePassword(password);
+            setDone(true);
+          } catch (err) {
+            setError(err instanceof Error ? err.message : "Couldn't save it. Try again.");
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <label htmlFor={`${id}-new`} className="sr-only">
+          New password
+        </label>
+        <input
+          id={`${id}-new`}
+          type="password"
+          required
+          minLength={8}
+          autoComplete="new-password"
+          placeholder="New password"
+          className={s.input}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <button type="submit" className="pill pill-dark" disabled={busy || password.length < 8}>
+          {busy && <LoaderCircle size={17} className={s.spin} aria-hidden="true" />}
+          Save password
+        </button>
+      </form>
+      {error && (
+        <p className={s.error} role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

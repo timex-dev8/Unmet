@@ -1,0 +1,60 @@
+<!-- Unmet email: sign-in link. Paste into Supabase → Authentication → Emails → Magic Link. Subject: "Your Unmet sign-in link" -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>Your Unmet sign-in link</title>
+  </head>
+  <body style="margin:0;padding:0;background:#eef3fa;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Tap to sign in. No password needed.</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#eef3fa;background-image:linear-gradient(180deg,#dcecfc 0%,#eef3fa 60%);">
+      <tr>
+        <td align="center" style="padding:48px 16px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;">
+            <!-- Logo: stacked idea cards, drawn with table cells (no images, works in every inbox) -->
+            <tr>
+              <td align="center" style="padding-bottom:24px;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td valign="middle" style="padding-right:10px;">
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                        <tr><td style="width:26px;height:15px;background:#073a8b;border-radius:5px;font-size:0;line-height:0;">&nbsp;</td></tr>
+                        <tr><td style="height:2px;font-size:0;line-height:0;">&nbsp;</td></tr>
+                        <tr><td style="width:22px;height:6px;background:#83caec;border-radius:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
+                      </table>
+                    </td>
+                    <td valign="middle" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:22px;font-weight:600;letter-spacing:-0.4px;color:#1f2025;">Unmet</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <!-- Card -->
+            <tr>
+              <td style="background:#ffffff;border-radius:28px;padding:44px 36px 36px;box-shadow:0 18px 48px -20px rgba(31,32,37,0.25);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+                <h1 style="margin:0 0 12px;font-size:28px;line-height:1.15;font-weight:600;letter-spacing:-0.6px;color:#1f2025;text-align:center;">Sign in to Unmet</h1>
+                <p style="margin:0 0 28px;font-size:16px;line-height:1.5;color:#5f6168;text-align:center;">Tap the button to sign in. No password needed.</p>
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center">
+                  <tr>
+                    <td align="center" style="border-radius:999px;background:#1f2025;">
+                      <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:15px 34px;font-size:16px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:999px;">Sign in to Unmet</a>
+                    </td>
+                  </tr>
+                </table>
+                <p style="margin:28px 0 0;font-size:13px;line-height:1.5;color:#8b8d94;text-align:center;">Open this on the same device where you asked for it. The link works once and expires in 1 hour.</p>
+                <p style="margin:16px 0 0;font-size:12px;line-height:1.5;color:#a3a5ab;text-align:center;word-break:break-all;">Button not working? Paste this into your browser:<br /><a href="{{ .ConfirmationURL }}" style="color:#5f6168;">{{ .ConfirmationURL }}</a></p>
+              </td>
+            </tr>
+            <!-- Footer -->
+            <tr>
+              <td align="center" style="padding:24px 16px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.5;color:#8b8d94;">
+                Sent to {{ .Email }} because someone used it on Unmet.<br />If that wasn't you, ignore this email: nothing happens without a click.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

@@ -50,6 +50,42 @@ export async function sendEmailLink(email: string) {
   if (error) throw error;
 }
 
+/** Password sign-in. Friendly messages for the common failures. */
+export async function signInWithPassword(email: string, password: string) {
+  const { error } = await supabase().auth.signInWithPassword({ email, password });
+  if (error) throw new Error(friendly(error.message));
+}
+
+/** New account with a password. Returns true when Supabase wants the email confirmed first. */
+export async function signUpWithPassword(email: string, password: string) {
+  const { data, error } = await supabase().auth.signUp({ email, password, options: { emailRedirectTo: callbackUrl() } });
+  if (error) throw new Error(friendly(error.message));
+  // An existing confirmed email comes back without identities (Supabase hides whether it exists).
+  if (data.user && data.user.identities?.length === 0) throw new Error("That email already has an account. Sign in instead.");
+  return !data.session;
+}
+
+/** Emails a link that opens Unmet with "set a new password". */
+export async function sendPasswordReset(email: string) {
+  const back = `${window.location.origin}/auth/callback?next=${encodeURIComponent("/app?reset=1")}`;
+  const { error } = await supabase().auth.resetPasswordForEmail(email, { redirectTo: back });
+  if (error) throw new Error(friendly(error.message));
+}
+
+export async function updatePassword(password: string) {
+  const { error } = await supabase().auth.updateUser({ password });
+  if (error) throw new Error(friendly(error.message));
+}
+
+function friendly(message: string) {
+  if (/invalid login credentials/i.test(message)) return "Wrong email or password.";
+  if (/email not confirmed/i.test(message)) return "Confirm your email first: open the link we sent you.";
+  if (/already registered/i.test(message)) return "That email already has an account. Sign in instead.";
+  if (/rate|security purposes/i.test(message)) return "Too many tries just now. Wait a minute and try again.";
+  if (/same.*password|different from the old/i.test(message)) return "Choose a password you haven't used here before.";
+  return message;
+}
+
 export async function signOut() {
   await supabase().auth.signOut();
 }
