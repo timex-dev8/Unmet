@@ -1,0 +1,40 @@
+/* Liquid glass (components/motion/LiquidGlass.tsx). Tint and text color come from the parent. */
+/* The page behind: bent at the rim (Chromium, --glass-bend is the SVG filter), blurred and saturated.
+   It sits on the glass itself: the rim's blend modes would cut a child layer off from the page. */
+.glass {
+  position: relative;
+  isolation: isolate;
+  -webkit-backdrop-filter: blur(var(--glass-blur, 16px)) saturate(180%);
+  backdrop-filter: var(--glass-bend,) blur(var(--glass-blur, 16px)) saturate(180%);
+}
+.defs {
+  position: absolute;
+  pointer-events: none;
+}
+/* A 1.5px rim of light; its brightest part turns toward the cursor */
+.rim {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  padding: 1.5px;
+  pointer-events: none;
+  background: linear-gradient(
+    var(--rim-angle, 135deg),
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.14) 33%,
+    rgba(255, 255, 255, 0.55) 66%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  mix-blend-mode: screen;
+  transition: background 0.3s ease;
+}
+.rimSoft {
+  mix-blend-mode: overlay;
+  opacity: 0.9;
+}
