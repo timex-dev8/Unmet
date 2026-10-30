@@ -529,3 +529,21 @@
 .stepsFold summary svg {
   transition: transform var(--t-med) var(--ease);
 }
+
+/* Verdict on compact research cards ("Is this worth building?") */
+.verdictTag {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--gray);
+  color: var(--ink-2);
+}
+.verdictStrong {
+  background: var(--ink);
+  color: var(--white);
+}
+.early + .verdictTag {
+  margin-left: 0;
+}

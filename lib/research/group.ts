@@ -20,6 +20,7 @@ const GroupSchema = z.object({
         quoteId: z.string().describe("The complaint id whose quote shows this problem most clearly"),
         competition: z.object({ value: z.number().min(0).max(100), reason: z.string() }),
         difficulty: z.object({ value: z.number().min(0).max(100), reason: z.string() }),
+        today: z.string(),
         ideas: z.array(z.object({ title: z.string(), text: z.string() })).max(3),
       }),
     )

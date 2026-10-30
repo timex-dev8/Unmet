@@ -27,6 +27,37 @@ export type Score = {
   reason: string;
 };
 
+/** What a complaint reveals beyond the pain itself; these signals drive the "worth building?" verdict. */
+export type Signal = "pays" | "switching" | "price" | "workaround";
+
+/** "Is this worth building?": a verdict computed from the evidence, never from the AI's opinion. */
+export type Report = {
+  verdict: "strong" | "maybe" | "weak";
+  reasons: string[];
+  signals: Record<Signal, number>; // how many complaints show each signal
+  today?: string; // what people use now and what they dislike about it (AI summary of the complaints)
+  workarounds: string[]; // manual hacks people describe (from complaints)
+};
+
+/** The pattern an idea follows (see IDEAS_SYSTEM in lib/research/prompts.ts). */
+export type IdeaLens = "automate" | "vertical" | "unbundle" | "service" | "wedge" | "connector" | "shovels";
+
+/** A product idea generated from a validated problem. Every idea cites the complaints it answers. */
+export type Idea = {
+  lens: IdeaLens;
+  title: string;
+  pitch: string; // one line
+  whoPays: string;
+  price: string; // rough, from comparable products
+  wedge: string; // why someone would switch to it
+  mvp: string; // a first version you could build in a weekend or two
+  firstUsers: string; // where the first 10 users are
+  risks: string;
+  evidence: string[]; // quotes it answers (verified complaints)
+  similar?: Competitor; // closest existing product, if the "already built?" check found one
+  score: number; // 0–100
+};
+
 export type Card = {
   slug: string;
   headline: string;
@@ -49,6 +80,8 @@ export type Card = {
   aiSuggestions: { title: string; text: string }[];
   sources: Source[];
   competitors?: Competitor[];
+  report?: Report;
+  ideas?: Idea[];
   sample?: boolean; // placeholder content, shown with a "Sample" tag
   signal?: "early"; // backed by only 2 sources: shown as an early signal, not a proven problem
   fresh?: boolean; // built on demand from a search

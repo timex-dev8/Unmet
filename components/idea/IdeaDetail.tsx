@@ -6,6 +6,8 @@ import SaveButton from "@/components/card/SaveButton";
 import ShareButton from "@/components/card/ShareButton";
 import { digDeeperHref } from "@/lib/links";
 import type { Card } from "@/lib/types";
+import IdeasSection from "./IdeasSection";
+import WorthBuilding from "./WorthBuilding";
 import s from "./idea.module.css";
 
 // The full idea page. Used by /app/idea/[slug] for feed cards and, in the browser,
@@ -53,6 +55,10 @@ export function IdeaSections({ card, headingLevel = 1 }: { card: Card; headingLe
             <strong>Who:</strong> {card.who}
           </p>
         </header>
+
+        {card.report && <WorthBuilding report={card.report} />}
+
+        {(card.ideas?.length || card.report) && <IdeasSection card={card} />}
 
         <section className={s.section} aria-labelledby="evidence">
           <h2 id="evidence" className={s.h2}>
@@ -163,7 +169,7 @@ export function IdeaSections({ card, headingLevel = 1 }: { card: Card; headingLe
           </ul>
         </section>
 
-        {card.aiSuggestions.length > 0 && (
+        {!card.ideas?.length && !card.report && card.aiSuggestions.length > 0 && (
           <section className={`${s.section} ${s.last}`} aria-label="AI suggestions">
             <AiSuggestions card={card} />
           </section>

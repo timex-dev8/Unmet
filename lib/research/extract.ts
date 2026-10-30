@@ -2,6 +2,7 @@ import "server-only";
 import { z } from "zod/v4";
 import { generateJson } from "@/lib/llm";
 import type { ResearchSource } from "@/lib/research-types";
+import type { Signal } from "@/lib/types";
 import { EXTRACT_SYSTEM } from "./prompts";
 import { quoteFound } from "./verify";
 
@@ -15,13 +16,21 @@ const ExtractSchema = z.object({
       firstHand: z.boolean(),
       relevance: z.number().int().min(0).max(3),
       who: z.string(),
-      complaints: z.array(z.object({ quote: z.string(), pain: z.string() })).max(3),
+      complaints: z
+        .array(
+          z.object({
+            quote: z.string(),
+            pain: z.string(),
+            signal: z.enum(["none", "pays", "switching", "price", "workaround"]),
+          }),
+        )
+        .max(3),
       reject: z.string(),
     }),
   ),
 });
 
-export type Complaint = { id: string; sourceId: number; quote: string; pain: string; who: string };
+export type Complaint = { id: string; sourceId: number; quote: string; pain: string; who: string; signal?: Signal };
 export type ExtractReport = { complaints: Complaint[]; offTopic: number; secondHand: number; unverified: number };
 
 /** Runs async jobs with at most `limit` in flight (keeps the free AI tier from rate-limiting us). */
@@ -85,7 +94,15 @@ export async function extractComplaints(
         continue;
       }
       for (const c of s.complaints) {
-        if (quoteFound(c.quote, src.text)) report.complaints.push({ id: `c${++n}`, sourceId: s.id, quote: c.quote.trim(), pain: c.pain, who: s.who });
+        if (quoteFound(c.quote, src.text))
+          report.complaints.push({
+            id: `c${++n}`,
+            sourceId: s.id,
+            quote: c.quote.trim(),
+            pain: c.pain,
+            who: s.who,
+            signal: c.signal === "none" ? undefined : c.signal,
+          });
         else report.unverified++;
       }
     }

@@ -45,7 +45,7 @@ export default function Home({ cards, startups = [] }: { cards: Card[]; startups
     <main className={s.home}>
       <section className={`${s.hero} rise`}>
         <h1 className={s.title}>What do you want to explore?</h1>
-        <p className={s.lede}>Name a market. Unmet finds what people complain about, with sources.</p>
+        <p className={s.lede}>Name a market or a product. Unmet finds what people complain about and turns it into ideas worth building.</p>
         <form className={s.composer} onSubmit={start}>
           <label htmlFor="home-q" className="sr-only">
             Describe a market or audience
@@ -55,7 +55,7 @@ export default function Home({ cards, startups = [] }: { cards: Card[]; startups
             className={s.input}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Describe a market, like “barbershop owners”"
+            placeholder="A market or a product, like “barbershops” or “Calendly”"
             autoComplete="off"
             enterKeyHint="go"
           />

@@ -1,0 +1,224 @@
+"use client";
+
+import { useState } from "react";
+import { ArrowUpRight, ClipboardCheck, Copy, LoaderCircle, Sparkles } from "lucide-react";
+import type { Card, Idea, IdeaLens } from "@/lib/types";
+import s from "./report.module.css";
+
+export const LENS_LABEL: Record<IdeaLens, string> = {
+  automate: "Automate the workaround",
+  vertical: "Made for them",
+  unbundle: "One part, done better",
+  service: "AI does the work",
+  wedge: "Cheaper and simpler",
+  connector: "Connect both sides",
+  shovels: "Tool for a new trend",
+};
+
+const TWISTS = ["More like this", "Make it B2B", "Make it cheaper", "Make it AI-first", "Make it for consumers"];
+
+type Validation = { headline: string; subhead: string; bullets: string[]; cta: string; questions: string[]; outreach: string };
+
+/** What the idea API needs: the card's verified quotes, never anything the AI made up. */
+function payload(card: Card) {
+  const quotes = [card.quote, ...(card.ideas ?? []).flatMap((i) => i.evidence)].filter(Boolean);
+  return {
+    headline: card.headline,
+    summary: card.summary,
+    who: card.who,
+    quotes: [...new Set(quotes)].slice(0, 12),
+    today: card.report?.today,
+    workarounds: card.report?.workarounds ?? [],
+    verdict: card.report?.verdict,
+  };
+}
+
+async function ask(body: object) {
+  const res = await fetch("/api/ideas", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error ?? "Couldn't do that right now. Try again.");
+  return data;
+}
+
+// The idea engine's output on the idea page: idea cards, remix buttons and "validate in a day".
+export default function IdeasSection({ card }: { card: Card }) {
+  const [ideas, setIdeas] = useState<Idea[]>(card.ideas ?? []);
+  const [busy, setBusy] = useState("");
+  const [error, setError] = useState("");
+  const canAsk = Boolean(card.quote || card.ideas?.length);
+
+  async function remix(twist: string) {
+    setError("");
+    setBusy(twist);
+    try {
+      const data = await ask({ mode: "remix", twist, card: payload(card) });
+      setIdeas((cur) => [...cur, ...(data.ideas as Idea[])]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy("");
+    }
+  }
+
+  return (
+    <section className={s.section} aria-labelledby="ideas">
+      <h2 id="ideas" className={s.h2}>
+        Ideas you could build
+      </h2>
+      <p className={s.lede}>Each idea answers real complaints from this problem, and is checked against products that already exist.</p>
+
+      <div className={s.ideas}>
+        {ideas.map((idea, i) => (
+          <IdeaView key={`${idea.title}-${i}`} idea={idea} card={card} />
+        ))}
+      </div>
+
+      {canAsk && (
+        <div className={s.remix}>
+          <span className={s.remixLabel}>
+            <Sparkles size={15} aria-hidden="true" />
+            {ideas.length ? "Get more ideas" : "Generate ideas"}
+          </span>
+          <div className={s.chips}>
+            {(ideas.length ? TWISTS : ["More like this"]).map((t) => (
+              <button key={t} type="button" className={s.chip} disabled={!!busy} onClick={() => remix(t)}>
+                {busy === t && <LoaderCircle size={14} className={s.spin} aria-hidden="true" />}
+                {ideas.length || t !== "More like this" ? t : "Generate ideas"}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {error && (
+        <p className={s.error} role="alert">
+          {error}
+        </p>
+      )}
+    </section>
+  );
+}
+
+function IdeaView({ idea, card }: { idea: Idea; card: Card }) {
+  const [plan, setPlan] = useState<Validation | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function validate() {
+    setError("");
+    setBusy(true);
+    try {
+      const data = await ask({ mode: "validate", card: payload(card), idea: { title: idea.title, pitch: idea.pitch } });
+      setPlan(data.validate as Validation);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const rows: [string, string][] = [
+    ["Who pays", `${idea.whoPays} · ${idea.price}`],
+    ["Why they'd switch", idea.wedge],
+    ["First version", idea.mvp],
+    ["First 10 users", idea.firstUsers],
+    ["Biggest risk", idea.risks],
+  ];
+
+  return (
+    <article className={`${s.idea} rise`}>
+      <div className={s.ideaTop}>
+        <span className={s.lens}>{LENS_LABEL[idea.lens]}</span>
+        <span className={s.score} title="From the evidence it answers, money signals and existing products">
+          {idea.score}
+        </span>
+      </div>
+      <h3 className={s.ideaTitle}>{idea.title}</h3>
+      <p className={s.pitch}>{idea.pitch}</p>
+
+      <dl className={s.facts}>
+        {rows.map(([k, v]) => (
+          <div key={k}>
+            <dt>{k}</dt>
+            <dd>{v}</dd>
+          </div>
+        ))}
+      </dl>
+
+      {idea.evidence.length > 0 && (
+        <div className={s.answers}>
+          <span className={s.answersLabel}>Answers these complaints</span>
+          {idea.evidence.map((q) => (
+            <q key={q}>{q}</q>
+          ))}
+        </div>
+      )}
+
+      {idea.similar && (
+        <a href={idea.similar.url} target="_blank" rel="noopener noreferrer" className={s.similar}>
+          <span>
+            <strong>Closest existing product:</strong> {idea.similar.name}
+          </span>
+          <ArrowUpRight size={16} aria-hidden="true" />
+        </a>
+      )}
+
+      {plan ? (
+        <ValidationPlan plan={plan} />
+      ) : (
+        <button type="button" className={s.validate} onClick={validate} disabled={busy}>
+          {busy ? <LoaderCircle size={16} className={s.spin} aria-hidden="true" /> : <ClipboardCheck size={16} aria-hidden="true" />}
+          Validate in a day
+        </button>
+      )}
+      {error && (
+        <p className={s.error} role="alert">
+          {error}
+        </p>
+      )}
+    </article>
+  );
+}
+
+function ValidationPlan({ plan }: { plan: Validation }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className={`${s.plan} rise`}>
+      <p className={s.planLabel}>1 · Landing page (in their words)</p>
+      <div className={s.landing}>
+        <strong>{plan.headline}</strong>
+        <span>{plan.subhead}</span>
+        <ul>
+          {plan.bullets.map((b) => (
+            <li key={b}>{b}</li>
+          ))}
+        </ul>
+        <span className={s.fakeBtn}>{plan.cta}</span>
+      </div>
+
+      <p className={s.planLabel}>2 · Ask 5 people these questions</p>
+      <ol className={s.questions}>
+        {plan.questions.map((q) => (
+          <li key={q}>{q}</li>
+        ))}
+      </ol>
+
+      <p className={s.planLabel}>3 · Message someone who complained</p>
+      <div className={s.outreach}>
+        <p>{plan.outreach}</p>
+        <button
+          type="button"
+          className={s.copy}
+          onClick={async () => {
+            await navigator.clipboard.writeText(plan.outreach).catch(() => {});
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+          }}
+        >
+          <Copy size={14} aria-hidden="true" />
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+      <p className={s.fine}>Find them through the source links above. If 3 of 5 describe the problem without prompting, keep going.</p>
+    </div>
+  );
+}

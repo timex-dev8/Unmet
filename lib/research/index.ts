@@ -5,8 +5,9 @@ import type { Depth, ResearchEvent, ResearchRequest, ResearchSource } from "@/li
 import type { Card } from "@/lib/types";
 import { buildCard, kindMix, medianAgeMonths, WINDOW_DAYS } from "./build";
 import { competitionFrom, findCompetitors, startupsFor } from "./competitors";
-import { extractComplaints } from "./extract";
+import { extractComplaints, type Complaint } from "./extract";
 import { critique, groupComplaints } from "./group";
+import { generateIdeas } from "./ideas";
 import { makePlan } from "./plan";
 import { filterSources, pickDiverse } from "./quality";
 import { getCached, saveIdeas, setCached } from "./store";
@@ -115,6 +116,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   ];
   const startupsJob = cfg.high ? startupsFor(plan.trustmrrCategory) : Promise.resolve([]);
 
+  if (plan.product) emit({ type: "step", label: `Looking for what ${plan.product} users complain about` });
   emit({ type: "step", label: `Searching ${[...new Set(jobs.map((j) => j.name))].join(", ")}` });
   const settled = await Promise.allSettled(jobs.map((j) => j.run));
   const raw = settled.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
@@ -184,13 +186,16 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   const opts = { topic: plan.topic, now, minSources: cfg.minSources, minSites: cfg.minSites };
   const strong: Card[] = [];
   const early: Card[] = [];
+  const complaintsOf = new Map<string, Complaint[]>(); // card slug → its verified complaints (for ideas)
+  const byId = new Map(extracted.complaints.map((c) => [c.id, c]));
   for (const p of problems) {
-    const card = buildCard(p, extracted.complaints, sources, opts);
+    let card = buildCard(p, extracted.complaints, sources, opts);
     if (card) strong.push(card);
     else if (cfg.minSources > 2) {
-      const weak = buildCard(p, extracted.complaints, sources, { ...opts, minSources: 2, minSites: 1 });
-      if (weak) early.push({ ...weak, signal: "early" });
+      card = buildCard(p, extracted.complaints, sources, { ...opts, minSources: 2, minSites: 1 });
+      if (card) early.push((card = { ...card, signal: "early" }));
     }
+    if (card) complaintsOf.set(card.slug, [...new Set(p.complaintIds)].map((id) => byId.get(id)).filter((c): c is Complaint => Boolean(c)));
   }
   const byDemand = (a: Card, b: Card) => b.scores.demand.value - a.scores.demand.value;
   const cards = [...strong.sort(byDemand), ...early.sort(byDemand)].slice(0, 6);
@@ -205,6 +210,24 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
         card.competitors = found;
         const c = competitionFrom(found);
         card.scores.competition = { value: c.value, label: c.value >= 67 ? "High" : c.value >= 40 ? "Medium" : "Low", basis: "data", reason: c.reason };
+        // A competitor with verified revenue is proof people pay to solve this.
+        const paid = found.filter((f) => f.mrr).sort((x, y) => (y.mrr ?? 0) - (x.mrr ?? 0))[0];
+        if (paid && card.report) card.report.reasons.push(`Proven market: ${paid.name} earns $${Math.round(paid.mrr! / 100).toLocaleString("en-US")}/mo`);
+      }),
+    );
+  }
+
+  // 8. Ideas: turn the strongest problems into product ideas (each cites its complaints).
+  // Medium and High also check whether each idea already exists (one Exa search per idea).
+  const ideaCards = cards.filter((c) => (complaintsOf.get(c.slug)?.length ?? 0) >= 2).slice(0, cfg.high ? 4 : cfg.exaType === "lite" ? 2 : 3);
+  if (ideaCards.length) {
+    emit({ type: "step", label: `Turning ${ideaCards.length === 1 ? "the problem" : `the top ${ideaCards.length} problems`} into product ideas` });
+    await Promise.all(
+      ideaCards.map(async (card) => {
+        card.ideas = await generateIdeas(card, complaintsOf.get(card.slug)!, cfg.exaType !== "lite", plan.product).catch((err) => {
+          console.warn("[research] ideas failed:", err instanceof Error ? err.message : err);
+          return undefined;
+        });
       }),
     );
   }

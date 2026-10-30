@@ -1,5 +1,5 @@
 import type { ResearchSource } from "@/lib/research-types";
-import type { Card, Score, SourceKind, Trend } from "@/lib/types";
+import type { Card, Report, Score, Signal, SourceKind, Trend } from "@/lib/types";
 import type { Complaint } from "./extract";
 import type { DraftProblem } from "./group";
 import { MAX_QUOTE_WORDS } from "./verify";
@@ -68,6 +68,34 @@ export function kindMix(sources: ResearchSource[]) {
     .join(", ");
 }
 
+/**
+ * "Is this worth building?" from the evidence alone: how many independent people, on how many
+ * sites, whether they pay or switch or hack around it, and whether it's growing.
+ */
+export function reportFor(own: Complaint[], used: ResearchSource[], sites: number, trend: Trend, today: string): Report {
+  const signals: Record<Signal, number> = { pays: 0, switching: 0, price: 0, workaround: 0 };
+  for (const c of own) if (c.signal) signals[c.signal]++;
+  const money = signals.pays + signals.switching + signals.price;
+
+  // Each passed check adds points and a reason the founder can read.
+  let points = 0;
+  const reasons: string[] = [];
+  const add = (n: number, reason: string) => {
+    points += n;
+    reasons.push(reason);
+  };
+  if (used.length >= 3) add(used.length >= 5 ? 2 : 1, `${used.length} independent sources`);
+  else add(0, `Only ${used.length} ${used.length === 1 ? "source" : "sources"} so far`);
+  if (sites >= 3) add(1, `Shows up on ${sites} different sites`);
+  if (money >= 1) add(money >= 2 ? 2 : 1, money === 1 ? "1 person mentions paying, switching or price" : `${money} people mention paying, switching or price`);
+  else add(0, "No one mentions paying for a fix yet");
+  if (signals.workaround) add(1, `${signals.workaround} ${signals.workaround === 1 ? "person built a workaround" : "people built workarounds"}`);
+  if (trend === "rising") add(1, "Mentions are rising");
+
+  const workarounds = [...new Set(own.filter((c) => c.signal === "workaround").map((c) => c.pain))].slice(0, 3);
+  return { verdict: points >= 5 ? "strong" : points >= 3 ? "maybe" : "weak", reasons, signals, today: today || undefined, workarounds };
+}
+
 export function buildCard(
   p: DraftProblem,
   complaints: Complaint[],
@@ -98,13 +126,14 @@ export function buildCard(
   const engaged = used.filter((s) => s.engagement && s.engagement.score > 2).length;
   const engagementNote = engaged > 0 ? `, ${engaged} with votes or replies` : "";
 
+  const trend = trendOf(dates, opts.now);
   return {
     slug: slugify(p.headline),
     headline: p.headline,
     summary: p.summary,
     who: p.who,
     category: p.category,
-    trend: trendOf(dates, opts.now),
+    trend,
     quote: quoteFrom?.quote ?? "",
     highlight: "",
     query: opts.topic,
@@ -128,6 +157,7 @@ export function buildCard(
     },
     aiSuggestions: p.ideas,
     sources: used.map((s) => ({ title: s.title, url: s.url, site: s.site, kind: s.kind, engagement: s.engagement?.label, postedAt: s.postedAt })),
+    report: reportFor(own, used, sites.size, trend, p.today),
     fresh: true,
   };
 }

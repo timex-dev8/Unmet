@@ -6,7 +6,8 @@ import { PLAN_SYSTEM } from "./prompts";
 import { STACK_SITES, TRUSTMRR_CATEGORIES } from "./sources/sites";
 
 const PlanSchema = z.object({
-  mode: z.enum(["search", "answer"]),
+  mode: z.enum(["search", "gap", "answer"]),
+  product: z.string().describe("Only for mode 'gap': the product or product category named; otherwise empty"),
   answer: z.string().describe("Only for mode 'answer'; otherwise empty"),
   topic: z.string(),
   audience: z.string(),
@@ -58,6 +59,7 @@ export async function makePlan(req: ResearchRequest): Promise<Plan> {
     stackSites: plan.stackSites.filter((s) => (STACK_SITES as readonly string[]).includes(s)),
     appTerms: plan.appTerms.map(plain).filter(Boolean),
     githubPhrase: plain(plan.githubPhrase),
+    product: plan.mode === "gap" ? plan.product.trim() : "",
     trustmrrCategory: (TRUSTMRR_CATEGORIES as readonly string[]).includes(plan.trustmrrCategory) ? plan.trustmrrCategory : "",
   };
 }

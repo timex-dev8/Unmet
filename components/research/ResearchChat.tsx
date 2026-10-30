@@ -18,6 +18,7 @@ import s from "./research.module.css";
 
 const EXAMPLES = [
   "I want to solve problems for barbershops",
+  "What do people hate about Calendly?",
   "What frustrates freelance designers?",
   "Problems dog owners have with daycare",
   "Pain points of running a small restaurant",
