@@ -10,16 +10,10 @@ export default function TabBar() {
   const pathname = usePathname();
   return (
     <nav className={s.tabs} aria-label="Sections">
-      {NAV.map(({ href, label, Icon, ink }) => {
+      {NAV.map(({ href, label, Icon }) => {
         const on = isActive(pathname, href);
         return (
-          <Link
-            key={href}
-            href={href}
-            className={`${s.tab} ${on ? s.tabOn : ""}`}
-            style={on ? { color: ink } : undefined}
-            aria-current={on ? "page" : undefined}
-          >
+          <Link key={href} href={href} className={`${s.tab} ${on ? s.tabOn : ""}`} aria-current={on ? "page" : undefined}>
             <Icon size={23} strokeWidth={on ? 2.4 : 2} aria-hidden="true" />
             {label}
           </Link>

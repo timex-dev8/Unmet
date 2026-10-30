@@ -15,13 +15,11 @@ export default async function FeedPage({ searchParams }: PageProps<"/app/feed">)
   const { cards } = await getCards({ filter });
 
   return (
-    <div className={s.page}>
-      <main className={s.screen}>
-        <h1 className="sr-only">Idea feed{filter ? `: ${filter}` : ""}</h1>
-        <FilterChips active={filter} />
-        {/* key resets the feed position when the filter changes */}
-        <SwipeFeed key={filter ?? "all"} cards={cards} />
-      </main>
-    </div>
+    <main className={s.screen}>
+      <h1 className="sr-only">Idea feed{filter ? `: ${filter}` : ""}</h1>
+      <FilterChips active={filter} />
+      {/* key resets the feed position when the filter changes */}
+      <SwipeFeed key={filter ?? "all"} cards={cards} />
+    </main>
   );
 }

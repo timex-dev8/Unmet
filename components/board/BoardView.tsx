@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, NotebookPen, Sparkles, X } from "lucide-react";
 import { TrendBadge, windowLabel } from "@/components/card/parts";
 import { entryFor, moveTo, nextStage, prevStage, setNote, STAGES, stageLabel, useBoard, type Stage } from "@/lib/board";
-import { categoryColor, STAGE_COLORS } from "@/lib/colors";
+import { STAGE_COLORS } from "@/lib/colors";
 import { digDeeperHref } from "@/lib/links";
 import { useSaved } from "@/lib/saved";
 import type { Card } from "@/lib/types";
@@ -127,8 +127,7 @@ function Item({ card, stage, note, onRemove }: { card: Card; stage: Stage; note:
         ev.dataTransfer.effectAllowed = "move";
       }}
     >
-      <div className={s.meta} style={{ color: categoryColor(card.category).ink }}>
-        <span className={s.catDot} style={{ background: categoryColor(card.category).solid }} aria-hidden="true" />
+      <div className={s.meta}>
         <span>{card.category}</span>
         <TrendBadge trend={card.trend} />
         <button type="button" className={s.remove} onClick={onRemove} aria-label={`Remove “${card.headline}” from board`}>

@@ -128,22 +128,11 @@
   white-space: nowrap;
   margin-top: 1px;
 }
-.blue {
-  background: var(--tint);
-  color: var(--navy);
-}
-.purple {
-  background: #f0eefe;
-  color: #4b3aa8;
-}
-.green {
-  background: #eaf5eb;
-  color: #276228;
-}
-.orange {
-  background: #fff4e5;
-  color: #8a4b00;
-}
+/* Thought kinds: quiet gray badges; the word carries the meaning (DESIGN.md) */
+.blue,
+.purple,
+.green,
+.orange,
 .gray {
   background: var(--gray);
   color: var(--ink-2);
@@ -212,8 +201,8 @@
   margin: 0 0 12px;
   padding: 10px 14px;
   border-radius: 12px;
-  background: #fff4e5;
-  color: #8a4b00;
+  background: var(--early-tint);
+  color: var(--early-ink);
   font-size: 14px;
 }
 .conclusion {
@@ -262,20 +251,12 @@
   border-radius: 50%;
   padding: 0;
 }
-.dot.blue {
-  background: var(--blue);
-}
-.dot.purple {
-  background: #6b5bd2;
-}
-.dot.green {
-  background: #3d8b41;
-}
-.dot.orange {
-  background: #c46a00;
-}
+.dot.blue,
+.dot.purple,
+.dot.green,
+.dot.orange,
 .dot.gray {
-  background: #86868b;
+  background: var(--text-3);
 }
 .themeName {
   flex: 1;
@@ -297,7 +278,7 @@
   color: var(--blue);
 }
 .unchecked {
-  color: #c46a00;
+  color: var(--early-ink);
 }
 .claim {
   flex: 1;
@@ -370,8 +351,8 @@
     top: var(--shell-top, 0px);
     height: calc(100dvh - var(--shell-top, 0px));
     overflow-y: auto;
-    background: var(--white);
-    border-left: 1px solid var(--line);
+    /* frosted, no divider: the page gradient shows through (DESIGN.md) */
+    background: rgba(255, 255, 255, 0.72);
   }
   .desktopPanel .panel {
     border-radius: 0;

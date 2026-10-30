@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { ArrowUp, Check, Sparkles } from "lucide-react";
 import SaveButton from "@/components/card/SaveButton";
 import { entryFor, useBoard } from "@/lib/board";
-import { categoryColor } from "@/lib/colors";
 import { useInterests } from "@/lib/interests";
 import { digDeeperHref } from "@/lib/links";
 import { forYou, rising } from "@/lib/rank";
@@ -47,6 +46,7 @@ export default function Home({ cards, startups = [] }: { cards: Card[]; startups
     <main className={s.home}>
       <section className={s.hero}>
         <h1 className={s.title}>What do you want to explore?</h1>
+        <p className={s.lede}>Name a market. Unmet finds what people complain about, with sources.</p>
         <form className={s.composer} onSubmit={start}>
           <label htmlFor="home-q" className="sr-only">
             Describe a market or audience
@@ -84,17 +84,8 @@ export default function Home({ cards, startups = [] }: { cards: Card[]; startups
           <div className={s.chips}>
             {CATEGORIES.map((c) => {
               const on = interests.picked.includes(c);
-              const col = categoryColor(c);
               return (
-                <button
-                  key={c}
-                  type="button"
-                  className={s.chip}
-                  aria-pressed={on}
-                  onClick={() => toggle(c)}
-                  style={on ? { background: col.tint, color: col.ink, boxShadow: `inset 0 0 0 2px ${col.solid}` } : undefined}
-                >
-                  <span className={s.dot} style={{ background: col.solid }} aria-hidden="true" />
+                <button key={c} type="button" className={s.chip} aria-pressed={on} onClick={() => toggle(c)}>
                   {c}
                   {on && <Check size={14} strokeWidth={2.8} aria-hidden="true" />}
                 </button>
@@ -134,30 +125,26 @@ export default function Home({ cards, startups = [] }: { cards: Card[]; startups
 
       <section className={s.tiles} aria-label="At a glance">
         {top && (
-          <Link href={`/app/idea/${top.card.slug}`} className={s.tile} style={{ background: "var(--rise-tint)", color: "var(--rise-ink)" }}>
+          <Link href={`/app/idea/${top.card.slug}`} className={s.tile}>
             <span className={s.tileLabel}>Rising this week</span>
             <span className={s.tileBig}>+{top.growth}%</span>
             <span className={s.tileText}>{top.card.headline}</span>
           </Link>
         )}
-        <Link href="/app/board" className={s.tile} style={{ background: "var(--tint)", color: "var(--navy)" }}>
+        <Link href="/app/board" className={s.tile}>
           <span className={s.tileLabel}>Your board</span>
           <span className={s.tileBig}>
             {saved.length} {saved.length === 1 ? "idea" : "ideas"}
           </span>
           <span className={s.tileText}>{saved.length ? `${advanced} moved past “Spotted”` : "Save ideas to start"}</span>
         </Link>
-        <Link
-          href={lastThread ? `/app/research/${lastThread.id}` : "/app/research"}
-          className={s.tile}
-          style={{ background: "var(--ai-tint)", color: "var(--ai-ink)" }}
-        >
+        <Link href={lastThread ? `/app/research/${lastThread.id}` : "/app/research"} className={s.tile}>
           <span className={s.tileLabel}>{lastThread ? "Continue research" : "Research"}</span>
           <span className={s.tileMid}>{lastThread ? lastThread.title : "Start your first"}</span>
           <span className={s.tileText}>{lastThread ? `${lastIdeas} ${lastIdeas === 1 ? "idea" : "ideas"}` : "Real complaints in about a minute"}</span>
         </Link>
         {startup && (
-          <a href={startup.url} target="_blank" rel="noopener noreferrer" className={s.tile} style={{ background: "var(--c-work-tint)", color: "var(--c-work-ink)" }}>
+          <a href={startup.url} target="_blank" rel="noopener noreferrer" className={s.tile}>
             <span className={s.tileLabel}>Startup growing now</span>
             <span className={s.tileMid}>{startup.name}</span>
             <span className={s.tileText}>
@@ -171,13 +158,11 @@ export default function Home({ cards, startups = [] }: { cards: Card[]; startups
 }
 
 function HomeCard({ card }: { card: Card }) {
-  const col = categoryColor(card.category);
   const e = card.evidence;
   return (
     <article className={s.card}>
-      <div className={s.strip} style={{ background: col.solid }} aria-hidden="true" />
       <div className={s.cardBody}>
-        <span className={s.tag} style={{ background: col.tint, color: col.ink }}>
+        <span className={s.meta}>
           {card.category}
           {card.trend === "rising" ? " · ↑ Rising" : ""}
         </span>

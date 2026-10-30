@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Plus } from "lucide-react";
 import Logo from "@/components/Logo";
-import { useInterests } from "@/lib/interests";
 import { useThreads } from "@/lib/research-store";
 import { useSaved } from "@/lib/saved";
 import { NAV, isActive } from "./nav";
@@ -14,7 +13,6 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { saved } = useSaved();
   const threads = useThreads().slice(0, 8);
-  const { interests } = useInterests();
 
   return (
     <aside className={s.side} aria-label="Studio">
@@ -28,7 +26,7 @@ export default function Sidebar() {
       </Link>
 
       <nav className={s.nav} aria-label="Sections">
-        {NAV.map(({ href, label, Icon, color }) => {
+        {NAV.map(({ href, label, Icon }) => {
           const on = isActive(pathname, href);
           return (
             <Link
@@ -37,9 +35,7 @@ export default function Sidebar() {
               className={`${s.navItem} ${on && pathname === href ? s.navOn : on ? s.navWithin : ""}`}
               aria-current={on ? "page" : undefined}
             >
-              <span className={s.navIcon} style={{ background: color }}>
-                <Icon size={16} strokeWidth={2.2} aria-hidden="true" />
-              </span>
+              <Icon size={19} strokeWidth={on ? 2.2 : 1.8} aria-hidden="true" />
               {label}
               {href === "/app/board" && saved.length > 0 && <span className={s.count}>{saved.length}</span>}
             </Link>
@@ -63,24 +59,6 @@ export default function Sidebar() {
           </div>
         </>
       )}
-
-      <div className={s.interests}>
-        <div className={s.interestsHead}>
-          <span>Your interests</span>
-          <Link href="/app#interests">Edit</Link>
-        </div>
-        {interests.picked.length ? (
-          <div className={s.interestChips}>
-            {interests.picked.map((c) => (
-              <span key={c} className={s.interestChip}>
-                {c}
-              </span>
-            ))}
-          </div>
-        ) : (
-          <p className={s.interestsEmpty}>Pick a few to personalize your feed.</p>
-        )}
-      </div>
     </aside>
   );
 }

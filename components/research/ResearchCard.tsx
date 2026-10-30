@@ -4,7 +4,6 @@ import type { MouseEvent } from "react";
 import Link from "next/link";
 import { Quote } from "@/components/card/parts";
 import SaveButton from "@/components/card/SaveButton";
-import { categoryColor } from "@/lib/colors";
 import type { Card } from "@/lib/types";
 import s from "./research.module.css";
 
@@ -22,7 +21,6 @@ export default function ResearchCard({
   selected?: boolean;
 }) {
   const e = card.evidence;
-  const col = categoryColor(card.category);
   const open = (ev: MouseEvent) => {
     if (onOpen && window.matchMedia("(min-width: 1100px)").matches) {
       ev.preventDefault();
@@ -32,10 +30,9 @@ export default function ResearchCard({
 
   return (
     <article className={`${s.card} ${selected ? s.cardSelected : ""}`} aria-labelledby={`r-${card.slug}`}>
-      <div className={s.cardStrip} style={{ background: col.solid }} aria-hidden="true" />
       <div className={s.cardInner}>
         <div className={s.cardMeta}>
-          <span className={s.cardTag} style={{ background: col.tint, color: col.ink }}>
+          <span className={s.cardTag}>
             #{index + 1} · {card.category}
             {card.trend === "rising" ? " · ↑ Rising" : ""}
           </span>

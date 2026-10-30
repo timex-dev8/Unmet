@@ -1,40 +1,28 @@
 .card {
   height: 100%;
   background: var(--white);
-  border-radius: 30px;
+  border-radius: 32px;
   box-shadow: var(--shadow-float);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-/* Category band: the card's color comes from its category (see lib/colors.ts) */
-.band {
-  flex: none;
+.meta {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  padding: 16px 20px;
-}
-.bandText {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.bandTitle {
-  font-size: 15px;
-  font-weight: 700;
-}
-.bandSub {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
+  color: var(--muted);
 }
 .sample {
-  margin-left: auto;
+  flex: none;
   font-size: 12px;
-  font-weight: 600;
-  color: #8a4b00;
-  background: var(--white);
+  font-weight: 500;
+  color: var(--early-ink);
+  background: var(--early-tint);
   border-radius: var(--radius-pill);
   padding: 4px 10px;
 }
@@ -44,21 +32,21 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 20px 22px 18px;
+  gap: 16px;
+  padding: 24px 24px 20px;
 }
 .headline {
   margin: 0;
   font-size: 28px;
-  font-weight: 700;
-  letter-spacing: -0.04em;
+  font-weight: 600;
+  letter-spacing: -0.03em;
   line-height: 1.08;
 }
 .summary {
   margin: 0;
   font-size: 16px;
   line-height: 1.5;
-  color: var(--ink-2);
+  color: var(--muted);
 }
 .evidence {
   display: flex;
@@ -90,10 +78,10 @@
   justify-content: center;
   gap: 6px;
   border-radius: var(--radius-pill);
-  background: var(--ai-tint);
-  color: var(--ai-ink);
+  background: var(--gray);
+  color: var(--ink);
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
   padding: 0 14px;
 }
@@ -105,7 +93,7 @@
   min-height: 44px;
   font-size: 15px;
   font-weight: 500;
-  color: var(--link);
+  color: var(--muted);
 }
 .details:hover {
   text-decoration: underline;
@@ -127,16 +115,13 @@
   .card {
     height: auto;
   }
-  .band {
-    padding: 20px 40px;
-  }
   .body {
-    padding: 32px 40px 28px;
-    gap: 20px;
+    padding: 40px 48px 32px;
+    gap: 24px;
   }
   .headline {
-    font-size: 42px;
-    line-height: 1.04;
+    font-size: 44px;
+    line-height: 1;
   }
   .summary {
     display: block;
@@ -150,7 +135,14 @@
     align-items: center;
     justify-content: space-between;
   }
+  .bottom {
+    gap: 16px;
+  }
   .bottom > :first-child {
-    flex: 0 0 520px;
+    flex: 1 1 auto;
+    max-width: 520px;
+  }
+  .details {
+    white-space: nowrap;
   }
 }

@@ -1,32 +1,37 @@
-/* Home: one question, three colorful cards, one row of tiles. */
+/* Home (DESIGN.md): one question, a few white cards, one row of tiles. Space, not lines. */
 .home {
   max-width: 1080px;
   margin: 0 auto;
-  padding: 32px 16px 48px;
+  padding: 48px 16px 56px;
   display: flex;
   flex-direction: column;
-  gap: 36px;
+  gap: 48px;
 }
 .h2 {
   margin: 0;
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: -0.03em;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 .sectionHead {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 .linkBtn {
   min-height: 44px;
   border: 0;
   background: none;
+  font: inherit;
   font-size: 15px;
-  color: var(--link);
+  font-weight: 500;
+  color: var(--muted);
   cursor: pointer;
+}
+.linkBtn:hover {
+  color: var(--ink);
 }
 
 /* Hero */
@@ -34,28 +39,36 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 18px;
   text-align: center;
 }
 .title {
   margin: 0;
-  font-size: clamp(32px, 5.4vw, 52px);
-  font-weight: 700;
-  letter-spacing: -0.045em;
-  line-height: 1.04;
+  max-width: 14ch;
+  font-size: clamp(40px, 6vw, 64px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.lede {
+  margin: 16px 0 32px;
+  max-width: 36ch;
+  font-size: 17px;
+  line-height: 1.4;
+  color: var(--muted);
 }
 .composer {
-  width: min(680px, 100%);
+  width: min(640px, 100%);
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 7px 7px 20px;
-  background: var(--white);
-  border-radius: 26px;
+  padding: 8px 8px 8px 22px;
+  background: var(--surface);
+  border-radius: var(--radius-pill);
   box-shadow: var(--shadow-float);
+  transition: box-shadow 0.2s ease;
 }
 .composer:focus-within {
-  box-shadow: 0 0 0 3px var(--tint), var(--shadow-float);
+  box-shadow: 0 0 0 4px var(--tint), var(--shadow-float);
 }
 .input {
   flex: 1;
@@ -69,7 +82,7 @@
   color: var(--ink);
 }
 .input::placeholder {
-  color: var(--muted);
+  color: var(--text-3);
 }
 .depth select {
   appearance: none;
@@ -78,21 +91,21 @@
   border: 0;
   border-radius: var(--radius-pill);
   background: var(--gray)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23424245' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%231f2025' stroke-opacity='.6' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")
     no-repeat right 11px center;
   font: inherit;
   font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-2);
+  font-weight: 500;
+  color: var(--muted);
   cursor: pointer;
 }
 .send {
   flex: none;
-  width: 46px;
-  height: 46px;
+  width: 44px;
+  height: 44px;
   border: 0;
   border-radius: 50%;
-  background: var(--blue);
+  background: var(--ink);
   color: var(--white);
   display: inline-flex;
   align-items: center;
@@ -104,7 +117,7 @@
   transform: scale(0.95);
 }
 .send:disabled {
-  background: #d2d2d7;
+  opacity: 0.2;
   cursor: default;
 }
 
@@ -113,10 +126,10 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 14px;
-  padding: 22px;
-  border-radius: 26px;
-  background: var(--white);
+  gap: 20px;
+  padding: 24px;
+  border-radius: 24px;
+  background: var(--surface);
 }
 .chips {
   display: flex;
@@ -126,32 +139,32 @@
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   min-height: 44px;
-  padding: 0 16px;
+  padding: 0 18px;
   border: 0;
   border-radius: var(--radius-pill);
   background: var(--gray);
+  font: inherit;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--ink);
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
-.dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
+.chip[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--white);
 }
 
 /* For you cards */
 .cards {
   display: flex;
-  gap: 14px;
+  gap: 12px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   margin: 0 -16px;
-  padding: 0 16px 6px;
+  padding: 0 16px 8px;
   scrollbar-width: none;
 }
 .cards::-webkit-scrollbar {
@@ -162,37 +175,31 @@
   scroll-snap-align: start;
   display: flex;
   flex-direction: column;
-  background: var(--white);
-  border-radius: 26px;
-  overflow: hidden;
+  background: var(--surface);
+  border-radius: 24px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-float);
 }
-.strip {
-  height: 6px;
-}
 .cardBody {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 20px 22px 22px;
+  padding: 24px;
 }
-.tag {
-  align-self: flex-start;
-  font-size: 12px;
-  font-weight: 600;
-  border-radius: var(--radius-pill);
-  padding: 4px 10px;
+.meta {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
 }
 .cardTitle {
   margin: 0;
   font-size: 20px;
   font-weight: 600;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.02em;
   line-height: 1.2;
 }
 .cardTitle a:hover {
@@ -200,8 +207,9 @@
   text-underline-offset: 3px;
 }
 .evidence {
-  margin: auto 0 0;
-  font-size: 13px;
+  margin: auto 0 4px;
+  padding-top: 8px;
+  font-size: 14px;
   color: var(--muted);
 }
 .evidence strong {
@@ -220,13 +228,14 @@
   justify-content: center;
   gap: 6px;
   border-radius: var(--radius-pill);
-  background: var(--ai-tint);
-  color: var(--ai-ink);
+  background: var(--gray);
+  color: var(--ink);
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
-/* Tiles */
+/* Tiles: same white surface as the cards, a big number, one line of context */
 .tiles {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -235,27 +244,30 @@
 .tile {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  min-height: 132px;
-  padding: 18px;
+  gap: 8px;
+  min-height: 148px;
+  padding: 20px;
   border-radius: 24px;
-  transition: transform 0.2s ease;
+  background: rgba(255, 255, 255, 0.6);
+  transition: background 0.2s ease, transform 0.2s ease;
 }
 .tile:hover {
+  background: var(--surface);
   transform: translateY(-2px);
 }
 .tileLabel {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
+  color: var(--muted);
 }
 .tileBig {
-  font-size: 26px;
-  font-weight: 700;
+  font-size: 28px;
+  font-weight: 600;
   letter-spacing: -0.03em;
 }
 .tileMid {
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.2;
   display: -webkit-box;
@@ -267,7 +279,7 @@
   margin-top: auto;
   font-size: 13px;
   line-height: 1.35;
-  color: var(--ink);
+  color: var(--muted);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -276,8 +288,8 @@
 
 @media (min-width: 900px) {
   .home {
-    padding: 56px 48px 64px;
-    gap: 44px;
+    padding: 96px 48px 96px;
+    gap: 80px;
   }
   .cards {
     display: grid;

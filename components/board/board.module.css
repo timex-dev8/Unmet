@@ -6,10 +6,10 @@
   margin-bottom: 16px;
 }
 .title {
-  margin: 0 0 4px;
-  font-size: 30px;
-  font-weight: 700;
-  letter-spacing: -0.04em;
+  margin: 0 0 6px;
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
 }
 .sub {
   margin: 0;
@@ -24,13 +24,13 @@
   gap: 4px;
   padding: 4px;
   margin-bottom: 14px;
-  border-radius: 14px;
-  background: #e8e8ed;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.55);
 }
 .tab {
   min-height: 48px;
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--radius-pill);
   background: none;
   display: flex;
   flex-direction: column;
@@ -81,7 +81,7 @@
 }
 .drop {
   min-height: 72px;
-  border: 1.5px dashed #d2d2d7;
+  border: 1.5px dashed rgba(31, 32, 37, 0.14);
   border-radius: 16px;
   display: flex;
   align-items: center;
@@ -287,12 +287,6 @@
   border-radius: 50%;
   flex: none;
 }
-.catDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex: none;
-}
 .tab {
   gap: 2px;
 }
@@ -303,6 +297,6 @@
 .item:hover {
   box-shadow: var(--shadow-float);
 }
-.meta {
-  font-weight: 600;
+.item {
+  padding: 18px 18px 14px;
 }

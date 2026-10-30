@@ -1,7 +1,6 @@
 .page {
   /* fills the studio between its top bar and the phone tab bar */
   min-height: calc(100dvh - var(--shell-top, 0px) - var(--shell-bottom, 0px));
-  background: var(--gray);
   display: flex;
   flex-direction: column;
 }
@@ -116,8 +115,8 @@
   margin: 0;
   padding: 12px 16px;
   border-radius: 16px;
-  background: #fff4e5;
-  color: #8a4b00;
+  background: var(--early-tint);
+  color: var(--early-ink);
   font-size: 15px;
 }
 .footnote {
@@ -152,21 +151,16 @@
   transform: translateY(-2px);
   box-shadow: var(--shadow-float);
 }
-.cardStrip {
-  height: 5px;
-  flex: none;
-}
 .cardInner {
-  padding: 18px 20px 16px;
+  padding: 24px 24px 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 .cardTag {
-  font-size: 12px;
-  font-weight: 600;
-  border-radius: var(--radius-pill);
-  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
 }
 .cardFoot {
   display: flex;
@@ -260,7 +254,7 @@
   margin: 0 0 10px;
   text-align: center;
   font-size: 14px;
-  color: #8a4b00;
+  color: var(--early-ink);
 }
 .composer {
   display: flex;
@@ -464,8 +458,8 @@
     flex: none;
     display: flex;
     flex-direction: column;
-    background: var(--white);
-    border-left: 1px solid var(--line);
+    /* frosted, no divider: the page gradient shows through (DESIGN.md) */
+    background: rgba(255, 255, 255, 0.72);
   }
 }
 
@@ -483,8 +477,8 @@
   margin-left: auto;
   font-size: 11px;
   font-weight: 600;
-  color: #8a4b00;
-  background: #fff4e5;
+  color: var(--early-ink);
+  background: var(--early-tint);
   border-radius: var(--radius-pill);
   padding: 3px 8px;
 }
@@ -534,7 +528,7 @@
   display: none;
 }
 .stepsFold summary svg {
-  color: var(--c-money);
+  color: var(--ink);
 }
 .stepsFold[open] summary {
   margin-bottom: 10px;

@@ -1,36 +1,28 @@
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
-import { categoryColor } from "@/lib/colors";
 import { digDeeperHref } from "@/lib/links";
 import type { Card } from "@/lib/types";
-import { CategoryIcon, ScoreChips, Sparkline, windowLabel } from "./parts";
+import { ScoreChips, Sparkline, windowLabel } from "./parts";
 import SaveButton from "./SaveButton";
 import ShareButton from "./ShareButton";
 import SourcesSheet from "./SourcesSheet";
 import s from "./card.module.css";
 import f from "./ideaCard.module.css";
 
-// The feed card: a colored category band, the problem, one line of evidence, three score
-// chips, actions. Quotes, score reasons and AI ideas live on the idea page.
+// The feed card: one meta line, the problem, one line of evidence, three score chips, actions. Quotes, score reasons and AI ideas live on the idea page.
 export default function IdeaCard({ card }: { card: Card }) {
   const e = card.evidence;
-  const col = categoryColor(card.category);
   const topic = card.query?.replaceAll('"', "");
   return (
     <article className={f.card} aria-labelledby={`h-${card.slug}`}>
-      <div className={f.band} style={{ background: col.tint }}>
-        <CategoryIcon category={card.category} size={40} />
-        <div className={f.bandText} style={{ color: col.ink }}>
-          <span className={f.bandTitle}>{card.category}</span>
-          <span className={f.bandSub}>
-            {card.trend === "rising" ? "↑ Rising" : card.trend === "falling" ? "↓ Falling" : "Steady"} · {e.threads}{" "}
+      <div className={f.body}>
+        <div className={f.meta}>
+          <span>
+            {card.category} · {card.trend === "rising" ? "↑ Rising" : card.trend === "falling" ? "↓ Falling" : "Steady"} · {e.threads}{" "}
             {e.threads === 1 ? "source" : "sources"}
           </span>
+          {card.sample && <span className={f.sample}>Sample</span>}
         </div>
-        {card.sample && <span className={f.sample}>Sample</span>}
-      </div>
-
-      <div className={f.body}>
         <h2 id={`h-${card.slug}`} className={f.headline}>
           {card.headline}
         </h2>
