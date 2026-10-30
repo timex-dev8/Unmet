@@ -1,3 +1,4 @@
+import { revalidateTag } from "next/cache";
 import { runFeed } from "@/lib/feed";
 
 // The daily feed job. Vercel Cron calls this twice a day (vercel.json); each run researches about
@@ -18,6 +19,7 @@ export async function GET(request: Request) {
     // Stop starting new niches after 4 minutes, so the run ends inside Vercel's 5-minute limit.
     const report = await runFeed({ max, deadline: started + 240_000 });
     const added = report.reduce((n, r) => n + r.added, 0);
+    if (added) revalidateTag("feed", "max"); // show the new cards on the next visit
     console.log(`[feed] ${report.length} niches, ${added} cards added or merged in ${Math.round((Date.now() - started) / 1000)}s`);
     return Response.json({ added, report });
   } catch (err) {

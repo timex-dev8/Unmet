@@ -1,4 +1,5 @@
 import "server-only";
+import { cacheLife, cacheTag } from "next/cache";
 import { z } from "zod/v4";
 import { generateJson } from "@/lib/llm";
 import { runResearch } from "@/lib/research";
@@ -123,8 +124,11 @@ export async function runFeed({ max, deadline }: { max: number; deadline: number
   return report;
 }
 
-/** Live feed cards, best first. */
+/** Live feed cards, best first. Cached for a few minutes (tag "feed"; the feed job refreshes it). */
 export async function readFeed(opts: { category?: string; rising?: boolean; limit?: number } = {}): Promise<Card[]> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("feed");
   if (!supabaseConfigured()) return [];
   let q = db().from("feed_cards").select("card").order("score", { ascending: false }).order("updated_at", { ascending: false });
   if (opts.category) q = q.eq("category", opts.category);
@@ -138,6 +142,9 @@ export async function readFeed(opts: { category?: string; rising?: boolean; limi
 }
 
 export async function readFeedCard(slug: string): Promise<Card | null> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("feed");
   if (!supabaseConfigured()) return null;
   const { data } = await db().from("feed_cards").select("card").eq("slug", slug).maybeSingle();
   return (data?.card as Card | undefined) ?? null;
