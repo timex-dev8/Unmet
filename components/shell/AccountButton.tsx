@@ -107,7 +107,8 @@ export default function AccountButton({ variant }: { variant: "side" | "icon" })
 type Mode = "password" | "link";
 type Sent = { title: string; text: string } | null;
 
-export function SignInForm({ id, failed }: { id: string; failed: boolean }) {
+/** `bare` drops the title and notes, for the welcome card where the page already says them. */
+export function SignInForm({ id, failed, bare = false }: { id: string; failed: boolean; bare?: boolean }) {
   const [mode, setMode] = useState<Mode>("password");
   const [creating, setCreating] = useState(false); // password mode: sign in vs create account
   const [email, setEmail] = useState("");
@@ -154,7 +155,7 @@ export function SignInForm({ id, failed }: { id: string; failed: boolean }) {
 
   if (sent) {
     return (
-      <div className={s.body}>
+      <div className={bare ? `${s.body} ${s.bareSent}` : s.body}>
         <span className={s.badge}>
           <Mail size={22} aria-hidden="true" />
         </span>
@@ -173,11 +174,11 @@ export function SignInForm({ id, failed }: { id: string; failed: boolean }) {
   const action = mode === "link" ? "Email me a link" : creating ? "Create account" : "Sign in";
 
   return (
-    <div className={s.body}>
-      <h2 id={id} className={s.title}>
+    <div className={bare ? s.bare : s.body}>
+      <h2 id={id} className={bare ? "sr-only" : s.title}>
         {title}
       </h2>
-      <p className={s.sub}>Your research, board and saved ideas follow you to every device.</p>
+      {!bare && <p className={s.sub}>Your research, board and saved ideas follow you to every device.</p>}
 
       {GOOGLE_ENABLED && (
         <>
@@ -274,7 +275,7 @@ export function SignInForm({ id, failed }: { id: string; failed: boolean }) {
           {error}
         </p>
       )}
-      <p className={s.fine}>Without an account, Unmet keeps everything in this browser only.</p>
+      {!bare && <p className={s.fine}>Without an account, Unmet keeps everything in this browser only.</p>}
     </div>
   );
 }
