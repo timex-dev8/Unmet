@@ -1,44 +1,80 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import type { Card } from "@/lib/types";
 import s from "./landing.module.css";
 
-// Full-bleed navy hero. Behind the headline: a slow wall of real complaint quotes from the feed,
-// so the first thing people see is the product's raw material, not a stock photo.
-export default function Hero({ quotes, liveCount }: { quotes: string[]; liveCount: number | null }) {
-  const rows = [quotes.filter((_, i) => i % 3 === 0), quotes.filter((_, i) => i % 3 === 1), quotes.filter((_, i) => i % 3 === 2)];
+const VERDICT = { strong: "Strong opportunity", maybe: "Worth a closer look", weak: "Weak signal so far" } as const;
+
+// The sky hero: serif headline, two buttons, and a real answer from the live feed floating below.
+export default function Hero({ example }: { example: Card | null }) {
   return (
     <header className={s.hero}>
-      <div className={s.wall} aria-hidden="true">
-        {rows.map((row, r) => (
-          <div key={r} className={`${s.wallRow} ${r % 2 ? s.wallReverse : ""}`}>
-            {/* Two copies, so the strip loops without a gap */}
-            {[...row, ...row].map((q, i) => (
-              <span key={i} className={s.wallQuote}>
-                “{q}”
-              </span>
-            ))}
-          </div>
-        ))}
-      </div>
+      <div className={s.clouds} aria-hidden="true" />
 
       <div className={s.heroInner}>
-        <p className={s.eyebrow}>{liveCount ? `${liveCount} problems with proof, found from real posts` : "Startup ideas from real complaints"}</p>
-        <h1 className={s.h1}>Build what people are already asking for.</h1>
-        <p className={s.lede}>
-          Unmet reads thousands of real complaints across the web, finds the ones that keep coming back, and tells you if they’re worth building, with
-          the proof.
-        </p>
+        <h1 className={s.h1}>Build what people are already asking for</h1>
+        <p className={s.lede}>Unmet reads real complaints across the web and tells you which ones are worth building, with the proof.</p>
         <div className={s.ctas}>
-          <Link href="/welcome" className={s.ctaPrimary}>
-            Find your first idea, free
-            <ArrowRight size={18} aria-hidden="true" />
+          <Link href="/welcome" className={`glossy ${s.btn}`}>
+            Find your first idea
           </Link>
-          <a href="#example" className={s.ctaGhost}>
+          <a href={example ? `/app/idea/${example.slug}` : "#how"} className={s.ghost}>
             See an example
           </a>
         </div>
-        <p className={s.heroNote}>No account needed to start.</p>
       </div>
+
+      <Preview example={example} />
     </header>
+  );
+}
+
+function Preview({ example }: { example: Card | null }) {
+  const ideas = (example?.ideas ?? []).slice(0, 2);
+  const verdict = example?.report ? VERDICT[example.report.verdict] : "Strong opportunity";
+  return (
+    <div className={s.previewWrap}>
+      <figure className={s.previewGlass} aria-label="An example answer from Unmet">
+        <div className={s.preview}>
+          <div className={s.previewMain}>
+            <p className={s.bubble}>{example?.query ? example.query : "What do people hate about Calendly?"}</p>
+            <div>
+              <p className={s.verdict}>{verdict}</p>
+              <p className={s.previewTitle}>{example?.headline ?? "Teams pay per seat for basics they barely use"}</p>
+              <p className={s.previewNote}>
+                {example?.report?.reasons[0] ?? "Repeated complaints on several sites, and people say they’d pay to fix it."}
+              </p>
+            </div>
+            {example && <p className={s.previewMeta}>{example.evidence.threads} sources · every quote checked against its page</p>}
+          </div>
+          <aside className={s.previewSide}>
+            <p className={s.sideLabel}>Ideas you could build</p>
+            {ideas.length > 0 ? (
+              ideas.map((idea, i) => (
+                <div key={idea.title}>
+                  {i > 0 && <div className={s.sideRule} />}
+                  <p className={s.ideaName}>{idea.title}</p>
+                  <p className={s.ideaPitch}>{idea.pitch}</p>
+                </div>
+              ))
+            ) : (
+              <>
+                <div>
+                  <p className={s.ideaName}>A flat-price scheduler</p>
+                  <p className={s.ideaPitch}>The basics for one small price, not per seat.</p>
+                </div>
+                <div className={s.sideRule} />
+                <div>
+                  <p className={s.ideaName}>Sync that never drops</p>
+                  <p className={s.ideaPitch}>Calendar sync people can trust.</p>
+                </div>
+              </>
+            )}
+            <Link href={example ? `/app/idea/${example.slug}` : "/welcome"} className={`glossy ${s.btn} ${s.sideBtn}`}>
+              Validate in a day
+            </Link>
+          </aside>
+        </div>
+      </figure>
+    </div>
   );
 }

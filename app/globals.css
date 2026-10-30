@@ -1,29 +1,47 @@
 /* Design tokens: see DESIGN.md ("Unmet editorial"). */
 :root {
-  --ink: #0e1726; /* navy-black text */
-  --ink-2: #3a4252;
-  --muted: #5f6675;
-  --line: #e6e0d2; /* sand hairline */
-  --gray: #f1eee6; /* quiet surfaces */
+  --ink: #19191d; /* text */
+  --ink-2: #3f3f4a;
+  --muted: #6b6b7b;
+  --line: #e9e9ef; /* hairline */
+  --gray: #f2f4f8; /* quiet buttons and chips */
   --white: #ffffff;
-  --paper: #f7f5ef; /* page background */
-  --sand: #dad4c3;
-  --slate: #588ca4; /* secondary text on navy */
-  --primary: #073a8b; /* the one main action per screen */
+  --paper: #ffffff; /* page background */
+  --side: #f8f9fc; /* Studio sidebar */
+  --sand: #dfe3ec; /* quiet borders */
+  --slate: #6b7280; /* small labels */
+  --primary: #1c38ea; /* the one main action per screen (glossy blue) */
 
-  --blue: #0071e3; /* buttons, bars */
-  --link: #0066cc; /* text links */
-  --navy: #073a8b; /* brand */
-  --mid: #369adf;
-  --sky: #83caec;
-  --tint: #e8f1fb; /* highlight marker, AI box */
+  --blue: #1c38ea; /* buttons, bars */
+  --link: #1c38ea; /* text links */
+  --navy: #1c38ea; /* brand blue: "Strong", selected */
+  --deep: #073a8b; /* the logo */
+  --mid: #2d5cf2;
+  --sky: #84b8ef;
+  --tint: #eef1fb; /* highlight marker, selected chips */
+
+  /* The sky (DESIGN.md "v3"): deep blue fading to pale and white, a warm sun glow */
+  --sky-deep: #2c6ad6;
+  --sky-wash: linear-gradient(180deg, #cfe3f8 0%, #e6f1fc 40%, #ffffff 100%);
+  --mist: linear-gradient(180deg, #eef1f8 0%, #f6f7fb 100%);
+  --mist-line: #e8ebf3;
+  --blue-card: radial-gradient(120% 120% at 20% 0%, #6f92f7 0%, #5b7ff0 45%, #8aa6f6 100%);
+  --fade-text: linear-gradient(to right, #19191d 0%, #626275 100%);
+
+  /* The shiny blue button: a soft highlight on top, a pale glow at the bottom right */
+  --glossy:
+    radial-gradient(120% 90% at 28% 0%, rgba(255, 255, 255, 0.38) 0, rgba(255, 255, 255, 0) 52%),
+    radial-gradient(90% 80% at 80% 110%, rgba(140, 190, 255, 0.45) 0, rgba(140, 190, 255, 0) 60%), linear-gradient(180deg, #2d5cf2 0%, #1c38ea 100%);
+  --glossy-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45), inset -2px -2px 4px rgba(191, 229, 251, 0.35), inset 2px 2px 3px rgba(19, 26, 228, 0.12),
+    0 10px 22px -10px rgba(28, 56, 234, 0.65);
 
   --brand-gradient: linear-gradient(180deg, var(--navy) 0%, var(--mid) 58%, var(--sky) 100%);
 
   /* Studio (see DESIGN.md): calm surfaces, one ink, one soft accent. */
   --studio-bg: var(--paper);
   --surface: #ffffff;
-  --text-3: rgba(14, 23, 38, 0.42);
+  --text-3: #9a9aab;
   --ai-tint: var(--gray);
   --ai-ink: var(--ink);
   --early-tint: #fdf3cf;
@@ -33,7 +51,7 @@
   --stage-spotted: #c9ccd3;
   --stage-researching: #9396a0;
   --stage-validating: #5c5f68;
-  --stage-building: #0e1726;
+  --stage-building: #19191d;
 
   /* Motion (DESIGN.md): transform + opacity only, one easing, three speeds */
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -41,7 +59,7 @@
   --t-med: 250ms;
 
   /* Floating surfaces: two soft shadow layers (nav, sheets, panels, cards) */
-  --shadow-float: 0 1px 2px rgba(0, 0, 0, 0.05), 0 16px 40px -18px rgba(0, 0, 0, 0.25);
+  --shadow-float: 0 1px 2px rgba(25, 25, 29, 0.05), 0 24px 50px -24px rgba(70, 110, 220, 0.35);
 
   --font: var(--font-geist), -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
   --font-serif: var(--font-display), "Iowan Old Style", Georgia, serif;
@@ -97,13 +115,15 @@ summary:focus-visible {
   gap: 8px;
   min-height: 44px;
   padding: 12px 24px;
-  border-radius: var(--radius-pill);
+  border-radius: 12px;
   border: 0;
   font-size: 17px;
   font-weight: 500;
   letter-spacing: -0.01em;
   cursor: pointer;
-  transition: opacity var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
+  transition:
+    opacity var(--t-fast) var(--ease),
+    transform var(--t-fast) var(--ease);
 }
 .pill:hover {
   opacity: 0.9;
@@ -125,13 +145,19 @@ summary:focus-visible {
   color: var(--white);
   border: 1px solid rgba(255, 255, 255, 0.4);
 }
-.pill-blue {
-  background: var(--blue);
+.pill-blue,
+.pill-dark,
+.glossy {
+  background: var(--glossy);
+  box-shadow: var(--glossy-shadow);
   color: var(--white);
 }
-.pill-dark {
-  background: var(--primary);
-  color: var(--white);
+/* Section titles fade from ink to gray, left to right */
+.fade-text {
+  background: var(--fade-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .hl {
@@ -186,10 +212,10 @@ summary:focus-visible {
   }
 }
 
-/* The landing page sits on navy, so the overscroll "bounce" above and below it shows navy, not white. */
+/* The landing page opens and closes on deep sky, so the overscroll "bounce" shows sky, not white. */
 html:has([data-landing]) {
-  background: var(--navy);
+  background: var(--sky-deep);
 }
 html:has([data-landing]) body {
-  background: var(--paper);
+  background: var(--white);
 }

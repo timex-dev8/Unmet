@@ -1,20 +1,31 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import s from "./landing.module.css";
 
 const sections = [
   { href: "#how", label: "How it works" },
-  { href: "#example", label: "Example" },
+  { href: "#trust", label: "Why trust it" },
   { href: "#pricing", label: "Pricing" },
-  { href: "#faq", label: "FAQ" },
 ];
 
+// White text on the sky at the top; frosted white with dark text once the page scrolls under it.
 export default function Nav() {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
-    <div className={s.navWrap}>
+    <div className={`${s.navWrap} ${scrolled ? s.navScrolled : ""}`}>
       <nav aria-label="Main" className={s.nav}>
         <Link href="/" className={s.brand} aria-label="Unmet home">
-          <Logo tone="light" />
+          <Logo tone={scrolled ? "dark" : "light"} />
         </Link>
 
         <div className={s.links}>
@@ -26,22 +37,10 @@ export default function Nav() {
         </div>
 
         <div className={s.navRight}>
-          {/* Phone menu: native <details>, works without JavaScript */}
-          <details className={s.menu}>
-            <summary>Menu</summary>
-            <div className={s.menuPanel}>
-              {sections.map((l) => (
-                <a key={l.href} href={l.href}>
-                  {l.label}
-                </a>
-              ))}
-              <Link href="/welcome">Sign in</Link>
-            </div>
-          </details>
           <Link href="/welcome" className={s.signIn}>
             Sign in
           </Link>
-          <Link href="/welcome" className={s.navCta}>
+          <Link href="/welcome" className={`glossy ${s.navCta}`}>
             Try free
           </Link>
         </div>

@@ -1,17 +1,13 @@
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, Check } from "lucide-react";
-import WorthBuilding from "@/components/idea/WorthBuilding";
-import { LogoMark } from "@/components/Logo";
-import { LENS_LABEL } from "@/lib/lenses";
-import type { Card } from "@/lib/types";
+import { Check, Plus } from "lucide-react";
 import s from "./landing.module.css";
 
-const SOURCES = ["Hacker News", "Stack Exchange", "App Store reviews", "GitHub issues", "Bluesky", "Community forums", "The open web"];
+const SOURCES = ["Hacker News", "Stack Exchange", "App Store reviews", "GitHub issues", "Bluesky", "Community forums"];
 
 export function SourceStrip() {
   return (
     <section className={s.sources} aria-label="Where Unmet looks">
-      <p>Reads what people write in public</p>
+      <p className={s.label}>Reads what people write in public</p>
       <ul>
         {SOURCES.map((x) => (
           <li key={x}>{x}</li>
@@ -23,28 +19,59 @@ export function SourceStrip() {
 
 const STEPS = [
   {
-    title: "Name a market or a product",
-    text: "“Wedding photographers.” “Dental clinics.” “What people hate about Calendly.” Plain words are enough.",
+    title: "Name a market",
+    text: "“Wedding photographers” or “Calendly”.",
+    icon: (
+      <>
+        <circle cx="11" cy="11" r="7" />
+        <path d="m20 20-3.5-3.5" />
+      </>
+    ),
   },
   {
-    title: "Unmet reads and checks",
-    text: "It searches forums, reviews, Q&A and posts from the last year, keeps first-hand complaints, and checks every quote against its source.",
+    title: "We read real posts",
+    text: "Every quote checked against its source.",
+    icon: (
+      <>
+        <path d="M4 6h16M4 12h10M4 18h7" />
+        <path d="m15 17 2 2 4-4" />
+      </>
+    ),
   },
   {
-    title: "Get a verdict and ideas",
-    text: "Each problem gets a “worth building?” verdict from the evidence, and product ideas that cite the complaints they solve.",
+    title: "Get ideas worth building",
+    text: "A clear verdict, and products to make.",
+    icon: (
+      <>
+        <path d="M9 18h6M10 21h4" />
+        <path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2.2h5c.1-1 .5-1.7 1.1-2.2A6 6 0 0 0 12 3z" />
+      </>
+    ),
   },
 ];
 
 export function HowItWorks() {
   return (
     <section id="how" className={s.section}>
-      <p className={s.kicker}>How it works</p>
-      <h2 className={s.h2}>From a hunch to a problem with proof, in about a minute.</h2>
+      <h2 className={`fade-text ${s.h2}`}>From a hunch to a problem with proof</h2>
+      <p className={s.sub}>About a minute, and every claim links to a real post.</p>
       <ol className={s.steps}>
-        {STEPS.map((step, i) => (
-          <li key={step.title}>
-            <span className={s.stepNum}>{i + 1}</span>
+        {STEPS.map((step) => (
+          <li key={step.title} className={s.step}>
+            <span className={s.icon} aria-hidden="true">
+              <svg
+                width="30"
+                height="30"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#fff"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                {step.icon}
+              </svg>
+            </span>
             <h3>{step.title}</h3>
             <p>{step.text}</p>
           </li>
@@ -54,74 +81,22 @@ export function HowItWorks() {
   );
 }
 
-// A real report from the live feed, not a mock-up.
-export function Example({ card }: { card: Card }) {
-  const ideas = (card.ideas ?? []).slice(0, 2);
-  return (
-    <section id="example" className={`${s.section} ${s.exampleSection}`}>
-      <p className={s.kicker}>A real example, from this week’s feed</p>
-      <h2 className={s.h2}>{card.headline}</h2>
-      <p className={s.exampleWho}>
-        {card.evidence.threads} sources · {card.who}
-      </p>
-
-      <div className={s.exampleGrid}>
-        <div className={s.examplePanel}>{card.report && <WorthBuilding report={card.report} />}</div>
-        <div className={s.exampleIdeas}>
-          {ideas.map((idea) => (
-            <article key={idea.title} className={s.miniIdea}>
-              <span className={s.miniLens}>{LENS_LABEL[idea.lens]}</span>
-              <h3>{idea.title}</h3>
-              <p>{idea.pitch}</p>
-              <dl>
-                <div>
-                  <dt>Who pays</dt>
-                  <dd>{idea.whoPays}</dd>
-                </div>
-                <div>
-                  <dt>First version</dt>
-                  <dd>{idea.mvp}</dd>
-                </div>
-              </dl>
-              {idea.evidence[0] && <q>{idea.evidence[0]}</q>}
-            </article>
-          ))}
-          <Link href={`/app/idea/${card.slug}`} className={s.exampleLink}>
-            Open the full report, with every source
-            <ArrowUpRight size={16} aria-hidden="true" />
-          </Link>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-const DIFFERENT = [
-  {
-    title: "Every claim links to a real post",
-    text: "Quotes are checked word for word against the page they came from. If it can’t be traced, it isn’t shown.",
-  },
-  {
-    title: "Ideas cite the complaints they solve",
-    text: "No idea from thin air: each one points to the people it would help, and where to find the first ten.",
-  },
-  {
-    title: "Checked against what already exists",
-    text: "Before an idea reaches you, Unmet looks for products that already do it, and tells you the gap.",
-  },
+const TRUST = [
+  { lead: "Every claim links to a real post.", text: "If a quote can’t be traced to its page, it isn’t shown." },
+  { lead: "Ideas cite their complaints.", text: "Each one points to the people it helps and where to find the first ten." },
+  { lead: "Checked against what exists.", text: "Unmet looks for products that already do it, and names the gap." },
 ];
 
-export function Different() {
+export function Trust() {
   return (
-    <section className={s.section}>
-      <p className={s.kicker}>Why trust it</p>
-      <h2 className={s.h2}>Evidence first. Opinions clearly labeled.</h2>
+    <section id="trust" className={`${s.section} ${s.center}`}>
+      <h2 className={`fade-text ${s.h2}`}>Evidence first. Opinions labeled.</h2>
+      <p className={s.sub}>Most idea tools make things up. Unmet shows its work.</p>
       <div className={s.trio}>
-        {DIFFERENT.map((d) => (
-          <div key={d.title}>
-            <h3>{d.title}</h3>
-            <p>{d.text}</p>
-          </div>
+        {TRUST.map((t) => (
+          <p key={t.lead} className={s.cap}>
+            <b>{t.lead}</b> {t.text}
+          </p>
         ))}
       </div>
     </section>
@@ -131,16 +106,14 @@ export function Different() {
 const PLANS = [
   {
     name: "Guest",
-    price: "Free",
     note: "No account",
-    items: ["The live feed of problems", "“Worth building?” reports and ideas", "Quick research (Low depth)", "Saved on this device"],
+    items: ["The live feed and every report", "Quick research (Low)", "Saved on this device"],
     cta: "Try it now",
   },
   {
     name: "Account",
-    price: "Free",
-    note: "Email and password, or a link",
-    items: ["Everything in Guest", "Deeper research: Medium and High", "Competitor check with verified revenue", "Synced on every device"],
+    note: "Email and password",
+    items: ["Everything in Guest", "Deeper research: Medium and High", "Synced on every device"],
     cta: "Create a free account",
     featured: true,
   },
@@ -149,23 +122,22 @@ const PLANS = [
 export function Pricing() {
   return (
     <section id="pricing" className={s.section}>
-      <p className={s.kicker}>Pricing</p>
-      <h2 className={s.h2}>Free while we build it with you.</h2>
+      <h2 className={`fade-text ${s.h2}`}>Free while we build it with you</h2>
       <div className={s.plans}>
         {PLANS.map((p) => (
-          <div key={p.name} className={`${s.plan} ${p.featured ? s.planFeatured : ""}`}>
+          <div key={p.name} className={`${s.plan} ${p.featured ? s.planBlue : s.planMist}`}>
             <p className={s.planName}>{p.name}</p>
-            <p className={s.planPrice}>{p.price}</p>
+            <p className={s.planPrice}>Free</p>
             <p className={s.planNote}>{p.note}</p>
             <ul>
               {p.items.map((i) => (
                 <li key={i}>
-                  <Check size={16} aria-hidden="true" />
+                  <Check size={17} aria-hidden="true" />
                   {i}
                 </li>
               ))}
             </ul>
-            <Link href="/welcome" className={p.featured ? s.planCtaPrimary : s.planCta}>
+            <Link href="/welcome" className={s.planCta}>
               {p.cta}
             </Link>
           </div>
@@ -201,12 +173,14 @@ const FAQ = [
 export function Faq() {
   return (
     <section id="faq" className={s.section}>
-      <p className={s.kicker}>Questions</p>
-      <h2 className={s.h2}>Good questions to ask a tool like this.</h2>
+      <h2 className={`fade-text ${s.h2}`}>Questions</h2>
       <div className={s.faq}>
         {FAQ.map((f) => (
           <details key={f.q}>
-            <summary>{f.q}</summary>
+            <summary>
+              {f.q}
+              <Plus size={22} aria-hidden="true" />
+            </summary>
             <p>{f.a}</p>
           </details>
         ))}
@@ -215,29 +189,22 @@ export function Faq() {
   );
 }
 
+// The sky comes back at the end, fading up from white.
 export function Closing() {
   return (
-    <section className={s.closing}>
-      <h2 className={s.closingTitle}>Your next idea is already out there. Someone just complained about it.</h2>
-      <Link href="/welcome" className={s.ctaPrimary}>
+    <footer className={s.closing}>
+      <h2 className={s.closingTitle}>Your next idea is already out there</h2>
+      <p className={s.closingSub}>Someone just complained about it.</p>
+      <Link href="/welcome" className={`glossy ${s.btn}`}>
         Find it, free
-        <ArrowRight size={18} aria-hidden="true" />
       </Link>
-    </section>
-  );
-}
-
-export function Footer() {
-  return (
-    <footer className={s.footer}>
-      <span className={s.footerBrand}>
-        <LogoMark tone="light" size={22} /> Unmet
-      </span>
-      <span>Ideas from real complaints, with the proof.</span>
-      <nav aria-label="Footer">
-        <a href="#how">How it works</a>
-        <a href="#pricing">Pricing</a>
-        <Link href="/welcome">Sign in</Link>
+      <nav aria-label="Footer" className={s.footer}>
+        <span>Unmet · Ideas from real complaints, with the proof</span>
+        <span className={s.footerLinks}>
+          <a href="#how">How it works</a>
+          <a href="#pricing">Pricing</a>
+          <Link href="/welcome">Sign in</Link>
+        </span>
       </nav>
     </footer>
   );
