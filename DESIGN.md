@@ -63,6 +63,7 @@ Landing CTAs → `/welcome`: the full-screen sky with a frosted white card in th
 - **Top bar:** clear at the top, frosted white with a hairline once content scrolls under it.
 - **Sidebar:** `--side` with a hairline; the active item is a white rounded rectangle that glides.
 - **Cards:** white with a hairline ring, a category chip, a serif headline, one evidence line ("6 sources on 4 sites · Strong opportunity"), a small shiny Save and a "See ideas →" link.
+- **Feed:** for inspiration, not only problems. Every third card is a real product that's working (`components/card/ProductCard.tsx`, data from `lib/products`): a blue "Working" chip, the name as the serif headline, one line on what it is, proof chips that link to their source ("$12k MRR, verified · TrustMRR", "#5 top-grossing in Finance · App Store"), and the shiny **Find its gaps** button that starts research on what its users complain about.
 - **Tiles:** the first blue, the rest mist, with a big serif number.
 
 ## Rules

@@ -1,0 +1,86 @@
+/* Product card (components/card/ProductCard.tsx): shares the feed card's frame (ideaCard.module.css). */
+.working {
+  flex: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--white);
+  background: var(--blue-card);
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+}
+.proof {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.proof a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  min-height: 40px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--mist);
+  box-shadow: inset 0 0 0 1px var(--mist-line);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  transition: box-shadow var(--t-fast) var(--ease);
+}
+.proof a:hover {
+  box-shadow: inset 0 0 0 1px #c9d3f5;
+}
+.site {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.why {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.actions {
+  display: flex;
+  gap: 8px;
+}
+.gaps {
+  flex: 1;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 18px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  transition: transform var(--t-fast) var(--ease);
+}
+.gaps:active {
+  transform: scale(0.97);
+}
+.visit {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 16px;
+  border-radius: 12px;
+  background: var(--gray);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+@media (min-width: 900px) {
+  .gaps {
+    flex: none;
+  }
+  .why {
+    font-size: 16px;
+  }
+}

@@ -201,3 +201,20 @@ alter table feed_topics enable row level security;
 
 drop policy if exists "public read feed" on feed_cards;
 create policy "public read feed" on feed_cards for select using (true);
+
+-- ---------------------------------------------------------------------------
+-- Stage 4: "what's working". Real products with proof (verified revenue, top-grossing charts,
+-- upvotes, stars), mixed into the feed. The evening feed job refreshes them (lib/products).
+
+create table if not exists feed_products (
+  slug text primary key,
+  product jsonb not null,
+  category text not null,
+  score int not null default 0,          -- strength of the proof, for ordering
+  updated_at timestamptz not null default now()
+);
+create index if not exists feed_products_rank_idx on feed_products (score desc);
+
+alter table feed_products enable row level security;
+drop policy if exists "public read products" on feed_products;
+create policy "public read products" on feed_products for select using (true);

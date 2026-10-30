@@ -86,3 +86,26 @@ export type Card = {
   signal?: "early"; // backed by only 2 sources: shown as an early signal, not a proven problem
   fresh?: boolean; // built on demand from a search
 };
+
+/** One piece of proof that a product is working, with the page it comes from. */
+export type ProductProof = {
+  kind: "mrr" | "growth" | "grossing" | "votes" | "stars" | "traffic";
+  label: string; // e.g. "$12k MRR, verified", "#7 top-grossing in Finance (US)"
+  url: string;
+  site: string; // e.g. "TrustMRR", "App Store"
+};
+
+/** A real product that's working, shown in the feed for inspiration next to the problems. */
+export type Product = {
+  kind: "product";
+  slug: string;
+  name: string;
+  url: string; // the product's own site or store page
+  oneLine: string; // what it is, in our own words
+  forWho: string;
+  category: Category;
+  why: string; // why it's working, from the proof only
+  proof: ProductProof[];
+  rising?: boolean; // grew in the last 30 days
+  updatedAt: string; // ISO date the proof was pulled
+};

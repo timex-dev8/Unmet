@@ -143,3 +143,15 @@ export const PROFILE_SYSTEM = `Someone told Unmet, in their own words, what they
 - niches: 3 niches to research, each phrased as a group of people (2–5 words), specific enough to have shared problems.
 - category: the closest from the list.
 Stay close to what they said; don't drift into unrelated markets.`;
+
+export const PRODUCT_SYSTEM = `You write short cards about real products that are working, for Unmet's feed. Founders scroll it for inspiration: what are people building, and paying for, right now?
+You get products, each with an index, a name, the source's own description and proof (revenue, chart rank, votes, stars).
+For each product:
+- keep: true only for a real product or tool that people use for work, money, health, learning or home life, the kind a founder could learn from or build a rival to. Small and indie products, niche tools and new launches are best.
+- keep: false for big companies and household names (Adobe, Zoom, Microsoft, LinkedIn, Intuit, Google, OpenAI, Anthropic…); games, game ports and anything game-themed; art pieces, toys, demos, hardware hobby builds, benchmarks and one-off experiments; gambling, dating, adult content, crypto trading, VPNs; tools for piracy or getting around paywalls; and anything you can't tell what it does.
+- name: the product's short name.
+- oneLine: what it is, in your own plain words, 6–14 words. Never copy the description. Say what it does for whom, e.g. "Bookkeeping and invoicing for freelancers and tiny businesses".
+- forWho: the people who use it, 2–6 words.
+- category: one of Dev tools, Productivity, Money, Work, Health, Home.
+- why: one short sentence on what the proof shows about demand, without repeating its numbers. E.g. a top-grossing app: "People pay for this every month."; fast GitHub stars: "Developers picked it up fast."; Show HN points: "Builders on Hacker News rallied around it."; verified MRR: "Customers pay for it, and the revenue is verified." Never invent facts.
+Plain words, no hype, no emoji.`;

@@ -2,20 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import {
-  AnimatePresence,
-  motion,
-  useMotionValue,
-  useReducedMotion,
-  useTransform,
-  type PanInfo,
-} from "motion/react";
+import { AnimatePresence, motion, useMotionValue, useReducedMotion, useTransform, type PanInfo } from "motion/react";
 import { Bookmark, ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
 import IdeaCard from "@/components/card/IdeaCard";
+import ProductCard from "@/components/card/ProductCard";
 import { markSkipped, useInterests } from "@/lib/interests";
 import { profileKeywords, textMatch } from "@/lib/rank";
 import { useSaved } from "@/lib/saved";
-import type { Card } from "@/lib/types";
+import type { Card, Product } from "@/lib/types";
 import s from "./feed.module.css";
 
 // Swipe directions: 1 = next (up), -1 = back (down), 2 = saved (right).
@@ -25,13 +19,27 @@ const SWIPE_DISTANCE = 100;
 const SWIPE_VELOCITY = 600;
 const HINT_KEY = "unmet:hint-seen";
 
-export default function SwipeFeed({ cards: input }: { cards: Card[] }) {
+type Item = Card | Product;
+const isProduct = (x: Item | undefined): x is Product => (x as Product | undefined)?.kind === "product";
+const keyOf = (x: Item) => (isProduct(x) ? `product-${x.slug}` : x.slug);
+
+// The feed is for inspiration: problems people complain about, and every third card a real product
+// that's working (lib/products).
+export default function SwipeFeed({ cards: input, products = [] }: { cards: Card[]; products?: Product[] }) {
   // Problems matching what this person told Unmet (and the niches they watch) come first.
   const { interests } = useInterests();
   const cards = useMemo(() => {
     const keywords = profileKeywords(interests);
-    return keywords.length ? [...input].sort((a, b) => textMatch(b, keywords) - textMatch(a, keywords)) : input;
-  }, [input, interests]);
+    const problems = keywords.length ? [...input].sort((a, b) => textMatch(b, keywords) - textMatch(a, keywords)) : input;
+    const out: Item[] = [];
+    let p = 0;
+    let c = 0;
+    while (c < problems.length || p < products.length) {
+      if ((out.length % 3 === 2 && p < products.length) || c >= problems.length) out.push(products[p++]);
+      else out.push(problems[c++]);
+    }
+    return out;
+  }, [input, products, interests]);
   const [index, setIndex] = useState(0);
   const [dir, setDir] = useState<Dir>(1);
   const [toast, setToast] = useState("");
@@ -53,7 +61,8 @@ export default function SwipeFeed({ cards: input }: { cards: Card[] }) {
     (d: Dir) => {
       markHintSeen();
       // Moving on without saving tells the ranking this card wasn't interesting.
-      if (d === 1 && cards[index]) markSkipped(cards[index].slug);
+      const current = cards[index];
+      if (d === 1 && current && !isProduct(current)) markSkipped(current.slug);
       setDir(d);
       setIndex((i) => (d === -1 ? Math.max(i - 1, 0) : Math.min(i + 1, cards.length)));
     },
@@ -63,6 +72,8 @@ export default function SwipeFeed({ cards: input }: { cards: Card[] }) {
   const saveAndNext = useCallback(() => {
     const current = cards[index];
     if (!current) return;
+    // Products aren't saved (the board holds problems); a right swipe just moves on
+    if (isProduct(current)) return go(1);
     save(current);
     flash("Saved");
     go(2);
@@ -98,12 +109,7 @@ export default function SwipeFeed({ cards: input }: { cards: Card[] }) {
   const variants = {
     enter: (d: Dir) => (d === -1 ? { y: -500, opacity: 0 } : { y: 16, scale: 0.96, opacity: 0.6 }),
     center: { x: 0, y: 0, scale: 1, opacity: 1, rotate: 0 },
-    exit: (d: Dir) =>
-      d === 2
-        ? { x: 480, rotate: 10, opacity: 0 }
-        : d === 1
-          ? { y: -600, opacity: 0 }
-          : { y: 40, scale: 0.96, opacity: 0 },
+    exit: (d: Dir) => (d === 2 ? { x: 480, rotate: 10, opacity: 0 } : d === 1 ? { y: -600, opacity: 0 } : { y: 40, scale: 0.96, opacity: 0 }),
   };
 
   if (!cards.length) {
@@ -125,22 +131,9 @@ export default function SwipeFeed({ cards: input }: { cards: Card[] }) {
 
         <AnimatePresence initial={false} custom={dir}>
           {card ? (
-            <SwipeCard
-              key={card.slug}
-              card={card}
-              dir={dir}
-              variants={variants}
-              duration={duration}
-              onDragEnd={onDragEnd}
-            />
+            <SwipeCard key={keyOf(card)} card={card} dir={dir} variants={variants} duration={duration} onDragEnd={onDragEnd} />
           ) : (
-            <motion.div
-              key="end"
-              className={s.end}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration }}
-            >
+            <motion.div key="end" className={s.end} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration }}>
               <h2 className={s.endTitle}>You’ve seen every idea.</h2>
               <p className={s.endText}>New problems are added as people post them.</p>
               <div className={s.endActions}>
@@ -203,7 +196,7 @@ function SwipeCard({
   duration,
   onDragEnd,
 }: {
-  card: Card;
+  card: Item;
   dir: Dir;
   variants: Record<string, unknown>;
   duration: number;
@@ -228,11 +221,13 @@ function SwipeCard({
       onDragEnd={onDragEnd}
       style={{ x, rotate }}
     >
-      <motion.div className={s.stamp} style={{ opacity: stamp }} aria-hidden="true">
-        <Bookmark size={18} fill="currentColor" />
-        Save
-      </motion.div>
-      <IdeaCard card={card} />
+      {!isProduct(card) && (
+        <motion.div className={s.stamp} style={{ opacity: stamp }} aria-hidden="true">
+          <Bookmark size={18} fill="currentColor" />
+          Save
+        </motion.div>
+      )}
+      {isProduct(card) ? <ProductCard product={card} /> : <IdeaCard card={card} />}
     </motion.div>
   );
 }
