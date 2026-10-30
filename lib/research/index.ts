@@ -122,13 +122,26 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   const raw = settled.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
   if (settled.every((r) => r.status === "rejected")) throw new Error("Search failed. Check the EXA_API_KEY and try again.");
 
+  // What each service returned ("Reddit 8, Hacker News 10, App Store reviews failed"), so a quiet failure shows.
+  const perService = new Map<string, { n: number; failed: boolean }>();
+  settled.forEach((r, i) => {
+    const e = perService.get(jobs[i].name) ?? { n: 0, failed: false };
+    if (r.status === "fulfilled") e.n += r.value.length;
+    else {
+      e.failed = true;
+      console.warn(`[research] ${jobs[i].name} search failed:`, r.reason instanceof Error ? r.reason.message : r.reason);
+    }
+    perService.set(jobs[i].name, e);
+  });
+  const serviceLine = [...perService].map(([name, e]) => (e.failed && !e.n ? `${name} failed` : `${name} ${e.n}`)).join(", ");
+
   // 3. Quality filter
   const quality = filterSources(raw, WINDOW_DAYS);
   const sources = pickDiverse(quality.kept, cfg.maxSources);
   const rejectedCount = Object.values(quality.rejected).reduce((a, b) => a + b, 0);
   emit({
     type: "step",
-    label: `Found ${raw.length} sources, kept ${sources.length} after quality checks${rejectedCount ? ` (${quality.rejected.old} too old, ${quality.rejected.untrusted} vendor pages or listicles, ${quality.rejected.duplicate + quality.rejected.thin} duplicates or too thin)` : ""}`,
+    label: `Found ${raw.length} sources (${serviceLine}), kept ${sources.length} after quality checks${rejectedCount ? ` (${quality.rejected.old} too old, ${quality.rejected.untrusted} vendor pages or listicles, ${quality.rejected.duplicate + quality.rejected.thin} duplicates or too thin)` : ""}`,
   });
   if (sources.length === 0) {
     emit({ type: "result", answer: `I couldn't find recent first-hand posts about “${plan.topic}”. Try different wording or a narrower audience.`, cards: [], sourceCount: 0 });
