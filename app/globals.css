@@ -16,6 +16,45 @@
 
   --brand-gradient: linear-gradient(180deg, var(--navy) 0%, var(--mid) 58%, var(--sky) 100%);
 
+  /* Category colors: dot/strip = saturated, tint = background, ink = text on tint (4.5:1+).
+     The same color always means the same category. See lib/colors.ts. */
+  --c-dev: #5856d6;
+  --c-dev-tint: #eeeefc;
+  --c-dev-ink: #3634a3;
+  --c-prod: #af52de;
+  --c-prod-tint: #f6edfc;
+  --c-prod-ink: #7a2fa3;
+  --c-money: #34c759;
+  --c-money-tint: #e9f8ed;
+  --c-money-ink: #1d7a37;
+  --c-work: #ff9500;
+  --c-work-tint: #fff3e3;
+  --c-work-ink: #9a5600;
+  --c-health: #ff2d55;
+  --c-health-tint: #ffeaf0;
+  --c-health-ink: #b0163a;
+  --c-home: #30b0c7;
+  --c-home-tint: #e6f6f9;
+  --c-home-ink: #12707f;
+
+  /* Status: rising, early signal, AI (suggestions and estimates). */
+  --rise-tint: #e9f8ed;
+  --rise-ink: #1d7a37;
+  --early-tint: #fff3e3;
+  --early-ink: #9a5600;
+  --ai: #7b5cf0;
+  --ai-tint: #f2eefd;
+  --ai-ink: #5b3cc4;
+
+  /* Board stages */
+  --stage-spotted: #8e8e93;
+  --stage-researching: #0071e3;
+  --stage-validating: #ff9f0a;
+  --stage-building: #34c759;
+
+  /* Floating surfaces: two soft shadow layers (nav, sheets, panels, cards) */
+  --shadow-float: 0 1px 2px rgba(0, 0, 0, 0.05), 0 16px 40px -18px rgba(0, 0, 0, 0.25);
+
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", var(--font-inter), "Helvetica Neue", Arial, sans-serif;
 
   --radius-tile: 28px;

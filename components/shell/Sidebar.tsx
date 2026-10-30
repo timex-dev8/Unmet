@@ -28,7 +28,7 @@ export default function Sidebar() {
       </Link>
 
       <nav className={s.nav} aria-label="Sections">
-        {NAV.map(({ href, label, Icon }) => {
+        {NAV.map(({ href, label, Icon, color }) => {
           const on = isActive(pathname, href);
           return (
             <Link
@@ -37,7 +37,9 @@ export default function Sidebar() {
               className={`${s.navItem} ${on && pathname === href ? s.navOn : on ? s.navWithin : ""}`}
               aria-current={on ? "page" : undefined}
             >
-              <Icon size={18} aria-hidden="true" />
+              <span className={s.navIcon} style={{ background: color }}>
+                <Icon size={16} strokeWidth={2.2} aria-hidden="true" />
+              </span>
               {label}
               {href === "/app/board" && saved.length > 0 && <span className={s.count}>{saved.length}</span>}
             </Link>

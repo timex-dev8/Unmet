@@ -41,6 +41,7 @@ export default function ResearchChat({
   configured,
   threadId,
   initialQuery,
+  initialDepth,
   about,
 }: {
   configured: boolean;
@@ -48,6 +49,8 @@ export default function ResearchChat({
   threadId?: string;
   /** Starts a research right away (from Home, a card's "Dig deeper", or the Mind page). */
   initialQuery?: string;
+  /** Depth chosen on Home. */
+  initialDepth?: Depth;
   /** The idea a "Dig deeper" research is about, sent to the AI as context. */
   about?: Context;
 }) {
@@ -56,7 +59,7 @@ export default function ResearchChat({
   const thread = useThread(threadId);
   const messages = thread?.messages ?? [];
   const [input, setInput] = useState("");
-  const [depth, setDepth] = useState<Depth>("medium");
+  const [depth, setDepth] = useState<Depth>(initialDepth ?? "medium");
   const [openCard, setOpenCard] = useState<Card | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const busy = messages.some((m) => m.pending);
@@ -238,21 +241,16 @@ export default function ResearchChat({
             </button>
           </form>
           <div className={s.options}>
-            <div className={s.depth} role="radiogroup" aria-label="Research depth">
-              {DEPTHS.map((d) => (
-                <button
-                  key={d.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={depth === d.id}
-                  className={`${s.depthBtn} ${depth === d.id ? s.depthOn : ""}`}
-                  onClick={() => setDepth(d.id)}
-                  disabled={busy}
-                >
-                  {d.label}
-                </button>
-              ))}
-            </div>
+            <label className={s.depthPill}>
+              <span className="sr-only">Research depth</span>
+              <select value={depth} onChange={(e) => setDepth(e.target.value as Depth)} disabled={busy}>
+                {DEPTHS.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    Depth: {d.label}
+                  </option>
+                ))}
+              </select>
+            </label>
             <span className={s.depthHint}>{DEPTHS.find((d) => d.id === depth)!.hint}</span>
           </div>
           {empty && configured && !about && (
@@ -305,6 +303,22 @@ function UserBubble({ text }: { text: string }) {
   );
 }
 
+function StepList({ steps, pending }: { steps: string[]; pending?: boolean }) {
+  return (
+    <ol className={s.steps}>
+      {steps.map((step, i) => {
+        const running = pending && i === steps.length - 1;
+        return (
+          <li key={i} className={running ? s.stepRunning : undefined}>
+            {running ? <LoaderCircle size={15} className={s.spin} aria-hidden="true" /> : <Check size={15} aria-hidden="true" />}
+            {step}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 function Reply({
   m,
   isLast,
@@ -332,18 +346,16 @@ function Reply({
 
   return (
     <div className={s.reply}>
-      {steps.length > 0 && (
-        <ol className={s.steps}>
-          {steps.map((step, i) => {
-            const running = m.pending && i === steps.length - 1;
-            return (
-              <li key={i} className={running ? s.stepRunning : undefined}>
-                {running ? <LoaderCircle size={15} className={s.spin} aria-hidden="true" /> : <Check size={15} aria-hidden="true" />}
-                {step}
-              </li>
-            );
-          })}
-        </ol>
+      {steps.length > 0 && m.pending && <StepList steps={steps} pending />}
+      {steps.length > 0 && !m.pending && (
+        // Once done, the steps fold into one line; the detail is a tap away.
+        <details className={s.stepsFold}>
+          <summary>
+            <Check size={14} aria-hidden="true" />
+            {m.mix ?? `${steps.length} steps`}
+          </summary>
+          <StepList steps={steps} />
+        </details>
       )}
       {m.pending && steps.length === 0 && (
         <p className={s.thinking}>
@@ -360,7 +372,7 @@ function Reply({
       )}
       {!m.pending && !m.error && m.sourceCount ? (
         <p className={s.footnote}>
-          {m.mix ?? `Based on ${m.sourceCount} sources`}. Last 12 months only; every quote is checked against its source.
+          Sources from the last 12 months; every quote is checked against its source.
         </p>
       ) : null}
       {isLast && cards.length > 0 && (

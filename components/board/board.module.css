@@ -279,3 +279,30 @@
     cursor: grabbing;
   }
 }
+
+/* v2: stage and category colors (always next to their names) */
+.stageDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+}
+.catDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+.tab {
+  gap: 2px;
+}
+.item {
+  border-radius: 22px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.item:hover {
+  box-shadow: var(--shadow-float);
+}
+.meta {
+  font-weight: 600;
+}

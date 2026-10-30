@@ -1,10 +1,13 @@
 /* ---------- Nav (the only glass surface) ---------- */
+/* Floats over the hero. (It used to be sticky with a -80px margin, which left a ~4px
+   white strip above the blue hero, because the wrapper is ~84px tall.) */
 .navWrap {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 20;
   padding: 12px 16px;
-  margin-bottom: -80px;
 }
 .nav {
   position: relative;

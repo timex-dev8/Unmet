@@ -85,7 +85,7 @@
   transition: color 0.15s ease;
 }
 .tabOn {
-  color: var(--blue);
+  color: var(--blue); /* overridden per section with its own color */
 }
 
 /* ---------- Sidebar (desktop) ---------- */
@@ -107,11 +107,21 @@
   flex-direction: column;
   gap: 2px;
 }
+.navIcon {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: 8px;
+  color: var(--white);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
 .navItem {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 40px;
+  gap: 12px;
+  min-height: 42px;
   padding: 0 12px;
   border-radius: 10px;
   font-size: 15px;
@@ -205,9 +215,9 @@
     height: 100dvh;
     display: flex;
     flex-direction: column;
-    padding: 16px 12px;
-    background: #fbfbfd;
-    border-right: 1px solid var(--line);
+    padding: 18px 12px;
+    /* lighter: same surface as the page, no divider (grouping by space, not lines) */
+    background: var(--gray);
   }
   .tabs,
   .topBrand,

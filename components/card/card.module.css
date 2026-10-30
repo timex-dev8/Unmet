@@ -193,3 +193,45 @@
   width: 44px;
   padding: 0;
 }
+
+/* v2: category icon tile and score chips */
+.catIcon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+}
+.scoreChips {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.scoreChip {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--gray);
+}
+.scoreChipLabel {
+  font-size: 11px;
+  color: var(--muted);
+}
+.scoreChipValue {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.scoreDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.count {
+  font-size: 14px;
+  font-weight: 700;
+}

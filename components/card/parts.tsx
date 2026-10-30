@@ -1,4 +1,5 @@
-import { ArrowDown, ArrowRight, ArrowUp, Sparkles } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUp, Briefcase, Code, HeartPulse, House, Sparkles, Timer, Wallet } from "lucide-react";
+import { categoryColor, levelColor } from "@/lib/colors";
 import type { Card, SourceKind, Trend } from "@/lib/types";
 import s from "./card.module.css";
 
@@ -44,7 +45,9 @@ export function CardTags({ card }: { card: Card }) {
   return (
     <div className={s.tagRow}>
       <div className={s.tags}>
-        <span className={s.tag}>{card.category}</span>
+        <span className={s.tag} style={{ background: categoryColor(card.category).tint, color: categoryColor(card.category).ink }}>
+          {card.category}
+        </span>
         {card.sample && <span className={`${s.tag} ${s.tagSample}`}>Sample</span>}
         {card.fresh && <span className={`${s.tag} ${s.tagFresh}`}>Fresh</span>}
         {card.signal === "early" && <span className={`${s.tag} ${s.tagSample}`}>Early signal</span>}
@@ -167,6 +170,51 @@ export function AiSuggestions({ card, limit }: { card: Card; limit?: number }) {
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+const CATEGORY_ICON: Record<string, typeof Code> = {
+  "Dev tools": Code,
+  Productivity: Timer,
+  Money: Wallet,
+  Work: Briefcase,
+  Health: HeartPulse,
+  Home: House,
+};
+
+/** The category's icon in a tile of its color. */
+export function CategoryIcon({ category, size = 40 }: { category: string; size?: number }) {
+  const Icon = CATEGORY_ICON[category] ?? Code;
+  return (
+    <span
+      className={s.catIcon}
+      style={{ width: size, height: size, background: categoryColor(category).solid, borderRadius: size * 0.3 }}
+      aria-hidden="true"
+    >
+      <Icon size={size * 0.48} strokeWidth={2.2} />
+    </span>
+  );
+}
+
+/** Demand / competition / difficulty as small chips: a colored dot plus the word (never color alone). */
+export function ScoreChips({ card }: { card: Card }) {
+  const rows = [
+    ["Demand", card.scores.demand, true],
+    ["Competition", card.scores.competition, false],
+    ["Difficulty", card.scores.difficulty, false],
+  ] as const;
+  return (
+    <div className={s.scoreChips}>
+      {rows.map(([name, sc, goodWhenHigh]) => (
+        <div key={name} className={s.scoreChip}>
+          <span className={s.scoreChipLabel}>{name}</span>
+          <span className={s.scoreChipValue}>
+            <span className={s.scoreDot} style={{ background: levelColor(sc.label, goodWhenHigh) }} aria-hidden="true" />
+            {sc.label}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }

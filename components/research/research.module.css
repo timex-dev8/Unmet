@@ -143,10 +143,46 @@
 .card {
   background: var(--white);
   border-radius: 24px;
-  padding: 20px;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-float);
+}
+.cardStrip {
+  height: 5px;
+  flex: none;
+}
+.cardInner {
+  padding: 18px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cardTag {
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+}
+.cardFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.cardFoot strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.cardFoot > button {
+  flex: 0 0 auto;
+  min-width: 108px;
 }
 .cardMeta {
   display: flex;
@@ -433,31 +469,6 @@
   }
 }
 
-/* Research depth switch (Low / Medium / High) */
-.depth {
-  display: inline-grid;
-  grid-template-columns: repeat(3, auto);
-  gap: 2px;
-  padding: 3px;
-  border-radius: 12px;
-  background: #e8e8ed;
-}
-.depthBtn {
-  min-height: 36px;
-  padding: 0 14px;
-  border: 0;
-  border-radius: 9px;
-  background: none;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--muted);
-  cursor: pointer;
-}
-.depthOn {
-  background: var(--white);
-  color: var(--ink);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
-}
 .depthHint {
   font-size: 12px;
   color: var(--muted);
@@ -488,4 +499,43 @@
     text-align: left;
     padding-left: 4px;
   }
+}
+
+/* v2: depth pill, folded steps */
+.depthPill select {
+  appearance: none;
+  min-height: 38px;
+  padding: 0 30px 0 14px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--white)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23424245' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")
+    no-repeat right 12px center;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.stepsFold summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  background: var(--white);
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  list-style: none;
+}
+.stepsFold summary::-webkit-details-marker {
+  display: none;
+}
+.stepsFold summary svg {
+  color: var(--c-money);
+}
+.stepsFold[open] summary {
+  margin-bottom: 10px;
 }

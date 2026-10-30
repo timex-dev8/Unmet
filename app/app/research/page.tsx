@@ -14,13 +14,14 @@ export const metadata: Metadata = {
 export const instant = false;
 
 export default async function NewResearchPage({ searchParams }: PageProps<"/app/research">) {
-  const { q, about } = await searchParams;
+  const { q, about, depth } = await searchParams;
   const card = typeof about === "string" ? await getCard(about) : null;
   return (
     <div className={s.page}>
       <ResearchChat
         configured={llmConfigured() && exaConfigured()}
         initialQuery={typeof q === "string" ? q.slice(0, 500) : undefined}
+        initialDepth={depth === "low" || depth === "medium" || depth === "high" ? depth : undefined}
         about={card ? { slug: card.slug, headline: card.headline, summary: card.summary } : undefined}
       />
     </div>
