@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next";
 
 // Inter is only the fallback: Apple devices use SF Pro through the system font stack.
 const inter = Inter({
@@ -20,7 +21,11 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={inter.variable} data-scroll-behavior="smooth">
-      <body>{children}</body>
+      <body>
+        {children}
+        {/* Page views for Unmet itself (Vercel Web Analytics: no cookies, free on Hobby) */}
+        <Analytics />
+      </body>
     </html>
   );
 }

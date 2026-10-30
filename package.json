@@ -13,6 +13,7 @@
     "@google/genai": "^2.32.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.118.0",
+    "@vercel/analytics": "^2.0.1",
     "exa-js": "^2.26.0",
     "lucide-react": "^1.64.0",
     "motion": "^14.8.0",
