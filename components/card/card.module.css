@@ -184,7 +184,7 @@
   transform: scale(0.97);
 }
 .actPrimary {
-  background: var(--ink);
+  background: var(--primary);
   color: var(--white);
 }
 .actSaved {

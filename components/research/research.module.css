@@ -304,7 +304,7 @@
   height: 44px;
   border: 0;
   border-radius: 50%;
-  background: var(--ink);
+  background: var(--primary);
   color: var(--white);
   display: inline-flex;
   align-items: center;

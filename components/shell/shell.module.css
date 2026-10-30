@@ -3,22 +3,22 @@
 .shell {
   --shell-top: 56px;
   --shell-bottom: calc(60px + env(safe-area-inset-bottom));
-  /* Studio palette (DESIGN.md): one ink, gray secondary text, a soft blue accent.
-     --blue is the primary-action color, so in the Studio it is ink (black pills). */
-  --ink: #1f2025;
-  --ink-2: rgba(31, 32, 37, 0.78);
-  --muted: rgba(31, 32, 37, 0.6);
-  --line: rgba(31, 32, 37, 0.08);
-  --gray: #eef2f7;
-  --tint: #dcecfc;
-  --blue: #1f2025;
-  --navy: #1f2025;
-  --shadow-float: 0 1px 2px rgba(31, 32, 37, 0.04), 0 12px 32px -20px rgba(31, 32, 37, 0.2);
+  /* Studio palette (DESIGN.md "Unmet editorial"): white cards on warm paper, navy-black ink,
+     navy for the one main action (--blue / --primary), sky tint for selection and highlights. */
+  --ink-2: rgba(14, 23, 38, 0.78);
+  --muted: rgba(14, 23, 38, 0.6);
+  --tint: #e2eef8;
+  --blue: var(--primary);
+  --shadow-float: 0 1px 2px rgba(14, 23, 38, 0.04), 0 14px 32px -20px rgba(14, 23, 38, 0.22);
   min-height: 100dvh;
-  background: var(--studio-bg);
-  background-color: #f5f7fa;
-  background-repeat: no-repeat;
+  background: var(--paper);
   color: var(--ink);
+}
+/* Page titles are set in the display serif; everything else stays in Geist. */
+.shell h1 {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  letter-spacing: -0.015em;
 }
 .main {
   min-width: 0;
@@ -109,7 +109,7 @@
   border-radius: var(--radius-pill);
 }
 .tabPill {
-  background: rgba(31, 32, 37, 0.07);
+  background: rgba(14, 23, 38, 0.07);
 }
 
 /* ---------- Sidebar (desktop) ---------- */

@@ -56,7 +56,7 @@
   color: var(--muted);
 }
 .strong {
-  background: var(--ink);
+  background: var(--primary);
   color: var(--white);
 }
 .strong .verdictNote {
@@ -259,7 +259,7 @@
   padding: 0 18px;
   border: 0;
   border-radius: var(--radius-pill);
-  background: var(--ink);
+  background: var(--primary);
   color: var(--white);
   font: inherit;
   font-size: 15px;

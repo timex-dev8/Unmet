@@ -89,7 +89,7 @@
   border-radius: 28px;
   background: var(--white);
   color: var(--ink);
-  box-shadow: 0 30px 80px -20px rgba(31, 32, 37, 0.35);
+  box-shadow: 0 30px 80px -20px rgba(14, 23, 38, 0.35);
   opacity: 0;
   transform: translateY(12px) scale(0.98);
   transition:
@@ -109,18 +109,18 @@
   }
 }
 .dialog::backdrop {
-  background: rgba(31, 32, 37, 0);
+  background: rgba(14, 23, 38, 0);
   transition:
     background 0.25s var(--ease),
     overlay 0.25s allow-discrete,
     display 0.25s allow-discrete;
 }
 .dialog[open]::backdrop {
-  background: rgba(31, 32, 37, 0.3);
+  background: rgba(14, 23, 38, 0.3);
 }
 @starting-style {
   .dialog[open]::backdrop {
-    background: rgba(31, 32, 37, 0);
+    background: rgba(14, 23, 38, 0);
   }
 }
 .close {
@@ -185,7 +185,7 @@
   border: 0;
   border-radius: var(--radius-pill);
   background: var(--white);
-  box-shadow: inset 0 0 0 1px rgba(31, 32, 37, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(14, 23, 38, 0.16);
   font: inherit;
   font-size: 16px;
   font-weight: 500;
@@ -326,7 +326,7 @@
 }
 .modePill {
   background: var(--white);
-  box-shadow: 0 1px 3px rgba(31, 32, 37, 0.12);
+  box-shadow: 0 1px 3px rgba(14, 23, 38, 0.12);
 }
 .links {
   width: 100%;

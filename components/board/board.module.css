@@ -86,7 +86,7 @@
 }
 .drop {
   min-height: 72px;
-  border: 1.5px dashed rgba(31, 32, 37, 0.14);
+  border: 1.5px dashed rgba(14, 23, 38, 0.14);
   border-radius: 16px;
   display: flex;
   align-items: center;
