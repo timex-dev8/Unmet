@@ -55,7 +55,7 @@ export default function Home({ cards, startups = [] }: { cards: Card[]; startups
             className={s.input}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="A market or a product, like “barbershops” or “Calendly”"
+            placeholder="Like “barbershops” or “Calendly”"
             autoComplete="off"
             enterKeyHint="go"
           />
