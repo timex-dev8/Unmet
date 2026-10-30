@@ -102,8 +102,8 @@ export function Pricing() {
             <li>A few saves</li>
             <li>Basic search</li>
           </ul>
-          <Link href="/app/feed" className={`pill pill-blue ${s.full}`}>
-            Open the feed
+          <Link href="/app" className={`pill pill-blue ${s.full}`}>
+            Open Unmet
           </Link>
         </div>
         <div className={`${s.plan} ${s.planPremium}`}>
@@ -131,8 +131,8 @@ export function Closing() {
     <div className={s.closingWrap}>
       <div className={s.closing}>
         <h2 className={s.closingTitle}>Your next idea is one swipe away.</h2>
-        <Link href="/app/feed" className="pill pill-white">
-          Open the feed
+        <Link href="/app" className="pill pill-white">
+          Open Unmet
         </Link>
       </div>
     </div>
