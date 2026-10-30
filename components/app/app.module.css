@@ -110,7 +110,9 @@
   color: var(--ink);
   position: relative;
   isolation: isolate;
-  transition: color var(--t-med) var(--ease), background var(--t-med) var(--ease);
+  transition:
+    color var(--t-med) var(--ease),
+    background var(--t-med) var(--ease);
 }
 .chip svg {
   color: var(--blue);
@@ -119,9 +121,9 @@
   background: transparent;
   color: var(--white);
 }
-/* the black active chip, gliding between filters (components/motion/Highlight.tsx) */
+/* the blue active chip, gliding between filters (components/motion/Highlight.tsx) */
 .chipPill {
-  background: var(--ink);
+  background: var(--primary);
 }
 .chipOn svg {
   color: var(--white);

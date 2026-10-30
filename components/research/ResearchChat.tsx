@@ -181,7 +181,7 @@ export default function ResearchChat({
     <div className={s.layout}>
       <main className={`${s.chat} ${empty ? s.chatEmpty : ""}`}>
         {empty ? (
-          <div className={s.intro}>
+          <div className={s.intro} data-wash>
             <span className={s.badge}>
               <Sparkles size={14} aria-hidden="true" />
               AI research

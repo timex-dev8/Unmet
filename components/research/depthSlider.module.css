@@ -80,11 +80,15 @@
   margin: -12px 0 0 -12px;
   border-radius: 50%;
   background: var(--white);
-  box-shadow: 0 0 0 0.5px rgba(14, 23, 38, 0.1), 0 2px 6px rgba(14, 23, 38, 0.2);
+  box-shadow:
+    0 0 0 0.5px rgba(14, 23, 38, 0.1),
+    0 2px 6px rgba(14, 23, 38, 0.2);
   transition: box-shadow var(--t-fast) var(--ease);
 }
 .root:has(.input:focus-visible) .knob {
-  box-shadow: 0 0 0 4px var(--tint), 0 2px 6px rgba(14, 23, 38, 0.2);
+  box-shadow:
+    0 0 0 4px var(--tint),
+    0 2px 6px rgba(14, 23, 38, 0.2);
 }
 
 .labels {
@@ -174,7 +178,9 @@
   padding: 16px 18px 14px;
   border-radius: 22px;
   background: var(--white);
-  box-shadow: 0 0 0 0.5px rgba(14, 23, 38, 0.08), 0 18px 48px -12px rgba(14, 23, 38, 0.28);
+  box-shadow:
+    0 0 0 0.5px rgba(14, 23, 38, 0.08),
+    0 18px 48px -12px rgba(14, 23, 38, 0.28);
   text-align: left;
 }
 .popUp {

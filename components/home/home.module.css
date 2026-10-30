@@ -151,7 +151,7 @@
     transform var(--t-fast) var(--ease);
 }
 .chip[aria-pressed="true"] {
-  background: var(--ink);
+  background: var(--primary);
   color: var(--white);
 }
 .chip:active {

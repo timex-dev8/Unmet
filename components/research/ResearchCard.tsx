@@ -43,7 +43,9 @@ export default function ResearchCard({
             {card.trend === "rising" ? " · ↑ Rising" : ""}
           </span>
           {card.signal === "early" && <span className={s.early}>Early signal</span>}
-          {card.report && <span className={`${s.verdictTag} ${card.report.verdict === "strong" ? s.verdictStrong : ""}`}>{VERDICT[card.report.verdict]}</span>}
+          {card.report && (
+            <span className={`${s.verdictTag} ${card.report.verdict === "strong" ? s.verdictStrong : ""}`}>{VERDICT[card.report.verdict]}</span>
+          )}
         </div>
         <h3 id={`r-${card.slug}`} className={s.cardTitle}>
           <Link href={`/app/idea/${card.slug}`} onClick={open}>
