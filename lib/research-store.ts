@@ -1,10 +1,11 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { type Syncable, unionBy } from "./sync-types";
 import type { Card } from "./types";
 
-// Research conversations ("threads"), kept in this browser so a reload doesn't lose them.
-// (Moves to Supabase later.)
+// Research conversations ("threads"), kept in this browser so a reload doesn't lose them,
+// and synced to the account when signed in (lib/sync.ts).
 
 export type ChatMessage = {
   id: string;
@@ -48,12 +49,13 @@ function read(): Thread[] {
   }
 }
 
+// A reload mid-answer can't resume the stream, so pending replies aren't stored (or synced).
+const storable = (list: Thread[]) => list.slice(0, MAX_THREADS).map((t) => ({ ...t, messages: t.messages.filter((m) => !m.pending).slice(-40) }));
+
 function write(list: Thread[]) {
   cache = list;
   try {
-    // A reload mid-answer can't resume the stream, so pending replies aren't stored.
-    const stored = list.slice(0, MAX_THREADS).map((t) => ({ ...t, messages: t.messages.filter((m) => !m.pending).slice(-40) }));
-    localStorage.setItem(KEY, JSON.stringify(stored));
+    localStorage.setItem(KEY, JSON.stringify(storable(list)));
   } catch {
     // storage full or blocked: keep it in memory for this visit
   }
@@ -107,3 +109,21 @@ export function findResearchCard(slug: string): Card | undefined {
   }
   return undefined;
 }
+
+export const threadsSync: Syncable<Thread[]> = {
+  kind: "threads",
+  get: () => storable(getSnapshot()),
+  // A chat that's mid-answer here keeps its local copy, so the running research isn't lost.
+  replace: (list) => {
+    const busy = new Map(getSnapshot().filter((t) => t.messages.some((m) => m.pending)).map((t) => [t.id, t]));
+    write(list.map((t) => busy.get(t.id) ?? t));
+  },
+  // Same thread on both sides: keep the one touched last.
+  merge: (local, remote) =>
+    unionBy(local, remote, (t) => t.id, (a, b) => (b.updatedAt > a.updatedAt ? b : a)).sort((a, b) => b.updatedAt - a.updatedAt),
+  subscribe: (l: () => void) => {
+    listeners.add(l);
+    return () => void listeners.delete(l);
+  },
+  clear: () => write([]),
+};

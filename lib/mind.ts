@@ -2,8 +2,10 @@
 
 import { useSyncExternalStore } from "react";
 import type { MindConclusion } from "./mind-types";
+import { type Syncable, unionBy } from "./sync-types";
 
-// Your thoughts and the last AI conclusion about them, kept in this browser (Supabase later).
+// Your thoughts and the last AI conclusion about them, kept in this browser and synced to the
+// account when signed in (lib/sync.ts).
 
 export type Thought = { id: string; text: string; at: number };
 type MindState = { thoughts: Thought[]; conclusion: (MindConclusion & { at: number; count: number }) | null };
@@ -68,3 +70,20 @@ export function saveConclusion(conclusion: MindConclusion) {
   const cur = getSnapshot();
   write({ ...cur, conclusion: { ...conclusion, at: Date.now(), count: cur.thoughts.length } });
 }
+
+export const mindSync: Syncable<MindState> = {
+  kind: "mind",
+  get: getSnapshot,
+  replace: (state) => write(state),
+  merge: (local, remote) => ({
+    thoughts: unionBy(local.thoughts, remote.thoughts, (t) => t.id)
+      .sort((a, b) => b.at - a.at)
+      .slice(0, 200),
+    conclusion: (local.conclusion?.at ?? 0) > (remote.conclusion?.at ?? 0) ? local.conclusion : remote.conclusion,
+  }),
+  subscribe: (l: () => void) => {
+    listeners.add(l);
+    return () => void listeners.delete(l);
+  },
+  clear: () => write(EMPTY),
+};

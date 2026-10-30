@@ -147,3 +147,27 @@ alter table ideas enable row level security;
 
 drop policy if exists "public read ideas" on ideas;
 create policy "public read ideas" on ideas for select using (true);
+
+-- ---------------------------------------------------------------------------
+-- Stage 2, step 2: accounts. Each signed-in person's history, synced across devices.
+-- One row per user per kind; data is that browser store's JSON (see lib/sync.ts).
+
+create table if not exists user_data (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  kind text not null check (kind in ('threads', 'saved', 'board', 'mind', 'interests')),
+  data jsonb not null,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, kind)
+);
+
+alter table user_data enable row level security;
+
+-- Only the owner can read or change their rows.
+drop policy if exists "own rows: read" on user_data;
+create policy "own rows: read" on user_data for select to authenticated using (user_id = auth.uid());
+drop policy if exists "own rows: insert" on user_data;
+create policy "own rows: insert" on user_data for insert to authenticated with check (user_id = auth.uid());
+drop policy if exists "own rows: update" on user_data;
+create policy "own rows: update" on user_data for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+drop policy if exists "own rows: delete" on user_data;
+create policy "own rows: delete" on user_data for delete to authenticated using (user_id = auth.uid());

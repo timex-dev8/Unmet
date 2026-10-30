@@ -1,0 +1,299 @@
+/* Account button + sign-in sheet (DESIGN.md: ink on white, black primary pill, soft surfaces) */
+
+/* Sidebar row, pinned to the bottom */
+.side {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.55);
+  font: inherit;
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background var(--t-fast) var(--ease);
+}
+.side:hover {
+  background: var(--white);
+}
+.side > svg {
+  flex: none;
+  color: var(--muted);
+}
+.sideText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.sideName {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sideSub {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Phone top bar */
+.icon {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+@media (min-width: 900px) {
+  .icon {
+    display: none;
+  }
+}
+
+.avatar {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--white);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+}
+.avatarBig {
+  width: 56px;
+  height: 56px;
+  font-size: 22px;
+}
+
+/* Sheet: centered card, slides up on phones */
+.dialog {
+  width: min(400px, calc(100% - 24px));
+  margin: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 28px;
+  background: var(--white);
+  color: var(--ink);
+  box-shadow: 0 30px 80px -20px rgba(31, 32, 37, 0.35);
+  opacity: 0;
+  transform: translateY(12px) scale(0.98);
+  transition:
+    opacity 0.25s var(--ease),
+    transform 0.25s var(--ease),
+    overlay 0.25s allow-discrete,
+    display 0.25s allow-discrete;
+}
+.dialog[open] {
+  opacity: 1;
+  transform: none;
+}
+@starting-style {
+  .dialog[open] {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+.dialog::backdrop {
+  background: rgba(31, 32, 37, 0);
+  transition:
+    background 0.25s var(--ease),
+    overlay 0.25s allow-discrete,
+    display 0.25s allow-discrete;
+}
+.dialog[open]::backdrop {
+  background: rgba(31, 32, 37, 0.3);
+}
+@starting-style {
+  .dialog[open]::backdrop {
+    background: rgba(31, 32, 37, 0);
+  }
+}
+.close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--gray);
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 36px 28px 24px;
+  text-align: center;
+}
+.title {
+  margin: 4px 0 0;
+  max-width: 100%;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+.sub {
+  margin: 0 0 8px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.sub strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.badge {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--tint);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.google {
+  width: 100%;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--white);
+  box-shadow: inset 0 0 0 1px rgba(31, 32, 37, 0.16);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    background var(--t-fast) var(--ease),
+    transform var(--t-fast) var(--ease);
+}
+.google:hover {
+  background: var(--gray);
+}
+.google:active {
+  transform: scale(0.98);
+}
+.google:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.or {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-3);
+}
+.or::before,
+.or::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.form :global(.pill) {
+  width: 100%;
+}
+.input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--gray);
+  font: inherit;
+  font-size: 16px; /* 16px+ so iOS doesn't zoom in */
+  color: var(--ink);
+  outline: 0;
+  transition: box-shadow var(--t-fast) var(--ease);
+}
+.input:focus {
+  box-shadow: 0 0 0 3px var(--tint);
+}
+
+.error {
+  width: 100%;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--early-tint);
+  color: var(--early-ink);
+  font-size: 14px;
+  text-align: left;
+}
+.fine {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-3);
+}
+.textBtn {
+  min-height: 44px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 15px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.signOut {
+  width: 100%;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--gray);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+}
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useSyncExternalStore } from "react";
+import { type Syncable, unionBy } from "./sync-types";
 import type { Card } from "./types";
 
-// Saves live in this browser only (no accounts in the demo).
+// Saves live in this browser, and in the account when signed in (lib/sync.ts).
 // We store a snapshot of each card so /saved works even if the feed changes.
 const KEY = "unmet:saved:v1";
 const EMPTY: Card[] = [];
@@ -69,3 +70,15 @@ export function useSaved() {
 
   return { saved, isSaved, save, remove, toggle };
 }
+
+export const savedSync: Syncable<Card[]> = {
+  kind: "saved",
+  get: getSnapshot,
+  replace: (list) => write(list),
+  merge: (local, remote) => unionBy(local, remote, (c) => c.slug),
+  subscribe: (l: () => void) => {
+    listeners.add(l);
+    return () => void listeners.delete(l);
+  },
+  clear: () => write([]),
+};

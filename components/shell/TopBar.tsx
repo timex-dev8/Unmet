@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import Logo from "@/components/Logo";
+import AccountButton from "./AccountButton";
 import CommandPalette from "./CommandPalette";
 import s from "./shell.module.css";
 
@@ -35,6 +36,7 @@ export default function TopBar() {
       <button type="button" className={s.searchIcon} onClick={() => setOpen(true)} aria-label="Search">
         <Search size={21} aria-hidden="true" />
       </button>
+      <AccountButton variant="icon" />
       <CommandPalette open={open} onClose={() => setOpen(false)} />
     </header>
   );

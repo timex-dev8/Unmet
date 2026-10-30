@@ -1,9 +1,10 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import type { Syncable } from "./sync-types";
 
 // Where each saved idea sits on the board, plus your notes. Saved ideas start as "Spotted".
-// Kept in this browser (Supabase later).
+// Kept in this browser, and in the account when signed in (lib/sync.ts).
 
 export const STAGES = [
   { id: "spotted", label: "Spotted", hint: "Saved from the feed or research" },
@@ -78,3 +79,20 @@ export function prevStage(stage: Stage): Stage | null {
 }
 
 export const stageLabel = (stage: Stage) => STAGES.find((s) => s.id === stage)!.label;
+
+export const boardSync: Syncable<BoardState> = {
+  kind: "board",
+  get: getSnapshot,
+  replace: (state) => write(state),
+  // Per idea, keep whichever side moved it last.
+  merge: (local, remote) => {
+    const out = { ...remote };
+    for (const [slug, e] of Object.entries(local)) if (!out[slug] || e.movedAt > out[slug].movedAt) out[slug] = e;
+    return out;
+  },
+  subscribe: (l: () => void) => {
+    listeners.add(l);
+    return () => void listeners.delete(l);
+  },
+  clear: () => write({}),
+};

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import MotionProvider from "@/components/motion/MotionProvider";
+import AccountSync from "@/components/shell/AccountSync";
 import Sidebar from "@/components/shell/Sidebar";
 import TabBar from "@/components/shell/TabBar";
 import TopBar from "@/components/shell/TopBar";
@@ -18,6 +19,7 @@ export default function StudioLayout({ children }: LayoutProps<"/app">) {
           <div className={s.content}>{children}</div>
         </div>
         <TabBar />
+        <AccountSync />
       </div>
     </MotionProvider>
   );

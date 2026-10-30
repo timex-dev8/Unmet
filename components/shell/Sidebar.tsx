@@ -7,6 +7,7 @@ import Logo from "@/components/Logo";
 import Highlight from "@/components/motion/Highlight";
 import { useThreads } from "@/lib/research-store";
 import { useSaved } from "@/lib/saved";
+import AccountButton from "./AccountButton";
 import { NAV, isActive } from "./nav";
 import s from "./shell.module.css";
 
@@ -61,6 +62,7 @@ export default function Sidebar() {
           </div>
         </>
       )}
+      <AccountButton variant="side" />
     </aside>
   );
 }

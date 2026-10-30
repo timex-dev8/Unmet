@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useSyncExternalStore } from "react";
+import type { Syncable } from "./sync-types";
 import type { Category } from "./types";
 
-// What this visitor cares about, kept in the browser (Supabase later).
+// What this visitor cares about, kept in the browser and synced to the account when signed in.
 // `picked` comes from the interest chips; `skipped` from swiping past cards in the feed.
 
 export type Interests = { picked: Category[]; skipped: string[]; onboarded: boolean };
@@ -61,3 +62,20 @@ export function markSkipped(slug: string) {
   if (cur.skipped.includes(slug)) return;
   write({ ...cur, skipped: [...cur.skipped, slug].slice(-200) });
 }
+
+export const interestsSync: Syncable<Interests> = {
+  kind: "interests",
+  get: getSnapshot,
+  replace: (state) => write(state),
+  // The account's picks win once it has made any; skips are combined.
+  merge: (local, remote) => ({
+    picked: remote.onboarded ? remote.picked : local.picked,
+    skipped: [...new Set([...remote.skipped, ...local.skipped])].slice(-200),
+    onboarded: local.onboarded || remote.onboarded,
+  }),
+  subscribe: (l: () => void) => {
+    listeners.add(l);
+    return () => void listeners.delete(l);
+  },
+  clear: () => write(EMPTY),
+};
