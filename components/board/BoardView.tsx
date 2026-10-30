@@ -2,8 +2,10 @@
 
 import { useState, type DragEvent } from "react";
 import Link from "next/link";
+import { motion } from "motion/react";
 import { ArrowLeft, ArrowRight, NotebookPen, Sparkles, X } from "lucide-react";
 import { TrendBadge, windowLabel } from "@/components/card/parts";
+import Highlight from "@/components/motion/Highlight";
 import { entryFor, moveTo, nextStage, prevStage, setNote, STAGES, stageLabel, useBoard, type Stage } from "@/lib/board";
 import { STAGE_COLORS } from "@/lib/colors";
 import { digDeeperHref } from "@/lib/links";
@@ -56,14 +58,8 @@ export default function BoardView() {
       {/* Phone: one stage at a time */}
       <div className={s.tabs} role="tablist" aria-label="Stages">
         {STAGES.map((st) => (
-          <button
-            key={st.id}
-            type="button"
-            role="tab"
-            aria-selected={tab === st.id}
-            className={`${s.tab} ${tab === st.id ? s.tabOn : ""}`}
-            onClick={() => setTab(st.id)}
-          >
+          <button key={st.id} type="button" role="tab" aria-selected={tab === st.id} className={s.tab} onClick={() => setTab(st.id)}>
+            {tab === st.id && <Highlight id="board-stage" className={s.tabPill} />}
             <span className={s.stageDot} style={{ background: STAGE_COLORS[st.id] }} aria-hidden="true" />
             <b>{byStage.get(st.id)!.length}</b>
             {st.label}
@@ -114,74 +110,89 @@ function Header({ count }: { count: number }) {
 
 function Item({ card, stage, note, onRemove }: { card: Card; stage: Stage; note: string; onRemove: () => void }) {
   const [editing, setEditing] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  // Fade out first, then remove. A timer, not onAnimationComplete, so it also works in background tabs.
+  const leave = () => {
+    setLeaving(true);
+    setTimeout(onRemove, 220);
+  };
   const next = nextStage(stage);
   const prev = prevStage(stage);
   const e = card.evidence;
 
+  // The wrapper carries the motion: same layoutId in every column, so a moved card glides
+  // from its old column to the new one; `layout` lets the cards around it close the gap smoothly.
   return (
-    <article
-      className={s.item}
-      draggable
-      onDragStart={(ev) => {
-        ev.dataTransfer.setData("text/plain", card.slug);
-        ev.dataTransfer.effectAllowed = "move";
-      }}
+    <motion.div
+      layout
+      layoutId={card.slug}
+      animate={leaving ? { opacity: 0, scale: 0.94 } : { opacity: 1, scale: 1 }}
+      transition={{ type: "spring", stiffness: 420, damping: 36, opacity: { duration: 0.2 } }}
     >
-      <div className={s.meta}>
-        <span>{card.category}</span>
-        <TrendBadge trend={card.trend} />
-        <button type="button" className={s.remove} onClick={onRemove} aria-label={`Remove “${card.headline}” from board`}>
-          <X size={15} aria-hidden="true" />
-        </button>
-      </div>
-      <h3 className={s.itemTitle}>
-        <Link href={`/app/idea/${card.slug}`}>{card.headline}</Link>
-      </h3>
-      <p className={s.evidence}>
-        <strong>{e.posts} mentions</strong> · {e.site} · {windowLabel(e.days)}
-      </p>
+      <article
+        className={s.item}
+        draggable
+        onDragStart={(ev) => {
+          ev.dataTransfer.setData("text/plain", card.slug);
+          ev.dataTransfer.effectAllowed = "move";
+        }}
+      >
+        <div className={s.meta}>
+          <span>{card.category}</span>
+          <TrendBadge trend={card.trend} />
+          <button type="button" className={s.remove} onClick={leave} aria-label={`Remove “${card.headline}” from board`}>
+            <X size={15} aria-hidden="true" />
+          </button>
+        </div>
+        <h3 className={s.itemTitle}>
+          <Link href={`/app/idea/${card.slug}`}>{card.headline}</Link>
+        </h3>
+        <p className={s.evidence}>
+          <strong>{e.posts} mentions</strong> · {e.site} · {windowLabel(e.days)}
+        </p>
 
-      {editing ? (
-        <textarea
-          className={s.noteInput}
-          defaultValue={note}
-          autoFocus
-          rows={3}
-          placeholder="What did you learn? Who should you talk to?"
-          aria-label={`Note for “${card.headline}”`}
-          onBlur={(ev) => {
-            setNote(card.slug, ev.target.value.trim());
-            setEditing(false);
-          }}
-        />
-      ) : note ? (
-        <button type="button" className={s.note} onClick={() => setEditing(true)} aria-label="Edit note">
-          {note}
-        </button>
-      ) : null}
+        {editing ? (
+          <textarea
+            className={s.noteInput}
+            defaultValue={note}
+            autoFocus
+            rows={3}
+            placeholder="What did you learn? Who should you talk to?"
+            aria-label={`Note for “${card.headline}”`}
+            onBlur={(ev) => {
+              setNote(card.slug, ev.target.value.trim());
+              setEditing(false);
+            }}
+          />
+        ) : note ? (
+          <button type="button" className={s.note} onClick={() => setEditing(true)} aria-label="Edit note">
+            {note}
+          </button>
+        ) : null}
 
-      <div className={s.actions}>
-        {prev && (
-          <button type="button" className={s.iconBtn} onClick={() => moveTo(card.slug, prev)} aria-label={`Move back to ${stageLabel(prev)}`}>
-            <ArrowLeft size={16} aria-hidden="true" />
-          </button>
-        )}
-        {next ? (
-          <button type="button" className={s.moveBtn} onClick={() => moveTo(card.slug, next)}>
-            {stageLabel(next)} <ArrowRight size={15} aria-hidden="true" />
-          </button>
-        ) : (
-          <span className={s.done}>In progress</span>
-        )}
-        {!note && !editing && (
-          <button type="button" className={s.iconBtn} onClick={() => setEditing(true)} aria-label="Add a note">
-            <NotebookPen size={16} aria-hidden="true" />
-          </button>
-        )}
-        <Link href={digDeeperHref(card)} className={s.iconBtn} aria-label={`Dig deeper into “${card.headline}”`}>
-          <Sparkles size={16} aria-hidden="true" />
-        </Link>
-      </div>
-    </article>
+        <div className={s.actions}>
+          {prev && (
+            <button type="button" className={s.iconBtn} onClick={() => moveTo(card.slug, prev)} aria-label={`Move back to ${stageLabel(prev)}`}>
+              <ArrowLeft size={16} aria-hidden="true" />
+            </button>
+          )}
+          {next ? (
+            <button type="button" className={s.moveBtn} onClick={() => moveTo(card.slug, next)}>
+              {stageLabel(next)} <ArrowRight size={15} aria-hidden="true" />
+            </button>
+          ) : (
+            <span className={s.done}>In progress</span>
+          )}
+          {!note && !editing && (
+            <button type="button" className={s.iconBtn} onClick={() => setEditing(true)} aria-label="Add a note">
+              <NotebookPen size={16} aria-hidden="true" />
+            </button>
+          )}
+          <Link href={digDeeperHref(card)} className={s.iconBtn} aria-label={`Dig deeper into “${card.headline}”`}>
+            <Sparkles size={16} aria-hidden="true" />
+          </Link>
+        </div>
+      </article>
+    </motion.div>
   );
 }

@@ -84,20 +84,9 @@
 .input::placeholder {
   color: var(--text-3);
 }
-.depth select {
-  appearance: none;
-  min-height: 36px;
-  padding: 0 28px 0 12px;
-  border: 0;
-  border-radius: var(--radius-pill);
-  background: var(--gray)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%231f2025' stroke-opacity='.6' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")
-    no-repeat right 11px center;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--muted);
-  cursor: pointer;
+.slider {
+  width: min(340px, 100%);
+  margin-top: 24px;
 }
 .send {
   flex: none;
@@ -150,11 +139,26 @@
   font-weight: 500;
   color: var(--ink);
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background var(--t-med) var(--ease),
+    color var(--t-med) var(--ease),
+    transform var(--t-fast) var(--ease);
 }
 .chip[aria-pressed="true"] {
   background: var(--ink);
   color: var(--white);
+}
+.chip:active {
+  transform: scale(0.97);
+}
+.check {
+  animation: check-in var(--t-med) var(--ease);
+}
+@keyframes check-in {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
 }
 
 /* For you cards */

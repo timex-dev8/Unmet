@@ -17,6 +17,13 @@ export type ResearchSource = {
 
 export type Depth = "low" | "medium" | "high";
 
+/** Depth levels in slider order, with what each one does and how long it takes. */
+export const DEPTHS: { id: Depth; label: string; what: string; time: string }[] = [
+  { id: "low", label: "Low", what: "Quick look", time: "about 20 seconds" },
+  { id: "medium", label: "Medium", what: "Web, forums, reviews, Q&A, App Store", time: "about 45 seconds" },
+  { id: "high", label: "High", what: "Every source + competitor check", time: "1–2 minutes" },
+];
+
 export type ChatTurn = { role: "user" | "assistant"; text: string };
 
 /** What the browser sends: the new message plus enough context for follow-ups. */

@@ -101,6 +101,16 @@
   color: var(--ink);
   font-weight: 600;
 }
+.tabIcon {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  padding: 3px 16px;
+  border-radius: var(--radius-pill);
+}
+.tabPill {
+  background: rgba(31, 32, 37, 0.07);
+}
 
 /* ---------- Sidebar (desktop) ---------- */
 .side {
@@ -138,13 +148,23 @@
   background: rgba(255, 255, 255, 0.5);
   color: var(--ink);
 }
+.navItem {
+  position: relative;
+  isolation: isolate;
+}
 .navOn,
 .navOn:hover {
-  background: var(--white);
+  background: none;
   color: var(--ink);
+}
+/* the sliding white pill behind the active item (components/motion/Highlight.tsx) */
+.navPill {
+  background: var(--white);
   box-shadow: var(--shadow-float);
 }
+/* keyed on the number, so it bumps whenever it changes */
 .count {
+  animation: count-bump 0.35s var(--ease);
   margin-left: auto;
   font-size: 12px;
   font-weight: 600;
@@ -240,4 +260,9 @@
   border: 0;
   background: none;
   color: var(--ink);
+}
+@keyframes count-bump {
+  40% {
+    transform: scale(1.25);
+  }
 }

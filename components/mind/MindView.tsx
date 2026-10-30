@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent, type KeyboardEvent } from "react";
+import { useState, type CSSProperties, type FormEvent, type KeyboardEvent } from "react";
 import Link from "next/link";
 import { ArrowRight, CircleCheck, CircleHelp, LoaderCircle, RefreshCw, Sparkles, X } from "lucide-react";
 import { researchHref } from "@/lib/links";
@@ -20,6 +20,9 @@ function ago(at: number) {
   if (h < 24) return `${h}h`;
   return `${Math.round(h / 24)}d`;
 }
+
+/** Delay for the shared `.rise` entrance (40ms per step, see globals.css). */
+const stagger = (i: number) => ({ "--i": i }) as CSSProperties;
 
 export default function MindView({ configured }: { configured: boolean }) {
   const { thoughts, conclusion } = useMind();
@@ -107,7 +110,7 @@ export default function MindView({ configured }: { configured: boolean }) {
         </div>
       ) : (
         <div className={s.conclusion} aria-live="polite">
-          <div>
+          <div className="rise">
             <p className={s.label}>You keep coming back to</p>
             <p className={s.core}>{conclusion.core}</p>
             <p className={s.meta}>
@@ -117,7 +120,7 @@ export default function MindView({ configured }: { configured: boolean }) {
           </div>
 
           {conclusion.themes.length > 0 && (
-            <div>
+            <div className="rise" style={stagger(1)}>
               <p className={s.label}>Themes</p>
               <ul className={s.themes}>
                 {conclusion.themes.map((t, i) => (
@@ -132,7 +135,7 @@ export default function MindView({ configured }: { configured: boolean }) {
           )}
 
           {conclusion.checks.length > 0 && (
-            <div>
+            <div className="rise" style={stagger(2)}>
               <p className={s.label}>Evidence check</p>
               <ul className={s.checks}>
                 {conclusion.checks.map((c) => (
@@ -164,7 +167,7 @@ export default function MindView({ configured }: { configured: boolean }) {
           )}
 
           {conclusion.tension && (
-            <div className={s.tension}>
+            <div className={`${s.tension} rise`} style={stagger(3)}>
               <p className={s.label}>Tension</p>
               <p>{conclusion.tension}</p>
             </div>
@@ -223,7 +226,7 @@ export default function MindView({ configured }: { configured: boolean }) {
               {thoughts.map((t) => {
                 const theme = themeOf.get(t.id);
                 return (
-                  <li key={t.id} className={s.thought}>
+                  <li key={t.id} className={`${s.thought} rise`}>
                     <p>{t.text}</p>
                     {theme && <span className={`${s.tag} ${s[theme.color]}`}>{theme.name}</span>}
                     <span className={s.time}>{ago(t.at)}</span>

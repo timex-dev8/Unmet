@@ -9,14 +9,12 @@ export default function SaveButton({ card, label = "Save" }: { card: Card; label
   const { isSaved, toggle } = useSaved();
   const saved = isSaved(card.slug);
   return (
-    <button
-      type="button"
-      onClick={() => toggle(card)}
-      aria-pressed={saved}
-      className={`${s.act} ${saved ? s.actSaved : s.actPrimary}`}
-    >
-      {saved ? <BookmarkCheck size={17} aria-hidden="true" /> : <Bookmark size={17} aria-hidden="true" />}
-      {saved ? "Saved" : label}
+    <button type="button" onClick={() => toggle(card)} aria-pressed={saved} className={`${s.act} ${saved ? s.actSaved : s.actPrimary}`}>
+      {/* keyed so the icon and label re-enter (pop / fade) each time the state flips */}
+      {saved ? <BookmarkCheck key="on" size={17} className={s.iconPop} aria-hidden="true" /> : <Bookmark key="off" size={17} aria-hidden="true" />}
+      <span key={saved ? "saved" : "save"} className={s.labelFade}>
+        {saved ? "Saved" : label}
+      </span>
     </button>
   );
 }

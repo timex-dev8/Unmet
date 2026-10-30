@@ -98,6 +98,16 @@
 .stepRunning {
   color: var(--ink);
 }
+/* a step's check pops in when it finishes */
+.pop {
+  animation: pop 0.32s var(--ease);
+}
+@keyframes pop {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+}
 .thinking {
   margin: 0;
   display: flex;
@@ -309,7 +319,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 8px 6px 0;
+  padding: 16px 8px 0;
 }
 .newChat {
   display: inline-flex;
@@ -460,14 +470,16 @@
     flex-direction: column;
     /* frosted, no divider: the page gradient shows through (DESIGN.md) */
     background: rgba(255, 255, 255, 0.72);
+    animation: panel-in 0.32s var(--ease);
+  }
+  @keyframes panel-in {
+    from {
+      opacity: 0;
+      transform: translateX(24px);
+    }
   }
 }
 
-.depthHint {
-  font-size: 12px;
-  color: var(--muted);
-  text-align: right;
-}
 .cardCompetitors {
   margin: 0;
   font-size: 13px;
@@ -482,35 +494,8 @@
   border-radius: var(--radius-pill);
   padding: 3px 8px;
 }
-.options {
-  flex-wrap: wrap;
-}
-.depthHint {
-  flex: 1 1 220px;
-}
-@media (max-width: 520px) {
-  .depthHint {
-    text-align: left;
-    padding-left: 4px;
-  }
-}
 
 /* v2: depth pill, folded steps */
-.depthPill select {
-  appearance: none;
-  min-height: 38px;
-  padding: 0 30px 0 14px;
-  border: 0;
-  border-radius: var(--radius-pill);
-  background: var(--white)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23424245' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")
-    no-repeat right 12px center;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-2);
-  cursor: pointer;
-}
 .stepsFold summary {
   display: inline-flex;
   align-items: center;
@@ -532,4 +517,21 @@
 }
 .stepsFold[open] summary {
   margin-bottom: 10px;
+}
+/* Open and close smoothly where the browser supports it; elsewhere it simply snaps. */
+.stepsFold {
+  interpolate-size: allow-keywords;
+}
+.stepsFold::details-content {
+  block-size: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: block-size var(--t-med) var(--ease), opacity var(--t-med) var(--ease), content-visibility var(--t-med) allow-discrete;
+}
+.stepsFold[open]::details-content {
+  block-size: auto;
+  opacity: 1;
+}
+.stepsFold summary svg {
+  transition: transform var(--t-med) var(--ease);
 }

@@ -175,7 +175,10 @@
   background: var(--gray);
   color: var(--ink);
   cursor: pointer;
-  transition: transform 0.12s ease, background 0.15s ease;
+  transition:
+    transform var(--t-fast) var(--ease),
+    background var(--t-med) var(--ease),
+    color var(--t-med) var(--ease);
 }
 .act:active {
   transform: scale(0.97);
@@ -192,6 +195,27 @@
   flex: none;
   width: 44px;
   padding: 0;
+}
+
+/* Save: the check pops, the label fades in */
+.iconPop {
+  animation: icon-pop 0.36s var(--ease);
+}
+@keyframes icon-pop {
+  0% {
+    transform: scale(0.6);
+  }
+  55% {
+    transform: scale(1.2);
+  }
+}
+.labelFade {
+  animation: label-fade var(--t-med) var(--ease);
+}
+@keyframes label-fade {
+  from {
+    opacity: 0;
+  }
 }
 
 /* Score chips */

@@ -8,17 +8,11 @@ import SaveButton from "@/components/card/SaveButton";
 import ShareButton from "@/components/card/ShareButton";
 import { IdeaSections } from "@/components/idea/IdeaDetail";
 import { digDeeperHref } from "@/lib/links";
-import {
-  createThread,
-  newId,
-  updateThread,
-  useStoreReady,
-  useThread,
-  type ChatMessage,
-} from "@/lib/research-store";
+import { createThread, newId, updateThread, useStoreReady, useThread, type ChatMessage } from "@/lib/research-store";
 import type { Depth, ResearchEvent } from "@/lib/research-types";
 import { useSaved } from "@/lib/saved";
 import type { Card } from "@/lib/types";
+import DepthSlider from "./DepthSlider";
 import ResearchCard from "./ResearchCard";
 import s from "./research.module.css";
 
@@ -30,12 +24,6 @@ const EXAMPLES = [
 ];
 
 type Context = Pick<Card, "slug" | "headline" | "summary">;
-
-const DEPTHS: { id: Depth; label: string; hint: string }[] = [
-  { id: "low", label: "Low", hint: "Quick look · about 20 seconds" },
-  { id: "medium", label: "Medium", hint: "Web, forums, reviews, Q&A, App Store · about 45 seconds" },
-  { id: "high", label: "High", hint: "Every source + competitor check · 1–2 minutes" },
-];
 
 export default function ResearchChat({
   configured,
@@ -205,14 +193,7 @@ export default function ResearchChat({
               m.role === "user" ? (
                 <UserBubble key={m.id} text={m.text} />
               ) : (
-                <Reply
-                  key={m.id}
-                  m={m}
-                  isLast={m.id === lastAnswerId}
-                  onAsk={(q) => send(q)}
-                  onOpen={setOpenCard}
-                  openSlug={openCard?.slug}
-                />
+                <Reply key={m.id} m={m} isLast={m.id === lastAnswerId} onAsk={(q) => send(q)} onOpen={setOpenCard} openSlug={openCard?.slug} />
               ),
             )}
             <div ref={endRef} />
@@ -241,17 +222,7 @@ export default function ResearchChat({
             </button>
           </form>
           <div className={s.options}>
-            <label className={s.depthPill}>
-              <span className="sr-only">Research depth</span>
-              <select value={depth} onChange={(e) => setDepth(e.target.value as Depth)} disabled={busy}>
-                {DEPTHS.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    Depth: {d.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <span className={s.depthHint}>{DEPTHS.find((d) => d.id === depth)!.hint}</span>
+            <DepthSlider value={depth} onChange={setDepth} disabled={busy} detail />
           </div>
           {empty && configured && !about && (
             <div className={s.examples}>
@@ -309,8 +280,8 @@ function StepList({ steps, pending }: { steps: string[]; pending?: boolean }) {
       {steps.map((step, i) => {
         const running = pending && i === steps.length - 1;
         return (
-          <li key={i} className={running ? s.stepRunning : undefined}>
-            {running ? <LoaderCircle size={15} className={s.spin} aria-hidden="true" /> : <Check size={15} aria-hidden="true" />}
+          <li key={i} className={`rise ${running ? s.stepRunning : ""}`}>
+            {running ? <LoaderCircle size={15} className={s.spin} aria-hidden="true" /> : <Check size={15} className={s.pop} aria-hidden="true" />}
             {step}
           </li>
         );
@@ -371,9 +342,7 @@ function Reply({
         </div>
       )}
       {!m.pending && !m.error && m.sourceCount ? (
-        <p className={s.footnote}>
-          Sources from the last 12 months; every quote is checked against its source.
-        </p>
+        <p className={s.footnote}>Sources from the last 12 months; every quote is checked against its source.</p>
       ) : null}
       {isLast && cards.length > 0 && (
         <div className={s.followUps}>

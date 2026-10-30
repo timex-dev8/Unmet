@@ -1,6 +1,6 @@
 "use client";
 
-import type { MouseEvent } from "react";
+import type { CSSProperties, MouseEvent } from "react";
 import Link from "next/link";
 import { Quote } from "@/components/card/parts";
 import SaveButton from "@/components/card/SaveButton";
@@ -29,7 +29,11 @@ export default function ResearchCard({
   };
 
   return (
-    <article className={`${s.card} ${selected ? s.cardSelected : ""}`} aria-labelledby={`r-${card.slug}`}>
+    <article
+      className={`${s.card} ${selected ? s.cardSelected : ""} rise`}
+      style={{ "--i": index } as CSSProperties}
+      aria-labelledby={`r-${card.slug}`}
+    >
       <div className={s.cardInner}>
         <div className={s.cardMeta}>
           <span className={s.cardTag}>

@@ -9,17 +9,38 @@
   color: var(--ink);
   box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.35);
   overflow: hidden;
-}
-.dialog::backdrop {
-  background: rgba(0, 0, 0, 0.3);
+  /* fades and settles in on open, reverses on close */
+  opacity: 0;
+  transform: scale(0.98);
+  transition:
+    opacity 0.2s var(--ease),
+    transform 0.2s var(--ease),
+    overlay 0.2s allow-discrete,
+    display 0.2s allow-discrete;
 }
 .dialog[open] {
-  animation: in 0.16s ease-out;
+  opacity: 1;
+  transform: none;
 }
-@keyframes in {
-  from {
+@starting-style {
+  .dialog[open] {
     opacity: 0;
-    transform: translateY(-6px) scale(0.99);
+    transform: scale(0.98);
+  }
+}
+.dialog::backdrop {
+  background: rgba(0, 0, 0, 0);
+  transition:
+    background 0.2s var(--ease),
+    overlay 0.2s allow-discrete,
+    display 0.2s allow-discrete;
+}
+.dialog[open]::backdrop {
+  background: rgba(0, 0, 0, 0.3);
+}
+@starting-style {
+  .dialog[open]::backdrop {
+    background: rgba(0, 0, 0, 0);
   }
 }
 .box {

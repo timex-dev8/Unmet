@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { TrendingUp } from "lucide-react";
+import Highlight from "@/components/motion/Highlight";
 import { CATEGORIES } from "@/lib/types";
 import type { FeedFilter } from "@/lib/cards";
 import s from "./app.module.css";
@@ -17,6 +20,7 @@ export default function FilterChips({ active }: { active: FeedFilter }) {
         const href = c.value ? `/app/feed?topic=${encodeURIComponent(c.value)}` : "/app/feed";
         return (
           <Link key={c.label} href={href} className={`${s.chip} ${on ? s.chipOn : ""}`} aria-current={on ? "page" : undefined}>
+            {on && <Highlight id="feed-filter" className={s.chipPill} />}
             {c.value === "Trending" && <TrendingUp size={15} strokeWidth={2.5} aria-hidden="true" />}
             {c.label}
           </Link>

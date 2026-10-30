@@ -31,6 +31,11 @@
   --stage-validating: #5c5f68;
   --stage-building: #1f2025;
 
+  /* Motion (DESIGN.md): transform + opacity only, one easing, three speeds */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --t-fast: 150ms;
+  --t-med: 250ms;
+
   /* Floating surfaces: two soft shadow layers (nav, sheets, panels, cards) */
   --shadow-float: 0 1px 2px rgba(0, 0, 0, 0.05), 0 16px 40px -18px rgba(0, 0, 0, 0.25);
 
@@ -93,13 +98,13 @@ summary:focus-visible {
   font-weight: 500;
   letter-spacing: -0.01em;
   cursor: pointer;
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition: opacity var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
 }
 .pill:hover {
   opacity: 0.9;
 }
 .pill:active {
-  transform: scale(0.98);
+  transform: scale(0.97);
 }
 .pill:disabled {
   opacity: 0.4;
@@ -131,6 +136,28 @@ summary:focus-visible {
   padding: 0 2px;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
+}
+
+/* Entrance: fade + rise. Set --i on list items for a 40ms stagger. */
+.rise {
+  animation: rise 0.42s var(--ease) backwards;
+  animation-delay: calc(min(var(--i, 0), 6) * 40ms);
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* Page switch: opacity only, so fixed and sticky children never shift while it runs. */
+.fade-in {
+  animation: fade-in 0.3s var(--ease) both;
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
 }
 
 .sr-only {

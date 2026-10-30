@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, type CSSProperties, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowUp, Check, Sparkles } from "lucide-react";
 import SaveButton from "@/components/card/SaveButton";
+import DepthSlider from "@/components/research/DepthSlider";
 import { entryFor, useBoard } from "@/lib/board";
 import { useInterests } from "@/lib/interests";
 import { digDeeperHref } from "@/lib/links";
@@ -15,8 +16,6 @@ import { useSaved } from "@/lib/saved";
 import type { Startup } from "@/lib/trustmrr";
 import { CATEGORIES, type Card } from "@/lib/types";
 import s from "./home.module.css";
-
-const DEPTH_LABEL: Record<Depth, string> = { low: "Low", medium: "Medium", high: "High" };
 
 export default function Home({ cards, startups = [] }: { cards: Card[]; startups?: Startup[] }) {
   const router = useRouter();
@@ -44,7 +43,7 @@ export default function Home({ cards, startups = [] }: { cards: Card[]; startups
 
   return (
     <main className={s.home}>
-      <section className={s.hero}>
+      <section className={`${s.hero} rise`}>
         <h1 className={s.title}>What do you want to explore?</h1>
         <p className={s.lede}>Name a market. Unmet finds what people complain about, with sources.</p>
         <form className={s.composer} onSubmit={start}>
@@ -60,24 +59,17 @@ export default function Home({ cards, startups = [] }: { cards: Card[]; startups
             autoComplete="off"
             enterKeyHint="go"
           />
-          <label className={s.depth}>
-            <span className="sr-only">Research depth</span>
-            <select value={depth} onChange={(e) => setDepth(e.target.value as Depth)}>
-              {(Object.keys(DEPTH_LABEL) as Depth[]).map((d) => (
-                <option key={d} value={d}>
-                  {DEPTH_LABEL[d]}
-                </option>
-              ))}
-            </select>
-          </label>
           <button type="submit" className={s.send} disabled={!input.trim()} aria-label="Start research">
             <ArrowUp size={20} strokeWidth={2.6} aria-hidden="true" />
           </button>
         </form>
+        <div className={s.slider}>
+          <DepthSlider value={depth} onChange={setDepth} />
+        </div>
       </section>
 
       {showInterests && (
-        <section className={s.interests} aria-labelledby="interests-title">
+        <section className={`${s.interests} rise`} style={stagger(2)} aria-labelledby="interests-title">
           <h2 id="interests-title" className={s.h2}>
             {interests.onboarded ? "Your interests" : "What do you care about?"}
           </h2>
@@ -87,7 +79,7 @@ export default function Home({ cards, startups = [] }: { cards: Card[]; startups
               return (
                 <button key={c} type="button" className={s.chip} aria-pressed={on} onClick={() => toggle(c)}>
                   {c}
-                  {on && <Check size={14} strokeWidth={2.8} aria-hidden="true" />}
+                  {on && <Check size={14} strokeWidth={2.8} className={s.check} aria-hidden="true" />}
                 </button>
               );
             })}
@@ -117,34 +109,36 @@ export default function Home({ cards, startups = [] }: { cards: Card[]; startups
           )}
         </div>
         <div className={s.cards}>
-          {picks.map((card) => (
-            <HomeCard key={card.slug} card={card} />
+          {picks.map((card, i) => (
+            <HomeCard key={card.slug} card={card} i={i + 2} />
           ))}
         </div>
       </section>
 
       <section className={s.tiles} aria-label="At a glance">
         {top && (
-          <Link href={`/app/idea/${top.card.slug}`} className={s.tile}>
+          <Link href={`/app/idea/${top.card.slug}`} className={`${s.tile} rise`} style={stagger(4)}>
             <span className={s.tileLabel}>Rising this week</span>
             <span className={s.tileBig}>+{top.growth}%</span>
             <span className={s.tileText}>{top.card.headline}</span>
           </Link>
         )}
-        <Link href="/app/board" className={s.tile}>
+        <Link href="/app/board" className={`${s.tile} rise`} style={stagger(5)}>
           <span className={s.tileLabel}>Your board</span>
           <span className={s.tileBig}>
             {saved.length} {saved.length === 1 ? "idea" : "ideas"}
           </span>
           <span className={s.tileText}>{saved.length ? `${advanced} moved past “Spotted”` : "Save ideas to start"}</span>
         </Link>
-        <Link href={lastThread ? `/app/research/${lastThread.id}` : "/app/research"} className={s.tile}>
+        <Link href={lastThread ? `/app/research/${lastThread.id}` : "/app/research"} className={`${s.tile} rise`} style={stagger(6)}>
           <span className={s.tileLabel}>{lastThread ? "Continue research" : "Research"}</span>
           <span className={s.tileMid}>{lastThread ? lastThread.title : "Start your first"}</span>
-          <span className={s.tileText}>{lastThread ? `${lastIdeas} ${lastIdeas === 1 ? "idea" : "ideas"}` : "Real complaints in about a minute"}</span>
+          <span className={s.tileText}>
+            {lastThread ? `${lastIdeas} ${lastIdeas === 1 ? "idea" : "ideas"}` : "Real complaints in about a minute"}
+          </span>
         </Link>
         {startup && (
-          <a href={startup.url} target="_blank" rel="noopener noreferrer" className={s.tile}>
+          <a href={startup.url} target="_blank" rel="noopener noreferrer" className={`${s.tile} rise`} style={stagger(6)}>
             <span className={s.tileLabel}>Startup growing now</span>
             <span className={s.tileMid}>{startup.name}</span>
             <span className={s.tileText}>
@@ -157,10 +151,13 @@ export default function Home({ cards, startups = [] }: { cards: Card[]; startups
   );
 }
 
-function HomeCard({ card }: { card: Card }) {
+/** Delay for the shared `.rise` entrance (40ms per step, see globals.css). */
+const stagger = (i: number) => ({ "--i": i }) as CSSProperties;
+
+function HomeCard({ card, i }: { card: Card; i: number }) {
   const e = card.evidence;
   return (
-    <article className={s.card}>
+    <article className={`${s.card} rise`} style={stagger(i)}>
       <div className={s.cardBody}>
         <span className={s.meta}>
           {card.category}

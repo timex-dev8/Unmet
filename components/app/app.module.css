@@ -108,13 +108,20 @@
   white-space: nowrap;
   background: var(--white);
   color: var(--ink);
+  position: relative;
+  isolation: isolate;
+  transition: color var(--t-med) var(--ease), background var(--t-med) var(--ease);
 }
 .chip svg {
   color: var(--blue);
 }
 .chipOn {
-  background: var(--ink);
+  background: transparent;
   color: var(--white);
+}
+/* the black active chip, gliding between filters (components/motion/Highlight.tsx) */
+.chipPill {
+  background: var(--ink);
 }
 .chipOn svg {
   color: var(--white);

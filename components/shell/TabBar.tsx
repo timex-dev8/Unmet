@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Highlight from "@/components/motion/Highlight";
 import { NAV, isActive } from "./nav";
 import s from "./shell.module.css";
 
@@ -14,7 +15,10 @@ export default function TabBar() {
         const on = isActive(pathname, href);
         return (
           <Link key={href} href={href} className={`${s.tab} ${on ? s.tabOn : ""}`} aria-current={on ? "page" : undefined}>
-            <Icon size={23} strokeWidth={on ? 2.4 : 2} aria-hidden="true" />
+            <span className={s.tabIcon}>
+              {on && <Highlight id="tab-bar" className={s.tabPill} />}
+              <Icon size={22} strokeWidth={on ? 2.2 : 1.8} aria-hidden="true" />
+            </span>
             {label}
           </Link>
         );

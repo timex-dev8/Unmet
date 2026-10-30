@@ -9,17 +9,38 @@
   background: var(--white);
   color: var(--ink);
   box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
-}
-.sheet::backdrop {
-  background: rgba(0, 0, 0, 0.35);
+  /* slides up on open and back down on close (closed state below, open state in [open]) */
+  transform: translateY(40px);
+  opacity: 0;
+  transition:
+    transform 0.3s var(--ease),
+    opacity 0.3s var(--ease),
+    overlay 0.3s allow-discrete,
+    display 0.3s allow-discrete;
 }
 .sheet[open] {
-  animation: up 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform: none;
+  opacity: 1;
 }
-@keyframes up {
-  from {
+@starting-style {
+  .sheet[open] {
     transform: translateY(40px);
     opacity: 0;
+  }
+}
+.sheet::backdrop {
+  background: rgba(0, 0, 0, 0);
+  transition:
+    background 0.3s var(--ease),
+    overlay 0.3s allow-discrete,
+    display 0.3s allow-discrete;
+}
+.sheet[open]::backdrop {
+  background: rgba(0, 0, 0, 0.35);
+}
+@starting-style {
+  .sheet[open]::backdrop {
+    background: rgba(0, 0, 0, 0);
   }
 }
 .inner {
