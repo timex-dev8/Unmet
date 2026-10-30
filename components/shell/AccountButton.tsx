@@ -7,6 +7,10 @@ import { authConfigured } from "@/lib/supabase/client";
 import { useSyncStatus } from "@/lib/sync";
 import s from "./account.module.css";
 
+// Google sign-in is built but hidden until it's switched on in Supabase (Authentication → Providers → Google).
+// Flip to true then.
+const GOOGLE_ENABLED = false;
+
 const STATUS_LABEL = { off: "", syncing: "Syncing…", synced: "Synced", error: "Sync paused, will retry" } as const;
 
 // Did this page load come back from a failed Google or email-link sign-in (?signin=failed)?
@@ -130,16 +134,19 @@ function SignInForm({ id, failed }: { id: string; failed: boolean }) {
       <h2 id={id} className={s.title}>
         Sign in to Unmet
       </h2>
-      <p className={s.sub}>Keep your research, board and saved ideas on every device. Everything here comes with you.</p>
+      <p className={s.sub}>Get a sign-in link by email. Your research, board and saved ideas then follow you to every device.</p>
 
-      <button type="button" className={s.google} onClick={google} disabled={state !== "idle"}>
-        {state === "google" ? <LoaderCircle size={18} className={s.spin} aria-hidden="true" /> : <GoogleLogo />}
-        Continue with Google
-      </button>
-
-      <div className={s.or}>
-        <span>or</span>
-      </div>
+      {GOOGLE_ENABLED && (
+        <>
+          <button type="button" className={s.google} onClick={google} disabled={state !== "idle"}>
+            {state === "google" ? <LoaderCircle size={18} className={s.spin} aria-hidden="true" /> : <GoogleLogo />}
+            Continue with Google
+          </button>
+          <div className={s.or}>
+            <span>or</span>
+          </div>
+        </>
+      )}
 
       <form className={s.form} onSubmit={sendLink}>
         <label htmlFor={`${id}-email`} className="sr-only">
