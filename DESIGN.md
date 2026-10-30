@@ -40,6 +40,6 @@ Smooth, quick, never in the way. Only `transform` and `opacity` (plus `block-siz
 - Speeds: 150ms press/hover (`--t-fast`), 250ms appear/move (`--t-med`), springs for sliders and sliding highlights. One easing: `--ease` (`cubic-bezier(.22,1,.36,1)`).
 - Entrances: the `.rise` class (fade + 8px rise). Set `--i` on list items for a 40ms stagger (capped at 6). Page switches use `.fade-in` (opacity only, so fixed and sticky children never shift).
 - "You are here" backgrounds glide between items with `components/motion/Highlight.tsx` (sidebar, tab bar, feed filters, board stages).
-- Depth is the `DepthSlider` (Low / Medium / High): drag, tap or arrow keys; the knob springs to the nearest stop.
+- Depth works like ChatGPT's Thinking control: a pill in the composer (`DepthPicker`) opens a popover with the `DepthSlider` (Low / Medium / High; drag, tap or arrow keys; the knob springs to the nearest stop).
 - Dialogs and sheets animate in and out with `@starting-style` + `allow-discrete` transitions.
 - Reduced motion: CSS animations are switched off in `globals.css`; `MotionProvider` sets `reducedMotion="user"` for the `motion` library.

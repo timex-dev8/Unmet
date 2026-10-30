@@ -267,6 +267,7 @@
   color: var(--early-ink);
 }
 .composer {
+  position: relative; /* anchors the depth popover on phones */
   display: flex;
   align-items: flex-end;
   gap: 8px;
@@ -313,13 +314,6 @@
 .send:disabled {
   background: #d2d2d7;
   cursor: default;
-}
-.options {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 16px 8px 0;
 }
 .newChat {
   display: inline-flex;

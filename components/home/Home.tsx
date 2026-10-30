@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowUp, Check, Sparkles } from "lucide-react";
 import SaveButton from "@/components/card/SaveButton";
-import DepthSlider from "@/components/research/DepthSlider";
+import DepthPicker from "@/components/research/DepthPicker";
 import { entryFor, useBoard } from "@/lib/board";
 import { useInterests } from "@/lib/interests";
 import { digDeeperHref } from "@/lib/links";
@@ -59,13 +59,11 @@ export default function Home({ cards, startups = [] }: { cards: Card[]; startups
             autoComplete="off"
             enterKeyHint="go"
           />
+          <DepthPicker value={depth} onChange={setDepth} />
           <button type="submit" className={s.send} disabled={!input.trim()} aria-label="Start research">
             <ArrowUp size={20} strokeWidth={2.6} aria-hidden="true" />
           </button>
         </form>
-        <div className={s.slider}>
-          <DepthSlider value={depth} onChange={setDepth} />
-        </div>
       </section>
 
       {showInterests && (

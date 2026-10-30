@@ -57,6 +57,7 @@
   color: var(--muted);
 }
 .composer {
+  position: relative; /* anchors the depth popover on phones */
   width: min(640px, 100%);
   display: flex;
   align-items: center;
@@ -83,10 +84,6 @@
 }
 .input::placeholder {
   color: var(--text-3);
-}
-.slider {
-  width: min(340px, 100%);
-  margin-top: 24px;
 }
 .send {
   flex: none;

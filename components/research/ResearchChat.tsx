@@ -12,7 +12,7 @@ import { createThread, newId, updateThread, useStoreReady, useThread, type ChatM
 import type { Depth, ResearchEvent } from "@/lib/research-types";
 import { useSaved } from "@/lib/saved";
 import type { Card } from "@/lib/types";
-import DepthSlider from "./DepthSlider";
+import DepthPicker from "./DepthPicker";
 import ResearchCard from "./ResearchCard";
 import s from "./research.module.css";
 
@@ -217,13 +217,11 @@ export default function ResearchChat({
               placeholder={empty ? "I want to solve problems for barbershops" : "Ask a follow-up or explore something new"}
               disabled={!configured}
             />
+            <DepthPicker value={depth} onChange={setDepth} disabled={busy} placement={empty ? "down" : "up"} />
             <button type="submit" className={s.send} disabled={!input.trim() || busy || !configured} aria-label="Send">
               {busy ? <LoaderCircle size={20} className={s.spin} aria-hidden="true" /> : <ArrowUp size={20} aria-hidden="true" />}
             </button>
           </form>
-          <div className={s.options}>
-            <DepthSlider value={depth} onChange={setDepth} disabled={busy} detail />
-          </div>
           {empty && configured && !about && (
             <div className={s.examples}>
               {EXAMPLES.map((ex) => (

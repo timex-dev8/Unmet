@@ -120,3 +120,90 @@
   font-size: 13px;
   color: var(--muted);
 }
+
+/* ChatGPT-style picker: a pill in the composer that opens the slider in a popover */
+.picker {
+  position: relative;
+  flex: none;
+  align-self: flex-end;
+  margin-bottom: 4px; /* centers the 36px pill against the 44px send button */
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 10px 0 12px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--gray);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    background var(--t-fast) var(--ease),
+    transform var(--t-fast) var(--ease);
+}
+.pill:hover,
+.pillOpen {
+  background: #e3e8ef;
+}
+.pill:active {
+  transform: scale(0.97);
+}
+.pill:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.pill svg {
+  color: var(--muted);
+}
+.chev {
+  transition: transform var(--t-med) var(--ease);
+}
+.pillOpen .chev {
+  transform: rotate(180deg);
+}
+.pop {
+  position: absolute;
+  right: -4px;
+  z-index: 40;
+  width: min(320px, calc(100vw - 32px));
+  padding: 16px 18px 14px;
+  border-radius: 22px;
+  background: var(--white);
+  box-shadow: 0 0 0 0.5px rgba(31, 32, 37, 0.08), 0 18px 48px -12px rgba(31, 32, 37, 0.28);
+  text-align: left;
+}
+.popUp {
+  bottom: calc(100% + 12px);
+  transform-origin: bottom right;
+}
+.popDown {
+  top: calc(100% + 12px);
+  transform-origin: top right;
+}
+.pop .root {
+  max-width: none;
+}
+.pop .title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.pop .head {
+  margin-bottom: 4px;
+}
+/* Phones: anchor the popover to the whole composer (position: relative there) so it never leaves the screen */
+@media (max-width: 600px) {
+  .picker {
+    position: static;
+  }
+  .pop {
+    left: 0;
+    right: 0;
+    width: auto;
+  }
+}

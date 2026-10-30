@@ -72,7 +72,7 @@ export default function DepthSlider({
   return (
     <div className={`${s.root} ${disabled ? s.disabled : ""}`}>
       <div className={s.head}>
-        <span>Depth</span>
+        <span className={s.title}>Depth</span>
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.span
             key={level.id}
