@@ -185,3 +185,11 @@ summary:focus-visible {
     animation: none !important;
   }
 }
+
+/* The landing page sits on navy, so the overscroll "bounce" above and below it shows navy, not white. */
+html:has([data-landing]) {
+  background: var(--navy);
+}
+html:has([data-landing]) body {
+  background: var(--paper);
+}

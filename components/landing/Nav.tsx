@@ -4,9 +4,9 @@ import s from "./landing.module.css";
 
 const sections = [
   { href: "#how", label: "How it works" },
-  { href: "/app/research", label: "Research" },
-  { href: "#features", label: "Features" },
+  { href: "#example", label: "Example" },
   { href: "#pricing", label: "Pricing" },
+  { href: "#faq", label: "FAQ" },
 ];
 
 export default function Nav() {
@@ -35,10 +35,14 @@ export default function Nav() {
                   {l.label}
                 </a>
               ))}
+              <Link href="/welcome">Sign in</Link>
             </div>
           </details>
-          <Link href="/app" className={`pill pill-white ${s.navCta}`}>
-            Open Unmet
+          <Link href="/welcome" className={s.signIn}>
+            Sign in
+          </Link>
+          <Link href="/welcome" className={s.navCta}>
+            Try free
           </Link>
         </div>
       </nav>

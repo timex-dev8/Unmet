@@ -2,18 +2,10 @@
 
 import { useState } from "react";
 import { ArrowUpRight, ClipboardCheck, Copy, LoaderCircle, Sparkles } from "lucide-react";
-import type { Card, Idea, IdeaLens } from "@/lib/types";
+import { LENS_LABEL } from "@/lib/lenses";
+import type { Card, Idea } from "@/lib/types";
 import s from "./report.module.css";
 
-export const LENS_LABEL: Record<IdeaLens, string> = {
-  automate: "Automate the workaround",
-  vertical: "Made for them",
-  unbundle: "One part, done better",
-  service: "AI does the work",
-  wedge: "Cheaper and simpler",
-  connector: "Connect both sides",
-  shovels: "Tool for a new trend",
-};
 
 const TWISTS = ["More like this", "Make it B2B", "Make it cheaper", "Make it AI-first", "Make it for consumers"];
 
