@@ -297,11 +297,12 @@
   color: rgba(255, 255, 255, 0.92);
   text-wrap: pretty;
 }
+/* Buttons keep their natural width, side by side and centered, on phones too */
 .ctas {
   margin-top: 32px;
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
   justify-content: center;
 }
 
@@ -403,6 +404,7 @@
   color: var(--muted);
 }
 .sideBtn {
+  align-self: flex-start;
   margin-top: auto;
 }
 
@@ -674,11 +676,6 @@
 }
 
 /* ---------- Wider screens ---------- */
-@media (min-width: 640px) {
-  .ctas {
-    flex-direction: row;
-  }
-}
 @media (min-width: 860px) {
   .navWrap {
     top: 20px;
@@ -766,5 +763,15 @@
   .footer {
     flex-direction: row;
     justify-content: space-between;
+  }
+}
+
+/* Small phones: slightly tighter buttons, so the two hero buttons fit side by side */
+@media (max-width: 420px) {
+  .btn,
+  .ghost {
+    min-height: 46px;
+    padding: 0 16px;
+    font-size: 15px;
   }
 }

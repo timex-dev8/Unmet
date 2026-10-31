@@ -2,8 +2,8 @@ import { revalidateTag } from "next/cache";
 import { runFeed } from "@/lib/feed";
 import { runProducts } from "@/lib/products";
 
-// The daily feed job. Vercel Cron calls this twice a day (vercel.json); each run researches about
-// half of FEED_DAILY_TOPICS niches. The evening run first refreshes "what's working" products
+// The daily feed job. Vercel Cron calls this three times a day: morning, midday and evening
+// (vercel.json); each run researches about a third of FEED_DAILY_TOPICS niches. The evening run first refreshes "what's working" products
 // (or any run with ?products=1). Vercel sends "Authorization: Bearer $CRON_SECRET".
 export const maxDuration = 300;
 
@@ -30,7 +30,7 @@ export async function GET(request: Request) {
   }
 
   const perDay = Math.max(0, Number(process.env.FEED_DAILY_TOPICS ?? 10));
-  const max = Math.ceil(perDay / 2);
+  const max = Math.ceil(perDay / 3);
   if (max && params.get("products") !== "1") {
     try {
       // Stop starting new niches after 4 minutes, so the run ends inside Vercel's 5-minute limit.
