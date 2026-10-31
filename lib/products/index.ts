@@ -4,7 +4,7 @@ import { z } from "zod/v4";
 import { generateJson } from "@/lib/llm";
 import { PRODUCT_SYSTEM } from "@/lib/research/prompts";
 import { db, supabaseConfigured } from "@/lib/supabase/server";
-import { CATEGORIES, type Product } from "@/lib/types";
+import { CATEGORIES, type Product, type ProductSource } from "@/lib/types";
 import { appStoreGrossing } from "./sources/appstore";
 import { githubRising } from "./sources/github";
 import { productHunt } from "./sources/producthunt";
@@ -73,14 +73,15 @@ function merge(all: RawProduct[]) {
     old.weight += p.weight;
     old.rising ||= p.rising;
     old.hint ??= p.hint;
+    old.image ??= p.image;
   }
   return [...byKey.values()].sort((a, b) => b.weight - a.weight);
 }
 
 /** Takes new products from each source in turn, so one big source (the App Store) can't crowd out the rest. */
 export function roundRobin(list: RawProduct[], n: number) {
-  const bySource = new Map<string, RawProduct[]>();
-  for (const p of list) bySource.set(p.proof[0]?.site ?? "", [...(bySource.get(p.proof[0]?.site ?? "") ?? []), p]);
+  const bySource = new Map<ProductSource, RawProduct[]>();
+  for (const p of list) bySource.set(p.source, [...(bySource.get(p.source) ?? []), p]);
   const queues = [...bySource.values()];
   const out: RawProduct[] = [];
   while (out.length < n && queues.some((q) => q.length)) for (const q of queues) if (q.length && out.length < n) out.push(q.shift()!);
@@ -134,6 +135,8 @@ export async function writeCards(raw: RawProduct[]): Promise<Product[]> {
         why: c.why,
         proof: p.proof.slice(0, 4),
         rising: p.rising,
+        image: p.image,
+        source: p.source,
         updatedAt: now,
       });
     }
@@ -159,7 +162,16 @@ export async function runProducts() {
   const fresh: RawProduct[] = [];
   for (const p of raw) {
     const old = byName.get(slugify(p.name));
-    if (old) refreshed.push({ ...old, proof: p.proof.slice(0, 4), rising: p.rising, updatedAt: now });
+    if (old)
+      refreshed.push({
+        ...old,
+        proof: p.proof.slice(0, 4),
+        rising: p.rising,
+        image: p.image ?? old.image,
+        // Keep the source a card was first found on; older rows saved before `source` existed take the fresh one
+        source: old.source ?? p.source,
+        updatedAt: now,
+      });
     else fresh.push(p);
   }
   const written = await writeCards(roundRobin(fresh, MAX_NEW));
@@ -197,6 +209,14 @@ export async function runProducts() {
   };
 }
 
+const SOURCES: ProductSource[] = ["TrustMRR", "Product Hunt", "App Store", "Hacker News", "GitHub"];
+
+/** The source for a stored product that has none, from the site of its first proof. */
+function sourceFromSite(site?: string): ProductSource {
+  if (site === "Show HN") return "Hacker News";
+  return SOURCES.find((s) => s === site) ?? "Hacker News";
+}
+
 /** Products for the feed, strongest proof first. Cached like the feed (tag "feed"). */
 export async function readProducts(opts: { category?: string; rising?: boolean } = {}): Promise<Product[]> {
   "use cache";
@@ -210,6 +230,10 @@ export async function readProducts(opts: { category?: string; rising?: boolean }
     warn("read", error);
     return [];
   }
-  const list = data.map((r) => r.product as Product);
+  // Rows saved before `source` existed get it from their first piece of proof
+  const list = data.map((r) => {
+    const p = r.product as Product;
+    return { ...p, source: p.source ?? sourceFromSite(p.proof[0]?.site) };
+  });
   return opts.rising ? list.filter((p) => p.rising) : list;
 }

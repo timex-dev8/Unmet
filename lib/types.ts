@@ -107,5 +107,9 @@ export type Product = {
   why: string; // why it's working, from the proof only
   proof: ProductProof[];
   rising?: boolean; // grew in the last 30 days
+  image?: string; // the product's icon or thumbnail (Product Hunt, App Store), when the source has one
+  source: ProductSource; // where we first found it, so Home can pick by source
   updatedAt: string; // ISO date the proof was pulled
 };
+
+export type ProductSource = "TrustMRR" | "Product Hunt" | "App Store" | "Hacker News" | "GitHub";

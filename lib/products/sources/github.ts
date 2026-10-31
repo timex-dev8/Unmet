@@ -33,6 +33,7 @@ export async function githubRising(): Promise<RawProduct[]> {
       description: `${r.description}. Topics: ${(r.topics ?? []).join(", ")}`,
       proof: [{ kind: "stars", label: `${(r.stargazers_count / 1000).toFixed(1)}k GitHub stars in under 3 months`, url: r.html_url, site: "GitHub" }],
       rising: true,
+      source: "GitHub" as const,
       weight: Math.min(35, r.stargazers_count / 1000),
     }));
 }

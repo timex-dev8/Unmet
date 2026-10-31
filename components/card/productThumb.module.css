@@ -1,0 +1,20 @@
+/* A product's icon (components/card/ProductThumb.tsx); size and radius come from --thumb and --thumb-r. */
+.thumb {
+  flex: none;
+  width: var(--thumb, 48px);
+  height: var(--thumb, 48px);
+  border-radius: var(--thumb-r, 12px);
+  object-fit: cover;
+  background: var(--gray);
+}
+.letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--blue-card);
+  color: var(--white);
+  font-family: var(--font-serif);
+  font-size: calc(var(--thumb, 48px) * 0.5);
+  font-weight: 500;
+  line-height: 1;
+}

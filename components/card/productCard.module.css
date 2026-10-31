@@ -8,6 +8,16 @@
   border-radius: var(--radius-pill);
   padding: 4px 10px;
 }
+/* The icon sits to the left of the name */
+.head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.head h2 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 .proof {
   list-style: none;
   margin: 0;

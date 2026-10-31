@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight, Sparkles } from "lucide-react";
 import type { Product } from "@/lib/types";
+import ProductThumb from "./ProductThumb";
 import f from "./ideaCard.module.css";
 import p from "./productCard.module.css";
 
@@ -18,9 +19,12 @@ export default function ProductCard({ product }: { product: Product }) {
           </span>
           <span className={p.working}>Working</span>
         </div>
-        <h2 id={`p-${product.slug}`} className={f.headline}>
-          {product.name}
-        </h2>
+        <div className={p.head}>
+          <ProductThumb product={product} size={56} radius={14} />
+          <h2 id={`p-${product.slug}`} className={f.headline}>
+            {product.name}
+          </h2>
+        </div>
         <p className={f.summary}>{product.oneLine}</p>
 
         <ul className={p.proof} aria-label="Proof it's working">

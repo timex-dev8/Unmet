@@ -22,6 +22,7 @@ export async function showHn(minPoints = 150): Promise<RawProduct[]> {
         url: h.url!,
         description: `${title}. ${plain(h.story_text ?? "").slice(0, 600)}`,
         proof: [{ kind: "votes", label: `${h.points} points on Show HN`, url: thread, site: "Hacker News" }],
+        source: "Hacker News" as const,
         weight: Math.min(40, h.points / 25),
       };
     });

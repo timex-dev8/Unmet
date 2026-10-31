@@ -17,7 +17,15 @@ type Entry = {
   summary?: { label: string };
   "im:artist"?: { label: string };
   id: { label: string };
+  "im:image"?: { label: string; attributes?: { height?: string } }[];
 };
+
+// Apple lists the icon at several sizes; take the largest.
+// The feed's largest icon is 100px; Apple serves any size from the same URL, so ask for 256px (sharp on retina)
+const iconOf = (e: Entry) =>
+  [...(e["im:image"] ?? [])]
+    .sort((a, b) => Number(b.attributes?.height ?? 0) - Number(a.attributes?.height ?? 0))[0]
+    ?.label.replace(/\/\d+x\d+bb\.(png|jpg)$/, "/256x256bb.$1");
 
 export async function appStoreGrossing(perGenre = 25): Promise<RawProduct[]> {
   const lists = await Promise.allSettled(
@@ -34,6 +42,8 @@ export async function appStoreGrossing(perGenre = 25): Promise<RawProduct[]> {
         description: `${e["im:artist"]?.label ?? ""}. ${(e.summary?.label ?? "").slice(0, 600)}`,
         hint: genre,
         proof: [{ kind: "grossing", label: `#${i + 1} top-grossing in ${genre} (US)`, url: e.id.label.split("?")[0], site: "App Store" }],
+        image: iconOf(e),
+        source: "App Store",
         weight: 60 - i * 1.5,
       }));
     }),

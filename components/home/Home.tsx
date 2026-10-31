@@ -4,39 +4,32 @@ import { useState, type CSSProperties, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowUp } from "lucide-react";
+import ProductThumb from "@/components/card/ProductThumb";
 import SaveButton from "@/components/card/SaveButton";
 import DepthPicker from "@/components/research/DepthPicker";
-import { entryFor, useBoard } from "@/lib/board";
 import { useLowOnly } from "@/lib/auth";
 import { useInterests } from "@/lib/interests";
-import { forYou, profileKeywords, rising } from "@/lib/rank";
-import { useThreads } from "@/lib/research-store";
+import { forYou, profileKeywords } from "@/lib/rank";
 import type { Depth } from "@/lib/research-types";
 import { useSaved } from "@/lib/saved";
-import type { Startup } from "@/lib/trustmrr";
 import type { Card, Product } from "@/lib/types";
 import { Niches } from "./Interests";
 import s from "./home.module.css";
 
-export default function Home({ cards, startups = [], products = [] }: { cards: Card[]; startups?: Startup[]; products?: Product[] }) {
+export default function Home({ cards, products = [] }: { cards: Card[]; products?: Product[] }) {
   const router = useRouter();
   const [input, setInput] = useState("");
   const [depth, setDepth] = useState<Depth>("medium");
   const { saved } = useSaved();
-  const board = useBoard();
   const { interests } = useInterests();
   const lowOnly = useLowOnly();
-  const threads = useThreads();
 
   const picks = forYou(cards, { picked: interests.picked, skipped: interests.skipped, saved, keywords: profileKeywords(interests) });
   // "For you" mixes in one real product that's working, for inspiration (lib/products)
   const product = products[0];
   const shown = product ? picks.slice(0, 2) : picks;
-  const top = rising(cards, 1)[0];
-  const lastThread = threads[0];
-  const lastIdeas = lastThread ? lastThread.messages.flatMap((m) => m.cards ?? []).length : 0;
-  const advanced = saved.filter((c) => entryFor(board, c.slug).stage !== "spotted").length;
-  const startup = startups[0];
+  // "Trending products" skips the one already shown above
+  const trending = trendingPicks(products.slice(1));
 
   function start(e: FormEvent) {
     e.preventDefault();
@@ -90,38 +83,23 @@ export default function Home({ cards, startups = [], products = [] }: { cards: C
         </div>
       </section>
 
-      <section className={s.tiles} aria-label="At a glance">
-        {top && (
-          <Link href={`/app/idea/${top.card.slug}`} className={`${s.tile} ${s.tileBlue} rise`} style={stagger(4)}>
-            <span className={s.tileLabel}>Rising this week</span>
-            <span className={s.tileBig}>+{top.growth}%</span>
-            <span className={s.tileText}>{top.card.headline}</span>
-          </Link>
-        )}
-        <Link href="/app/board" className={`${s.tile} rise`} style={stagger(5)}>
-          <span className={s.tileLabel}>Your board</span>
-          <span className={s.tileBig}>
-            {saved.length} {saved.length === 1 ? "idea" : "ideas"}
-          </span>
-          <span className={s.tileText}>{saved.length ? `${advanced} moved past “Spotted”` : "Save ideas to start"}</span>
-        </Link>
-        <Link href={lastThread ? `/app/research/${lastThread.id}` : "/app/research"} className={`${s.tile} rise`} style={stagger(6)}>
-          <span className={s.tileLabel}>{lastThread ? "Continue research" : "Research"}</span>
-          <span className={s.tileMid}>{lastThread ? lastThread.title : "Start your first"}</span>
-          <span className={s.tileText}>
-            {lastThread ? `${lastIdeas} ${lastIdeas === 1 ? "idea" : "ideas"}` : "Real complaints in about a minute"}
-          </span>
-        </Link>
-        {startup && (
-          <a href={startup.url} target="_blank" rel="noopener noreferrer" className={`${s.tile} rise`} style={stagger(6)}>
-            <span className={s.tileLabel}>Startup growing now</span>
-            <span className={s.tileMid}>{startup.name}</span>
-            <span className={s.tileText}>
-              ${Math.round(startup.mrr / 100).toLocaleString("en-US")}/mo verified{startup.growth ? ` · +${startup.growth}%` : ""}
-            </span>
-          </a>
-        )}
-      </section>
+      {trending.length > 0 && (
+        <section aria-labelledby="trending">
+          <div className={s.sectionHead}>
+            <h2 id="trending" className={`fade-text ${s.h2}`}>
+              Trending products
+            </h2>
+            <Link href="/app/feed" className={s.more}>
+              See all<span className={s.moreFeed}> in Feed</span> →
+            </Link>
+          </div>
+          <div className={s.trending}>
+            {trending.map((p, i) => (
+              <TrendingCard key={p.slug} product={p} i={i + 4} />
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }
@@ -179,6 +157,43 @@ function HomeProduct({ product, i }: { product: Product; i: number }) {
           </Link>
         </div>
       </div>
+    </article>
+  );
+}
+
+/** Up to 4 products: the top 2 from Product Hunt and the top 2 from TrustMRR, topped up from the other one, then any other source. */
+function trendingPicks(products: Product[]): Product[] {
+  const ph = products.filter((p) => p.source === "Product Hunt");
+  const mrr = products.filter((p) => p.source === "TrustMRR");
+  const rest = products.filter((p) => p.source !== "Product Hunt" && p.source !== "TrustMRR");
+  const picked = [...ph.slice(0, 2), ...mrr.slice(0, 2)];
+  const spare = ph.length < 2 ? [...mrr.slice(2), ...ph.slice(2)] : [...ph.slice(2), ...mrr.slice(2)];
+  return [...picked, ...spare, ...rest].slice(0, 4);
+}
+
+function TrendingCard({ product, i }: { product: Product; i: number }) {
+  const gaps = `/app/research?q=${encodeURIComponent(`What do people hate about ${product.name}?`)}`;
+  const proof = product.proof[0];
+  return (
+    <article className={`${s.trendCard} rise`} style={stagger(i)}>
+      <div className={s.trendTop}>
+        <ProductThumb product={product} />
+        <span className={s.trendSource}>{product.source}</span>
+      </div>
+      <h3 className={s.trendName}>
+        <a href={product.url} target="_blank" rel="noopener noreferrer">
+          {product.name}
+        </a>
+      </h3>
+      <p className={s.trendLine}>{product.oneLine}</p>
+      {proof && (
+        <a href={proof.url} target="_blank" rel="noopener noreferrer" className={s.trendChip}>
+          {proof.label}
+        </a>
+      )}
+      <Link href={gaps} className={`${s.more} ${s.trendGaps}`}>
+        Find its gaps →
+      </Link>
     </article>
   );
 }

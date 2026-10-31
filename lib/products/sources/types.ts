@@ -1,4 +1,4 @@
-import type { ProductProof } from "@/lib/types";
+import type { ProductProof, ProductSource } from "@/lib/types";
 
 /** What every product source returns, before merging and writing the card. */
 export type RawProduct = {
@@ -8,6 +8,8 @@ export type RawProduct = {
   hint?: string; // e.g. the App Store genre or TrustMRR category
   proof: ProductProof[];
   rising?: boolean;
+  image?: string; // icon or thumbnail URL, when the source has one
+  source: ProductSource; // which source found it, for round-robin and the Home picks
   weight: number; // how strong the proof is, for ordering (verified revenue weighs most)
 };
 
