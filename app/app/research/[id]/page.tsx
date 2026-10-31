@@ -4,7 +4,7 @@ import { exaConfigured } from "@/lib/exa";
 import { llmConfigured } from "@/lib/llm";
 import s from "@/components/research/research.module.css";
 
-export const metadata: Metadata = { title: "Research · Unmet Studio" };
+export const metadata: Metadata = { title: "Research" };
 
 // Threads live in the browser for now, so this page only passes the id along.
 export const instant = false;

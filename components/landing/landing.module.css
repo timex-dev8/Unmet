@@ -629,6 +629,35 @@
   color: var(--muted);
 }
 
+.problems {
+  list-style: none;
+  margin: 32px 0 0;
+  padding: 0;
+  border-bottom: 1px solid var(--line);
+}
+.problems li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 18px 0;
+  border-top: 1px solid var(--line);
+}
+.problems a {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+}
+.problems a:hover {
+  color: var(--primary);
+}
+.problems span {
+  flex: none;
+  font-size: 14px;
+  color: var(--text-3);
+}
+
 /* ---------- Closing: the sky again, fading up from white ---------- */
 .closing {
   margin-top: 112px;

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import MotionProvider from "@/components/motion/MotionProvider";
 import AccountSync from "@/components/shell/AccountSync";
 import AppGate from "@/components/shell/AppGate";
@@ -7,7 +7,10 @@ import TabBar from "@/components/shell/TabBar";
 import TopBar from "@/components/shell/TopBar";
 import s from "@/components/shell/shell.module.css";
 
-export const metadata: Metadata = { title: "Unmet Studio" };
+// The studio is private: keep it out of search results. Idea pages opt back in (app/app/idea/[slug]/page.tsx).
+export const metadata: Metadata = { title: { default: "Studio · Unmet", template: "%s · Unmet" }, robots: { index: false, follow: true } };
+
+export const viewport: Viewport = { themeColor: "#ffffff" };
 
 // The studio: every app screen shares this frame.
 export default function StudioLayout({ children }: LayoutProps<"/app">) {

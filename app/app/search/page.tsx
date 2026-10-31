@@ -5,7 +5,7 @@ import { CardTags } from "@/components/card/parts";
 import { searchCards } from "@/lib/cards";
 import s from "./search.module.css";
 
-export const metadata: Metadata = { title: "Search · Unmet" };
+export const metadata: Metadata = { title: "Search" };
 
 // The query comes from the URL; render the whole page on the server before sending it.
 export const instant = false;
@@ -80,9 +80,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/app/searc
         {query && results.length === 0 && (
           <div className={s.empty} aria-live="polite">
             <p className={s.emptyTitle}>Nothing on “{query}” yet.</p>
-            <p className={s.emptyText}>
-              We only show problems backed by real posts. Pulling fresh posts for any topic arrives in the next update.
-            </p>
+            <p className={s.emptyText}>We only show problems backed by real posts. Pulling fresh posts for any topic arrives in the next update.</p>
             {/* Stage 2: searches Hacker News + the web and builds cards on demand. */}
             <button type="button" className="pill pill-blue" disabled aria-disabled="true">
               <Sparkles size={16} aria-hidden="true" />

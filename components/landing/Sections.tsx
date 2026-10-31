@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Check, Plus } from "lucide-react";
+import type { Card } from "@/lib/types";
 import s from "./landing.module.css";
 
 const SOURCES = ["Hacker News", "Stack Exchange", "App Store reviews", "GitHub issues", "Bluesky", "Community forums"];
@@ -99,6 +100,25 @@ export function Trust() {
           </p>
         ))}
       </div>
+    </section>
+  );
+}
+
+// A quiet list of real problems: gives visitors (and search engines) a way into the idea pages.
+export function RecentProblems({ cards }: { cards: Card[] }) {
+  if (cards.length === 0) return null;
+  return (
+    <section id="problems" className={s.section}>
+      <h2 className={`fade-text ${s.h2}`}>Recent problems</h2>
+      <p className={s.sub}>A few of the complaints Unmet has read lately, each with its sources.</p>
+      <ul className={s.problems}>
+        {cards.map((c) => (
+          <li key={c.slug}>
+            <Link href={`/app/idea/${c.slug}`}>{c.headline}</Link>
+            <span>{c.category}</span>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

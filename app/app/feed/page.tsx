@@ -5,7 +5,7 @@ import { getCards, isCategory, type FeedFilter } from "@/lib/cards";
 import { readProducts } from "@/lib/products";
 import s from "@/components/feed/feed.module.css";
 
-export const metadata: Metadata = { title: "Feed · Unmet" };
+export const metadata: Metadata = { title: "Feed" };
 
 // The filter comes from the URL; render the whole page on the server before sending it.
 export const instant = false;

@@ -5,7 +5,7 @@ import s from "./landing.module.css";
 const VERDICT = { strong: "Strong opportunity", maybe: "Worth a closer look", weak: "Weak signal so far" } as const;
 
 // The sky hero: serif headline, two buttons, and a real answer from the live feed floating below.
-export default function Hero({ example }: { example: Card | null }) {
+export default function Hero({ example, fallbackSlug }: { example: Card | null; fallbackSlug: string }) {
   return (
     <header className={s.hero}>
       <div className={s.clouds} aria-hidden="true" />
@@ -17,9 +17,9 @@ export default function Hero({ example }: { example: Card | null }) {
           <Link href="/welcome" className={`glossy ${s.btn}`}>
             Find your first idea
           </Link>
-          <a href={example ? `/app/idea/${example.slug}` : "#how"} className={s.ghost}>
+          <Link href={`/app/idea/${example?.slug ?? fallbackSlug}`} className={s.ghost}>
             See an example
-          </a>
+          </Link>
         </div>
       </div>
 

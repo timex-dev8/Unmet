@@ -6,7 +6,7 @@ import { llmConfigured } from "@/lib/llm";
 import s from "@/components/research/research.module.css";
 
 export const metadata: Metadata = {
-  title: "New research · Unmet Studio",
+  title: "New research",
   description: "Describe a market. Unmet searches recent posts and turns real complaints into ideas, with sources.",
 };
 

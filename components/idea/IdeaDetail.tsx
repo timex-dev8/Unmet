@@ -102,7 +102,7 @@ export function IdeaSections({ card, headingLevel = 1 }: { card: Card; headingLe
         <ul className={`${s.box} ${s.sources}`}>
           {card.sources.map((src) => (
             <li key={src.url}>
-              <a href={src.url} target="_blank" rel="noopener noreferrer" className={s.source}>
+              <a href={src.url} target="_blank" rel="noopener noreferrer ugc nofollow" className={s.source}>
                 <span>
                   <span className={s.sourceTitle}>{src.title}</span>
                   <span className={s.meta}>
@@ -131,7 +131,7 @@ export function IdeaSections({ card, headingLevel = 1 }: { card: Card; headingLe
           <ul className={`${s.box} ${s.sources}`}>
             {card.competitors.map((c) => (
               <li key={c.url}>
-                <a href={c.url} target="_blank" rel="noopener noreferrer" className={s.source}>
+                <a href={c.url} target="_blank" rel="noopener noreferrer ugc nofollow" className={s.source}>
                   <span>
                     <span className={s.sourceTitle}>
                       {c.name}

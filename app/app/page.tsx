@@ -3,7 +3,7 @@ import Home from "@/components/home/Home";
 import { getAllCards } from "@/lib/cards";
 import { readProducts } from "@/lib/products";
 
-export const metadata: Metadata = { title: "Home · Unmet Studio" };
+export const metadata: Metadata = { title: "Home" };
 
 export default async function StudioHome() {
   const [cards, products] = await Promise.all([getAllCards(), readProducts().catch(() => [])]);

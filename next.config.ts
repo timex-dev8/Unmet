@@ -6,11 +6,11 @@ const nextConfig: NextConfig = {
   // The app now lives under /app (the studio); old links keep working.
   async redirects() {
     return [
-      { source: "/feed", destination: "/app/feed", permanent: false },
-      { source: "/research", destination: "/app/research", permanent: false },
-      { source: "/saved", destination: "/app/board", permanent: false },
-      { source: "/search", destination: "/app/search", permanent: false },
-      { source: "/idea/:slug", destination: "/app/idea/:slug", permanent: false },
+      { source: "/feed", destination: "/app/feed", permanent: true },
+      { source: "/research", destination: "/app/research", permanent: true },
+      { source: "/saved", destination: "/app/board", permanent: true },
+      { source: "/search", destination: "/app/search", permanent: true },
+      { source: "/idea/:slug", destination: "/app/idea/:slug", permanent: true },
     ];
   },
 };
