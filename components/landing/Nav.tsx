@@ -23,7 +23,14 @@ export default function Nav() {
   const [bubble, setBubble] = useState<{ x: number; w: number } | null>(null);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
+    // Clear glass while the bar is over the deep part of the sky; frosted white once it reaches the
+    // pale part, so the text always has contrast. Near the top no section is "current".
+    const onScroll = () => {
+      const hero = document.querySelector("header");
+      const deep = hero ? hero.offsetHeight * 0.4 : 300;
+      setScrolled(window.scrollY > deep);
+      if (window.scrollY < 300) setCurrent(null);
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
