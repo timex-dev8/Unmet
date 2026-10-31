@@ -275,12 +275,28 @@
   gap: 8px;
   padding: 8px 8px 8px 18px;
   background: var(--white);
-  border-radius: 26px;
-  box-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.2);
-  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow:
+    0 1px 2px rgba(25, 25, 29, 0.05),
+    0 24px 50px -24px rgba(70, 110, 220, 0.45),
+    inset 0 0 0 1px #e6e8f0;
 }
 .composer:focus-within {
-  border-color: var(--blue);
+  box-shadow:
+    0 0 0 4px var(--tint),
+    0 24px 50px -24px rgba(70, 110, 220, 0.45),
+    inset 0 0 0 1px #c9d3f5;
+}
+/* Phones: the text gets the whole first line; depth and send sit on a row below */
+@media (max-width: 899px) {
+  .composer {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    padding: 6px 8px 8px 16px;
+  }
+  .composer .input {
+    flex: 1 1 100%;
+  }
 }
 .input {
   flex: 1;
@@ -340,8 +356,9 @@
   min-height: 44px;
   padding: 0 16px;
   border: 0;
-  border-radius: var(--radius-pill);
+  border-radius: 999px;
   background: var(--white);
+  box-shadow: inset 0 0 0 1px #e6e8f0;
   font-size: 14px;
   color: var(--ink);
   cursor: pointer;
@@ -552,4 +569,63 @@
 }
 .early + .verdictTag {
   margin-left: 0;
+}
+
+/* ---------- New research: your past research under the composer ---------- */
+.past {
+  width: 100%;
+  padding-top: 40px;
+  text-align: left;
+}
+.pastTitle {
+  margin: 0 0 12px;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.pastList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-radius: 20px;
+  background: var(--white);
+  box-shadow: inset 0 0 0 1px #eceef4;
+  overflow: hidden;
+}
+.pastList li + li {
+  border-top: 1px solid #eceef4;
+}
+.pastItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 10px 16px 10px 18px;
+  color: var(--ink);
+  transition: background var(--t-fast) var(--ease);
+}
+.pastItem:hover {
+  background: #f7f8fb;
+}
+.pastItem > svg {
+  flex: none;
+  color: var(--text-3);
+}
+.pastText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pastName {
+  font-size: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pastMeta {
+  font-size: 13px;
+  color: var(--muted);
 }

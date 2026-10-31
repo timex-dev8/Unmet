@@ -3,12 +3,12 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowUp, BookmarkPlus, Check, ExternalLink, LoaderCircle, Sparkles, X } from "lucide-react";
+import { ArrowUp, BookmarkPlus, Check, ChevronRight, ExternalLink, LoaderCircle, Sparkles, X } from "lucide-react";
 import SaveButton from "@/components/card/SaveButton";
 import ShareButton from "@/components/card/ShareButton";
 import { IdeaSections } from "@/components/idea/IdeaDetail";
 import { digDeeperHref } from "@/lib/links";
-import { createThread, newId, updateThread, useStoreReady, useThread, type ChatMessage } from "@/lib/research-store";
+import { createThread, newId, updateThread, useStoreReady, useThread, useThreads, type ChatMessage } from "@/lib/research-store";
 import type { Depth, ResearchEvent } from "@/lib/research-types";
 import { authHeaders, useLowOnly } from "@/lib/auth";
 import { useSaved } from "@/lib/saved";
@@ -186,8 +186,8 @@ export default function ResearchChat({
               <Sparkles size={14} aria-hidden="true" />
               AI research
             </span>
-            <h1 className={s.title}>{about ? `Dig into “${about.headline}”` : "What problem space do you want to explore?"}</h1>
-            <p className={s.lead}>Unmet searches recent posts across the web and turns real complaints into ideas, with sources.</p>
+            <h1 className={s.title}>{about ? `Dig into “${about.headline}”` : "Research"}</h1>
+            <p className={s.lead}>Name a market or a product. Unmet reads recent posts and turns real complaints into ideas, with sources.</p>
           </div>
         ) : (
           <div className={s.thread} aria-live="polite">
@@ -225,15 +225,7 @@ export default function ResearchChat({
               {busy ? <LoaderCircle size={20} className={s.spin} aria-hidden="true" /> : <ArrowUp size={20} aria-hidden="true" />}
             </button>
           </form>
-          {empty && configured && !about && (
-            <div className={s.examples}>
-              {EXAMPLES.map((ex) => (
-                <button key={ex} type="button" className={s.example} onClick={() => send(ex)}>
-                  {ex}
-                </button>
-              ))}
-            </div>
-          )}
+          {empty && configured && !about && <PastResearch onTry={send} />}
         </div>
       </main>
 
@@ -360,4 +352,53 @@ function Reply({
       )}
     </div>
   );
+}
+
+/** Under the composer on a new research: what you researched before (newest first), or examples to try. */
+function PastResearch({ onTry }: { onTry: (q: string) => void }) {
+  const threads = useThreads().filter((t) => t.messages.length > 0);
+  if (!threads.length) {
+    return (
+      <div className={s.examples}>
+        {EXAMPLES.map((ex) => (
+          <button key={ex} type="button" className={s.example} onClick={() => onTry(ex)}>
+            {ex}
+          </button>
+        ))}
+      </div>
+    );
+  }
+  return (
+    <section className={s.past} aria-labelledby="past-research">
+      <h2 id="past-research" className={`fade-text ${s.pastTitle}`}>
+        Your research
+      </h2>
+      <ul className={s.pastList}>
+        {threads.slice(0, 12).map((t) => {
+          const ideas = t.messages.reduce((n, m) => n + (m.cards?.length ?? 0), 0);
+          return (
+            <li key={t.id}>
+              <Link href={`/app/research/${t.id}`} className={s.pastItem}>
+                <span className={s.pastText}>
+                  <span className={s.pastName}>{t.title}</span>
+                  <span className={s.pastMeta}>
+                    {ideas} {ideas === 1 ? "idea" : "ideas"} · {when(t.updatedAt)}
+                  </span>
+                </span>
+                <ChevronRight size={18} aria-hidden="true" />
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+function when(at: number) {
+  const days = Math.floor((Date.now() - at) / 86_400_000);
+  if (days < 1) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 7) return `${days} days ago`;
+  return new Date(at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }

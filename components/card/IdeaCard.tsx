@@ -45,8 +45,11 @@ export default function IdeaCard({ card }: { card: Card }) {
               <Sparkles size={15} aria-hidden="true" />
               Dig deeper
             </Link>
-            <SourcesSheet card={card} compact />
-            <ShareButton card={card} />
+            {/* Phones keep just Save and Details; the rest is on the idea page */}
+            <span className={f.extra}>
+              <SourcesSheet card={card} compact />
+              <ShareButton card={card} />
+            </span>
           </div>
           <Link href={`/app/idea/${card.slug}`} className={f.details} draggable={false}>
             Details and AI ideas

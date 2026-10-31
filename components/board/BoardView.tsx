@@ -100,10 +100,12 @@ export default function BoardView() {
 function Header({ count }: { count: number }) {
   return (
     <div className={s.head}>
-      <h1 className={s.title}>Board</h1>
-      <p className={s.sub}>
-        {count} {count === 1 ? "idea" : "ideas"} · move them forward as you learn · on this device
-      </p>
+      <h1 className={s.title}>Your board</h1>
+      {count > 0 && (
+        <p className={s.sub}>
+          {count} saved {count === 1 ? "idea" : "ideas"}. Move each one forward as you learn more.
+        </p>
+      )}
     </div>
   );
 }

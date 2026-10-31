@@ -101,6 +101,24 @@
   text-underline-offset: 3px;
 }
 
+.extra {
+  display: contents;
+}
+/* Phones: Save and "Details" only; Dig deeper, sources and share live on the idea page */
+@media (max-width: 899px) {
+  .dig,
+  .extra {
+    display: none;
+  }
+  .details {
+    align-self: stretch;
+    justify-content: center;
+    border-radius: 12px;
+    background: var(--gray);
+    color: var(--ink);
+  }
+}
+
 /* Shorter phones: keep the actions visible */
 @media (max-height: 760px) {
   .summary {

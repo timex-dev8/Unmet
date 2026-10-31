@@ -14,11 +14,11 @@ import { useThreads } from "@/lib/research-store";
 import type { Depth } from "@/lib/research-types";
 import { useSaved } from "@/lib/saved";
 import type { Startup } from "@/lib/trustmrr";
-import type { Card } from "@/lib/types";
+import type { Card, Product } from "@/lib/types";
 import { Niches } from "./Interests";
 import s from "./home.module.css";
 
-export default function Home({ cards, startups = [] }: { cards: Card[]; startups?: Startup[] }) {
+export default function Home({ cards, startups = [], products = [] }: { cards: Card[]; startups?: Startup[]; products?: Product[] }) {
   const router = useRouter();
   const [input, setInput] = useState("");
   const [depth, setDepth] = useState<Depth>("medium");
@@ -29,6 +29,9 @@ export default function Home({ cards, startups = [] }: { cards: Card[]; startups
   const threads = useThreads();
 
   const picks = forYou(cards, { picked: interests.picked, skipped: interests.skipped, saved, keywords: profileKeywords(interests) });
+  // "For you" mixes in one real product that's working, for inspiration (lib/products)
+  const product = products[0];
+  const shown = product ? picks.slice(0, 2) : picks;
   const top = rising(cards, 1)[0];
   const lastThread = threads[0];
   const lastIdeas = lastThread ? lastThread.messages.flatMap((m) => m.cards ?? []).length : 0;
@@ -80,9 +83,10 @@ export default function Home({ cards, startups = [] }: { cards: Card[]; startups
           </h2>
         </div>
         <div className={s.cards}>
-          {picks.map((card, i) => (
+          {shown.map((card, i) => (
             <HomeCard key={card.slug} card={card} i={i + 2} />
           ))}
+          {product && <HomeProduct product={product} i={shown.length + 2} />}
         </div>
       </section>
 
@@ -149,6 +153,29 @@ function HomeCard({ card, i }: { card: Card; i: number }) {
           <SaveButton card={card} small />
           <Link href={`/app/idea/${card.slug}`} className={s.more}>
             See ideas →
+          </Link>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function HomeProduct({ product, i }: { product: Product; i: number }) {
+  const gaps = `/app/research?q=${encodeURIComponent(`What do people hate about ${product.name}?`)}`;
+  return (
+    <article className={`${s.card} rise`} style={stagger(i)}>
+      <div className={s.cardBody}>
+        <span className={`${s.meta} ${s.metaWorking}`}>Working · {product.category}</span>
+        <h3 className={s.cardTitle}>
+          <a href={product.url} target="_blank" rel="noopener noreferrer">
+            {product.name}
+          </a>
+        </h3>
+        <p className={s.productLine}>{product.oneLine}</p>
+        {product.proof[0] && <p className={s.evidence}>{product.proof[0].label}</p>}
+        <div className={s.cardActions}>
+          <Link href={gaps} className={s.more}>
+            Find its gaps →
           </Link>
         </div>
       </div>

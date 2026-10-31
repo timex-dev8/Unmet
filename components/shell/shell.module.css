@@ -2,7 +2,7 @@
    Pages size themselves with --shell-top and --shell-bottom. */
 .shell {
   --shell-top: 56px;
-  --shell-bottom: calc(60px + env(safe-area-inset-bottom));
+  --shell-bottom: calc(84px + env(safe-area-inset-bottom)); /* the floating tab bar and its gap */
   /* Studio palette (DESIGN.md "v3"): a white page with a sky wash under the title, a pale sidebar,
      and the shiny blue for the one main action. */
   min-height: 100dvh;
@@ -26,6 +26,13 @@
 }
 .content {
   padding-bottom: var(--shell-bottom);
+}
+/* Idea pages bring their own action bar: no tab bar under it on phones */
+.shell:has([data-hide-tabs]) {
+  --shell-bottom: 0px;
+}
+.shell:has([data-hide-tabs]) .tabsWrap {
+  display: none;
 }
 
 /* ---------- Top bar ---------- */
@@ -80,20 +87,26 @@
 }
 
 /* ---------- Tab bar (phone) ---------- */
-.tabs {
+/* Floats 10px above the bottom edge (and the home indicator), inset 12px from the sides */
+.tabsWrap {
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  left: 12px;
+  right: 12px;
+  bottom: calc(10px + env(safe-area-inset-bottom));
   z-index: 30;
-  height: var(--shell-bottom);
-  padding: 4px 4px env(safe-area-inset-bottom);
+}
+.tabsGlass {
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.95),
+    inset 0 0 0 1px rgba(25, 25, 29, 0.06),
+    0 14px 34px -14px rgba(40, 60, 140, 0.35);
+}
+.tabs {
+  height: 64px;
+  padding: 4px;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  background: rgba(255, 255, 255, 0.9);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  backdrop-filter: blur(20px) saturate(160%);
-  box-shadow: 0 -1px 0 var(--line);
 }
 .tab {
   display: flex;
@@ -223,7 +236,7 @@
     background: var(--side);
     box-shadow: 1px 0 0 #eceef4;
   }
-  .tabs,
+  .tabsWrap,
   .topBrand,
   .searchIcon {
     display: none;

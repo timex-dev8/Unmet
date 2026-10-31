@@ -80,7 +80,7 @@
 .input {
   flex: 1;
   min-width: 0;
-  min-height: 44px;
+  min-height: 48px;
   border: 0;
   outline: 0;
   background: none;
@@ -493,4 +493,28 @@
   align-items: center;
   font-size: 14px;
   font-weight: 500;
+}
+
+/* Phones: the question gets the whole first line; depth and send sit on a row below */
+@media (max-width: 899px) {
+  .composer {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    padding: 6px 8px 8px 18px;
+  }
+  .input {
+    flex: 1 1 100%;
+  }
+}
+
+/* The one product in "For you" */
+.metaWorking {
+  background: var(--blue-card);
+  color: var(--white);
+}
+.productLine {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--muted);
 }

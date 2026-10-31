@@ -14,7 +14,8 @@ import s from "./idea.module.css";
 // for ideas found in research chat (which aren't in the database yet).
 export default function IdeaDetail({ card, backHref = "/app/feed", backLabel = "Feed" }: { card: Card; backHref?: string; backLabel?: string }) {
   return (
-    <div className={s.page}>
+    // data-hide-tabs: on phones the idea's own action bar replaces the tab bar (one bar, not two)
+    <div className={s.page} data-hide-tabs>
       <div className={s.wrap}>
         <AppBar variant="back" backHref={backHref} backLabel={backLabel} />
         <IdeaSections card={card} />
@@ -47,133 +48,130 @@ export function IdeaSections({ card, headingLevel = 1 }: { card: Card; headingLe
 
   return (
     <>
-        <header className={s.header}>
-          <CardTags card={card} />
-          <Title className={s.h1}>{card.headline}</Title>
-          <p className={s.summary}>{card.summary}</p>
-          <p className={s.who}>
-            <strong>Who:</strong> {card.who}
-          </p>
-        </header>
+      <header className={s.header}>
+        <CardTags card={card} />
+        <Title className={s.h1}>{card.headline}</Title>
+        <p className={s.summary}>{card.summary}</p>
+        <p className={s.who}>
+          <strong>Who:</strong> {card.who}
+        </p>
+      </header>
 
-        {card.report && <WorthBuilding report={card.report} />}
+      {card.report && <WorthBuilding report={card.report} />}
 
-        {(card.ideas?.length || card.report) && <IdeasSection card={card} />}
+      {(card.ideas?.length || card.report) && <IdeasSection card={card} />}
 
-        <section className={s.section} aria-labelledby="evidence">
-          <h2 id="evidence" className={s.h2}>
-            Evidence
-          </h2>
-          <div className={s.box}>
-            <div className={s.stats}>
-              <div>
-                <div className={s.stat}>{e.posts}</div>
-                <div className={s.meta}>mentions</div>
-              </div>
-              <div>
-                <div className={s.stat}>{e.threads}</div>
-                <div className={s.meta}>{card.fresh ? "sources" : "threads"}</div>
-              </div>
-              <div>
-                <div className={s.stat}>{yearly ? 12 : e.days}</div>
-                <div className={s.meta}>{yearly ? "months" : "days"}</div>
-              </div>
+      <section className={s.section} aria-labelledby="evidence">
+        <h2 id="evidence" className={s.h2}>
+          Evidence
+        </h2>
+        <div className={s.box}>
+          <div className={s.stats}>
+            <div>
+              <div className={s.stat}>{e.posts}</div>
+              <div className={s.meta}>mentions</div>
             </div>
-            <div className={s.chart}>
-              <Sparkline values={e.weekly} width={320} height={64} />
+            <div>
+              <div className={s.stat}>{e.threads}</div>
+              <div className={s.meta}>{card.fresh ? "sources" : "threads"}</div>
             </div>
-            <div className={s.chartLabels}>
-              <span>{yearly ? "12 months ago" : `${e.days} days ago`}</span>
-              <span>{yearly ? "This month" : "This week"}</span>
+            <div>
+              <div className={s.stat}>{yearly ? 12 : e.days}</div>
+              <div className={s.meta}>{yearly ? "months" : "days"}</div>
             </div>
           </div>
-          {card.quote && (
-            <div className={s.box}>
-              <Quote text={card.quote} highlight={card.highlight} className={s.quote} />
-            </div>
-          )}
-        </section>
+          <div className={s.chart}>
+            <Sparkline values={e.weekly} width={320} height={64} />
+          </div>
+          <div className={s.chartLabels}>
+            <span>{yearly ? "12 months ago" : `${e.days} days ago`}</span>
+            <span>{yearly ? "This month" : "This week"}</span>
+          </div>
+        </div>
+        {card.quote && (
+          <div className={s.box}>
+            <Quote text={card.quote} highlight={card.highlight} className={s.quote} />
+          </div>
+        )}
+      </section>
 
-        <section className={s.section} aria-labelledby="sources">
-          <h2 id="sources" className={s.h2}>
-            Sources
+      <section className={s.section} aria-labelledby="sources">
+        <h2 id="sources" className={s.h2}>
+          Sources
+        </h2>
+        <ul className={`${s.box} ${s.sources}`}>
+          {card.sources.map((src) => (
+            <li key={src.url}>
+              <a href={src.url} target="_blank" rel="noopener noreferrer" className={s.source}>
+                <span>
+                  <span className={s.sourceTitle}>{src.title}</span>
+                  <span className={s.meta}>
+                    {kindBadge(src) && <span className={s.badge}>{kindBadge(src)}</span>}
+                    {sourceMeta(src)}
+                  </span>
+                </span>
+                <ArrowUpRight size={18} aria-hidden="true" />
+              </a>
+            </li>
+          ))}
+        </ul>
+        {card.query && (
+          <p className={s.note}>
+            {card.fresh ? "Found by Unmet research" : `Recent ${e.site} mentions`} for “{card.query.replaceAll('"', "")}”, {windowLabel(e.days)}
+            {e.updatedAt ? `, pulled ${shortDate(e.updatedAt)}` : ""}.
+          </p>
+        )}
+      </section>
+
+      {card.competitors && card.competitors.length > 0 && (
+        <section className={s.section} aria-labelledby="competitors">
+          <h2 id="competitors" className={s.h2}>
+            Who already solves this
           </h2>
           <ul className={`${s.box} ${s.sources}`}>
-            {card.sources.map((src) => (
-              <li key={src.url}>
-                <a href={src.url} target="_blank" rel="noopener noreferrer" className={s.source}>
+            {card.competitors.map((c) => (
+              <li key={c.url}>
+                <a href={c.url} target="_blank" rel="noopener noreferrer" className={s.source}>
                   <span>
-                    <span className={s.sourceTitle}>{src.title}</span>
-                    <span className={s.meta}>
-                      {kindBadge(src) && <span className={s.badge}>{kindBadge(src)}</span>}
-                      {sourceMeta(src)}
+                    <span className={s.sourceTitle}>
+                      {c.name}
+                      {c.mrr ? <span className={s.mrr}>${Math.round(c.mrr / 100).toLocaleString("en-US")}/mo verified</span> : null}
                     </span>
+                    {c.note && <span className={s.meta}>{c.note}</span>}
                   </span>
                   <ArrowUpRight size={18} aria-hidden="true" />
                 </a>
               </li>
             ))}
           </ul>
-          {card.query && (
-            <p className={s.note}>
-              {card.fresh ? "Found by Unmet research" : `Recent ${e.site} mentions`} for “{card.query.replaceAll('"', "")}”,{" "}
-              {windowLabel(e.days)}
-              {e.updatedAt ? `, pulled ${shortDate(e.updatedAt)}` : ""}.
-            </p>
-          )}
+          <p className={s.note}>Found by a quick web search and TrustMRR (revenue verified by payment providers). Not a full market map.</p>
         </section>
+      )}
 
-        {card.competitors && card.competitors.length > 0 && (
-          <section className={s.section} aria-labelledby="competitors">
-            <h2 id="competitors" className={s.h2}>
-              Who already solves this
-            </h2>
-            <ul className={`${s.box} ${s.sources}`}>
-              {card.competitors.map((c) => (
-                <li key={c.url}>
-                  <a href={c.url} target="_blank" rel="noopener noreferrer" className={s.source}>
-                    <span>
-                      <span className={s.sourceTitle}>
-                        {c.name}
-                        {c.mrr ? <span className={s.mrr}>${Math.round(c.mrr / 100).toLocaleString("en-US")}/mo verified</span> : null}
-                      </span>
-                      {c.note && <span className={s.meta}>{c.note}</span>}
-                    </span>
-                    <ArrowUpRight size={18} aria-hidden="true" />
-                  </a>
-                </li>
-              ))}
-            </ul>
-            <p className={s.note}>Found by a quick web search and TrustMRR (revenue verified by payment providers). Not a full market map.</p>
-          </section>
-        )}
+      <section className={s.section} aria-labelledby="scores">
+        <h2 id="scores" className={s.h2}>
+          Why these scores
+        </h2>
+        <ul className={`${s.box} ${s.rows}`}>
+          {scores.map(([name, sc]) => (
+            <li key={name} className={s.row}>
+              <span>
+                <span className={s.rowTitle}>
+                  {name} · {sc.label}
+                </span>
+                <span className={s.meta}>{sc.reason}</span>
+              </span>
+              <span className={sc.basis === "ai" ? s.basisAi : s.basisData}>{sc.basis === "ai" ? "AI estimate" : "Data"}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
 
-        <section className={s.section} aria-labelledby="scores">
-          <h2 id="scores" className={s.h2}>
-            Why these scores
-          </h2>
-          <ul className={`${s.box} ${s.rows}`}>
-            {scores.map(([name, sc]) => (
-              <li key={name} className={s.row}>
-                <span>
-                  <span className={s.rowTitle}>
-                    {name} · {sc.label}
-                  </span>
-                  <span className={s.meta}>{sc.reason}</span>
-                </span>
-                <span className={sc.basis === "ai" ? s.basisAi : s.basisData}>
-                  {sc.basis === "ai" ? "AI estimate" : "Data"}
-                </span>
-              </li>
-            ))}
-          </ul>
+      {!card.ideas?.length && !card.report && card.aiSuggestions.length > 0 && (
+        <section className={`${s.section} ${s.last}`} aria-label="AI suggestions">
+          <AiSuggestions card={card} />
         </section>
-
-        {!card.ideas?.length && !card.report && card.aiSuggestions.length > 0 && (
-          <section className={`${s.section} ${s.last}`} aria-label="AI suggestions">
-            <AiSuggestions card={card} />
-          </section>
-        )}
+      )}
     </>
   );
 }
