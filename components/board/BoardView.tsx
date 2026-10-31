@@ -2,7 +2,7 @@
 
 import { useState, type DragEvent } from "react";
 import Link from "next/link";
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import { ArrowLeft, ArrowRight, NotebookPen, Sparkles, X } from "lucide-react";
 import { TrendBadge, windowLabel } from "@/components/card/parts";
 import Highlight from "@/components/motion/Highlight";
@@ -127,7 +127,7 @@ function Item({ card, stage, note, onRemove }: { card: Card; stage: Stage; note:
   // The wrapper carries the motion: same layoutId in every column, so a moved card glides
   // from its old column to the new one; `layout` lets the cards around it close the gap smoothly.
   return (
-    <motion.div
+    <m.div
       layout
       layoutId={card.slug}
       animate={leaving ? { opacity: 0, scale: 0.94 } : { opacity: 1, scale: 1 }}
@@ -197,6 +197,6 @@ function Item({ card, stage, note, onRemove }: { card: Card; stage: Stage; note:
           </Link>
         </div>
       </article>
-    </motion.div>
+    </m.div>
   );
 }

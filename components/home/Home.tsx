@@ -8,15 +8,16 @@ import ProductThumb from "@/components/card/ProductThumb";
 import SaveButton from "@/components/card/SaveButton";
 import DepthPicker from "@/components/research/DepthPicker";
 import { useLowOnly } from "@/lib/auth";
+import { loadCard } from "@/lib/card-action";
+import { type HomeIdea, type HomeProduct, trendingPicks } from "@/lib/home";
 import { useInterests } from "@/lib/interests";
 import { forYou, profileKeywords } from "@/lib/rank";
 import type { Depth } from "@/lib/research-types";
 import { useSaved } from "@/lib/saved";
-import type { Card, Product } from "@/lib/types";
 import { Niches } from "./Interests";
 import s from "./home.module.css";
 
-export default function Home({ cards, products = [] }: { cards: Card[]; products?: Product[] }) {
+export default function Home({ cards, products = [] }: { cards: HomeIdea[]; products?: HomeProduct[] }) {
   const router = useRouter();
   const [input, setInput] = useState("");
   const [depth, setDepth] = useState<Depth>("medium");
@@ -109,9 +110,9 @@ const stagger = (i: number) => ({ "--i": i }) as CSSProperties;
 
 const VERDICT = { strong: "Strong opportunity", maybe: "Worth a closer look", weak: "Weak signal so far" } as const;
 
-function HomeCard({ card, i }: { card: Card; i: number }) {
+function HomeCard({ card, i }: { card: HomeIdea; i: number }) {
   const e = card.evidence;
-  const sites = new Set(card.sources.map((x) => x.site)).size || 1;
+  const sites = card.sites;
   return (
     <article className={`${s.card} rise`} style={stagger(i)}>
       <div className={s.cardBody}>
@@ -124,11 +125,11 @@ function HomeCard({ card, i }: { card: Card; i: number }) {
         </h3>
         <p className={s.evidence}>
           {e.threads ? `${e.threads} sources on ${sites} ${sites === 1 ? "site" : "sites"}` : `${e.posts} mentions · ${e.site}`}
-          {card.report ? ` · ${VERDICT[card.report.verdict]}` : ""}
+          {card.verdict ? ` · ${VERDICT[card.verdict]}` : ""}
           {card.sample ? " · sample" : ""}
         </p>
         <div className={s.cardActions}>
-          <SaveButton card={card} small />
+          <SaveButton card={card} load={loadCard} small />
           <Link href={`/app/idea/${card.slug}`} className={s.more}>
             See ideas →
           </Link>
@@ -138,7 +139,7 @@ function HomeCard({ card, i }: { card: Card; i: number }) {
   );
 }
 
-function HomeProduct({ product, i }: { product: Product; i: number }) {
+function HomeProduct({ product, i }: { product: HomeProduct; i: number }) {
   const gaps = `/app/research?q=${encodeURIComponent(`What do people hate about ${product.name}?`)}`;
   return (
     <article className={`${s.card} rise`} style={stagger(i)}>
@@ -161,17 +162,7 @@ function HomeProduct({ product, i }: { product: Product; i: number }) {
   );
 }
 
-/** Up to 4 products: the top 2 from Product Hunt and the top 2 from TrustMRR, topped up from the other one, then any other source. */
-function trendingPicks(products: Product[]): Product[] {
-  const ph = products.filter((p) => p.source === "Product Hunt");
-  const mrr = products.filter((p) => p.source === "TrustMRR");
-  const rest = products.filter((p) => p.source !== "Product Hunt" && p.source !== "TrustMRR");
-  const picked = [...ph.slice(0, 2), ...mrr.slice(0, 2)];
-  const spare = ph.length < 2 ? [...mrr.slice(2), ...ph.slice(2)] : [...ph.slice(2), ...mrr.slice(2)];
-  return [...picked, ...spare, ...rest].slice(0, 4);
-}
-
-function TrendingCard({ product, i }: { product: Product; i: number }) {
+function TrendingCard({ product, i }: { product: HomeProduct; i: number }) {
   const gaps = `/app/research?q=${encodeURIComponent(`What do people hate about ${product.name}?`)}`;
   const proof = product.proof[0];
   return (

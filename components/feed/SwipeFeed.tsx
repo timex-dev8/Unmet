@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { AnimatePresence, motion, useMotionValue, useReducedMotion, useTransform, type PanInfo } from "motion/react";
+import { AnimatePresence, m, useMotionValue, useReducedMotion, useTransform, type PanInfo } from "motion/react";
 import { Bookmark, ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
 import IdeaCard from "@/components/card/IdeaCard";
 import ProductCard from "@/components/card/ProductCard";
@@ -133,7 +133,7 @@ export default function SwipeFeed({ cards: input, products = [] }: { cards: Card
           {card ? (
             <SwipeCard key={keyOf(card)} card={card} dir={dir} variants={variants} duration={duration} onDragEnd={onDragEnd} />
           ) : (
-            <motion.div key="end" className={s.end} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration }}>
+            <m.div key="end" className={s.end} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration }}>
               <h2 className={s.endTitle}>You’ve seen every idea.</h2>
               <p className={s.endText}>New problems are added as people post them.</p>
               <div className={s.endActions}>
@@ -145,7 +145,7 @@ export default function SwipeFeed({ cards: input, products = [] }: { cards: Card
                   Start over
                 </button>
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 
@@ -207,7 +207,7 @@ function SwipeCard({
   const rotate = useTransform(x, [-200, 0, 200], [-6, 0, 6]);
 
   return (
-    <motion.div
+    <m.div
       className={s.cardWrap}
       custom={dir}
       variants={variants as never}
@@ -222,13 +222,13 @@ function SwipeCard({
       style={{ x, rotate }}
     >
       {!isProduct(card) && (
-        <motion.div className={s.stamp} style={{ opacity: stamp }} aria-hidden="true">
+        <m.div className={s.stamp} style={{ opacity: stamp }} aria-hidden="true">
           <Bookmark size={18} fill="currentColor" />
           Save
-        </motion.div>
+        </m.div>
       )}
       {isProduct(card) ? <ProductCard product={card} /> : <IdeaCard card={card} />}
-    </motion.div>
+    </m.div>
   );
 }
 

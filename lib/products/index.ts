@@ -268,7 +268,7 @@ function sourceFromSite(site?: string): ProductSource {
 /** Products for the feed, strongest proof first. Cached like the feed (tag "feed"). */
 export async function readProducts(opts: { category?: string; rising?: boolean } = {}): Promise<Product[]> {
   "use cache";
-  cacheLife("minutes");
+  cacheLife("days");
   cacheTag("feed");
   if (!supabaseConfigured()) return [];
   let q = db().from("feed_products").select("product").order("score", { ascending: false });

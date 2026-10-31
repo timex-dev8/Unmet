@@ -141,10 +141,10 @@ export async function runFeed({ max, deadline }: { max: number; deadline: number
   return report;
 }
 
-/** Live feed cards, best first. Cached for a few minutes (tag "feed"; the feed job refreshes it). */
+/** Live feed cards, best first. Cached for days (tag "feed"; the feed job revalidates it). */
 export async function readFeed(opts: { category?: string; rising?: boolean; limit?: number } = {}): Promise<Card[]> {
   "use cache";
-  cacheLife("minutes");
+  cacheLife("days");
   cacheTag("feed");
   if (!supabaseConfigured()) return [];
   let q = db().from("feed_cards").select("card").order("score", { ascending: false }).order("updated_at", { ascending: false });
@@ -160,7 +160,7 @@ export async function readFeed(opts: { category?: string; rising?: boolean; limi
 
 export async function readFeedCard(slug: string): Promise<Card | null> {
   "use cache";
-  cacheLife("minutes");
+  cacheLife("days");
   cacheTag("feed");
   if (!supabaseConfigured()) return null;
   const { data } = await db().from("feed_cards").select("card").eq("slug", slug).maybeSingle();

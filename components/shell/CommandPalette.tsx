@@ -2,19 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
-import {
-  House,
-  Layers,
-  LayoutGrid,
-  Lightbulb,
-  MessageSquare,
-  NotebookPen,
-  Plus,
-  Search,
-  Sparkles,
-  type LucideIcon,
-} from "lucide-react";
-import sampleCards from "@/data/sample-cards.json";
+import { House, Layers, LayoutGrid, Lightbulb, MessageSquare, NotebookPen, Plus, Search, Sparkles, type LucideIcon } from "lucide-react";
 import { researchHref } from "@/lib/links";
 import { useThreads } from "@/lib/research-store";
 import { useSaved } from "@/lib/saved";
@@ -36,7 +24,7 @@ const matches = (text: string, words: string[]) => {
   return words.every((w) => t.includes(w));
 };
 
-/** Search ideas, research and actions from anywhere. Opens with ⌘K / Ctrl+K or the search bar. */
+/** Search saved ideas, research and actions from anywhere (the feed and samples are searched on the server: /app/search). Loaded on first open by TopBar. */
 export default function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const router = useRouter();
   const ref = useRef<HTMLDialogElement>(null);
@@ -55,7 +43,7 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
   const items = useMemo(() => {
     const words = query.toLowerCase().split(/\s+/).filter(Boolean);
     const ideaPool = new Map<string, Card>();
-    for (const c of [...saved, ...threads.flatMap((t) => t.messages.flatMap((m) => m.cards ?? [])), ...(sampleCards as Card[])]) {
+    for (const c of [...saved, ...threads.flatMap((t) => t.messages.flatMap((m) => m.cards ?? []))]) {
       if (!ideaPool.has(c.slug)) ideaPool.set(c.slug, c);
     }
     const ideas: Item[] = [...ideaPool.values()]
@@ -70,7 +58,14 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
     const q = query.trim();
     const launch: Item[] = q
       ? [
-          { id: "q-research", group: "Actions", label: `Research “${q}”`, sub: "Search the web for real complaints", href: researchHref(q), Icon: Sparkles },
+          {
+            id: "q-research",
+            group: "Actions",
+            label: `Research “${q}”`,
+            sub: "Search the web for real complaints",
+            href: researchHref(q),
+            Icon: Sparkles,
+          },
           { id: "q-search", group: "Actions", label: `Search ideas for “${q}”`, href: `/app/search?q=${encodeURIComponent(q)}`, Icon: Search },
         ]
       : [];

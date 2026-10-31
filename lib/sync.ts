@@ -87,9 +87,8 @@ function clearStores() {
 }
 
 async function upload(store: Syncable<unknown>, id: string) {
-  const { error } = await supabase()
-    .from("user_data")
-    .upsert({ user_id: id, kind: store.kind, data: store.get(), updated_at: new Date().toISOString() });
+  const db = await supabase();
+  const { error } = await db.from("user_data").upsert({ user_id: id, kind: store.kind, data: store.get(), updated_at: new Date().toISOString() });
   if (error) throw error;
 }
 
@@ -138,7 +137,7 @@ export async function flushSync(ms = 4000): Promise<boolean> {
 
 async function pull(merge: boolean) {
   if (!userId) return;
-  const { data, error } = await supabase().from("user_data").select("kind, data").eq("user_id", userId);
+  const { data, error } = await (await supabase()).from("user_data").select("kind, data").eq("user_id", userId);
   if (error) throw error;
   const remote = new Map(data.map((r) => [r.kind as SyncKind, r.data]));
   for (const store of STORES) {

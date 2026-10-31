@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import Link from "next/link";
 import { ChevronDown, Gauge, Lock } from "lucide-react";
 import { useLowOnly } from "@/lib/auth";
@@ -82,7 +82,7 @@ export default function DepthPicker({
 
       <AnimatePresence>
         {open && (
-          <motion.div
+          <m.div
             id={popId}
             role="dialog"
             aria-label="Research depth"
@@ -102,7 +102,7 @@ export default function DepthPicker({
                 </span>
               </p>
             )}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

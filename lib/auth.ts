@@ -15,11 +15,18 @@ let started = false;
 function start() {
   if (started || !authConfigured) return;
   started = true;
-  supabase().auth.onAuthStateChange((_event, session) => {
-    current = session?.user ?? null;
-    if (current) setGuest(false); // signing in ends guest mode (the guest's data merges into the account)
-    listeners.forEach((l) => l());
-  });
+  supabase().then(
+    (client) =>
+      client.auth.onAuthStateChange((_event, session) => {
+        current = session?.user ?? null;
+        if (current) setGuest(false); // signing in ends guest mode (the guest's data merges into the account)
+        listeners.forEach((l) => l());
+      }),
+    (err) => {
+      started = false; // try again on the next subscriber
+      console.warn("[auth] couldn't load sign-in:", err instanceof Error ? err.message : err);
+    },
+  );
 }
 
 function subscribe(l: () => void) {
@@ -39,8 +46,11 @@ export function useUser() {
 // ---------------------------------------------------------------------------
 // Guest mode: chosen on /welcome, remembered in this browser. Guests can use everything except
 // deeper research (Medium and High), which app/api/research refuses without an account.
+// The flag lives in localStorage, mirrored into the `unmet_guest` cookie so proxy.ts can let guests
+// into /app on the server (it sends visitors with neither that cookie nor a session to /welcome).
 
 const GUEST_KEY = "unmet:guest";
+const GUEST_COOKIE = "unmet_guest"; // read by proxy.ts
 const guestListeners = new Set<() => void>();
 const readGuest = () => {
   try {
@@ -56,9 +66,14 @@ function setGuest(on: boolean) {
   } catch {
     // storage blocked: guest mode lasts for this visit
   }
+  // Signing in clears it too: from then on the session cookie is what lets this browser into /app.
+  document.cookie = on
+    ? `${GUEST_COOKIE}=1; Path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax`
+    : `${GUEST_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
   guestListeners.forEach((l) => l());
 }
 
+/** Also run for guests from before the cookie existed, so the server lets them into /app again. */
 export const continueAsGuest = () => setGuest(true);
 
 /** undefined while the page is still hydrating. */
@@ -94,24 +109,24 @@ function callbackUrl() {
 }
 
 export async function signInWithGoogle() {
-  const { error } = await supabase().auth.signInWithOAuth({ provider: "google", options: { redirectTo: callbackUrl() } });
+  const { error } = await (await supabase()).auth.signInWithOAuth({ provider: "google", options: { redirectTo: callbackUrl() } });
   if (error) throw error;
 }
 
 export async function sendEmailLink(email: string) {
-  const { error } = await supabase().auth.signInWithOtp({ email, options: { emailRedirectTo: callbackUrl() } });
+  const { error } = await (await supabase()).auth.signInWithOtp({ email, options: { emailRedirectTo: callbackUrl() } });
   if (error) throw error;
 }
 
 /** Password sign-in. Friendly messages for the common failures. */
 export async function signInWithPassword(email: string, password: string) {
-  const { error } = await supabase().auth.signInWithPassword({ email, password });
+  const { error } = await (await supabase()).auth.signInWithPassword({ email, password });
   if (error) throw new Error(friendly(error.message));
 }
 
 /** New account with a password. Returns true when Supabase wants the email confirmed first. */
 export async function signUpWithPassword(email: string, password: string) {
-  const { data, error } = await supabase().auth.signUp({ email, password, options: { emailRedirectTo: callbackUrl() } });
+  const { data, error } = await (await supabase()).auth.signUp({ email, password, options: { emailRedirectTo: callbackUrl() } });
   if (error) throw new Error(friendly(error.message));
   // An existing confirmed email comes back without identities (Supabase hides whether it exists).
   if (data.user && data.user.identities?.length === 0) throw new Error("That email already has an account. Sign in instead.");
@@ -121,12 +136,12 @@ export async function signUpWithPassword(email: string, password: string) {
 /** Emails a link that opens Unmet with "set a new password". */
 export async function sendPasswordReset(email: string) {
   const back = `${window.location.origin}/auth/callback?next=${encodeURIComponent("/app?reset=1")}`;
-  const { error } = await supabase().auth.resetPasswordForEmail(email, { redirectTo: back });
+  const { error } = await (await supabase()).auth.resetPasswordForEmail(email, { redirectTo: back });
   if (error) throw new Error(friendly(error.message));
 }
 
 export async function updatePassword(password: string) {
-  const { error } = await supabase().auth.updateUser({ password });
+  const { error } = await (await supabase()).auth.updateUser({ password });
   if (error) throw new Error(friendly(error.message));
 }
 
@@ -141,7 +156,7 @@ function friendly(message: string) {
 
 /** The signed-in person's access token, for our own API routes that act on their behalf. */
 export async function accessToken() {
-  const { data } = await supabase().auth.getSession();
+  const { data } = await (await supabase()).auth.getSession();
   return data.session?.access_token ?? null;
 }
 
@@ -149,5 +164,5 @@ export async function signOut() {
   // Upload the last changes while the session still works. Local scope: the default ("global")
   // would also sign out every other device, before their unsaved changes upload.
   await flushSync();
-  await supabase().auth.signOut({ scope: "local" });
+  await (await supabase()).auth.signOut({ scope: "local" });
 }

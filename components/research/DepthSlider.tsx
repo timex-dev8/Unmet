@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type PointerEvent } from "react";
-import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "motion/react";
+import { AnimatePresence, animate, m, useMotionValue, useTransform } from "motion/react";
 import { DEPTHS, type Depth } from "@/lib/research-types";
 import s from "./depthSlider.module.css";
 
@@ -74,7 +74,7 @@ export default function DepthSlider({
       <div className={s.head}>
         <span className={s.title}>Depth</span>
         <AnimatePresence mode="popLayout" initial={false}>
-          <motion.span
+          <m.span
             key={level.id}
             className={s.value}
             initial={{ opacity: 0, y: 6 }}
@@ -83,7 +83,7 @@ export default function DepthSlider({
             transition={{ duration: 0.2 }}
           >
             {level.label} · {level.time}
-          </motion.span>
+          </m.span>
         </AnimatePresence>
       </div>
 
@@ -102,11 +102,11 @@ export default function DepthSlider({
 
       <div className={s.track} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} aria-hidden="true">
         <div className={s.rail} ref={railRef}>
-          <motion.div className={s.fill} style={{ width: left }} />
+          <m.div className={s.fill} style={{ width: left }} />
           {DEPTHS.map((d, i) => (
             <span key={d.id} className={`${s.stop} ${i <= index ? s.stopOn : ""}`} style={{ left: `${(i / LAST) * 100}%` }} />
           ))}
-          <motion.div className={s.knob} style={{ left }} animate={{ scale: active ? 1.12 : 1 }} transition={{ duration: 0.15 }} />
+          <m.div className={s.knob} style={{ left }} animate={{ scale: active ? 1.12 : 1 }} transition={{ duration: 0.15 }} />
         </div>
       </div>
 
@@ -127,7 +127,7 @@ export default function DepthSlider({
 
       {detail && (
         <AnimatePresence mode="wait" initial={false}>
-          <motion.p
+          <m.p
             key={level.id}
             className={s.detail}
             initial={{ opacity: 0 }}
@@ -136,7 +136,7 @@ export default function DepthSlider({
             transition={{ duration: 0.15 }}
           >
             {level.what}
-          </motion.p>
+          </m.p>
         </AnimatePresence>
       )}
     </div>

@@ -26,9 +26,12 @@ export default function Welcome({ next, failed }: { next: string; failed: boolea
 
   useEffect(() => {
     if (!ready) return;
+    // Guests from before the guest cookie have only the localStorage flag; set the cookie too, or
+    // proxy.ts would send them straight back here.
+    if (guest === true) continueAsGuest();
     const to = safeNext(next); // checked again here: router.replace("/\\evil.com") would leave the site
     router.replace(interests.onboarded ? to : `/welcome/start?next=${encodeURIComponent(to)}`);
-  }, [ready, interests.onboarded, next, router]);
+  }, [ready, guest, interests.onboarded, next, router]);
 
   return (
     <div className={s.page}>

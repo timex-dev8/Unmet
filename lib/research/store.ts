@@ -1,4 +1,5 @@
 import "server-only";
+import { cacheLife, cacheTag, revalidateTag } from "next/cache";
 import type { ResearchEvent } from "@/lib/research-types";
 import { missingFunction } from "@/lib/rate-limit";
 import { db, supabaseConfigured } from "@/lib/supabase/server";
@@ -132,9 +133,21 @@ export async function saveIdeas(cards: Card[]) {
     .from("ideas")
     .upsert(cards.map((card) => ({ slug: card.slug, card: publicCard(card) })));
   if (error) warn("ideas write", error);
+  else
+    for (const card of cards) {
+      try {
+        revalidateTag(`idea:${card.slug}`, { expire: 0 }); // a cached "not found" for this slug must not outlive the save
+      } catch {
+        // Not inside a request (scripts): nothing is cached there.
+      }
+    }
 }
 
+/** A shared idea by slug. Cached for days (tags "feed" and "idea:<slug>"): the stored card is public and rarely changes. */
 export async function getIdea(slug: string): Promise<Card | null> {
+  "use cache";
+  cacheLife("days");
+  cacheTag("feed", `idea:${slug}`);
   if (!supabaseConfigured()) return null;
   const { data, error } = await db().from("ideas").select("card").eq("slug", slug).maybeSingle();
   if (error) warn("idea read", error);

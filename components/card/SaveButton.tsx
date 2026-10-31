@@ -5,13 +5,24 @@ import { useSaved } from "@/lib/saved";
 import type { Card } from "@/lib/types";
 import s from "./card.module.css";
 
-export default function SaveButton({ card, label = "Save", small = false }: { card: Card; label?: string; small?: boolean }) {
-  const { isSaved, toggle } = useSaved();
+type Props = { label?: string; small?: boolean } & (
+  | { card: Card; load?: undefined }
+  // A slim copy of the card: the full one is fetched when it's saved (Saved and Board need all of it)
+  | { card: Pick<Card, "slug">; load: (slug: string) => Promise<Card | null> }
+);
+
+export default function SaveButton({ card, load, label = "Save", small = false }: Props) {
+  const { isSaved, save, remove } = useSaved();
   const saved = isSaved(card.slug);
+  const toggle = async () => {
+    if (saved) return remove(card.slug);
+    const full = load ? await load(card.slug).catch(() => null) : (card as Card);
+    if (full) save(full);
+  };
   return (
     <button
       type="button"
-      onClick={() => toggle(card)}
+      onClick={() => void toggle()}
       aria-pressed={saved}
       className={`${s.act} ${saved ? s.actSaved : s.actPrimary} ${small ? s.actSmall : ""}`}
     >

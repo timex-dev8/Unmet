@@ -42,6 +42,8 @@ export default function AccountButton({ variant }: { variant: "side" | "icon" })
   const failed = useSyncExternalStore(noop, signinFailed, () => false);
   const reset = useSyncExternalStore(noop, resetLink, () => false);
   const [resetDone, setResetDone] = useState(false);
+  const [shown, setShown] = useState(false); // the dialog's contents exist only while it's open
+  const hideTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Coming back from a failed sign-in or a password-reset email: open the sheet, tidy the address bar.
   useEffect(() => {
@@ -50,14 +52,18 @@ export default function AccountButton({ variant }: { variant: "side" | "icon" })
     url.searchParams.delete("signin");
     url.searchParams.delete("reset");
     window.history.replaceState(null, "", url);
-    ref.current?.showModal();
+    ref.current?.showModal(); // onToggle below mounts the contents
   }, [variant, failed, reset]);
 
   if (!authConfigured) return null;
 
   const name = user?.email ?? "";
   const initial = name ? name[0].toUpperCase() : "";
-  const open = () => ref.current?.showModal();
+  const open = () => {
+    clearTimeout(hideTimer.current);
+    setShown(true);
+    ref.current?.showModal();
+  };
 
   return (
     <>
@@ -78,26 +84,40 @@ export default function AccountButton({ variant }: { variant: "side" | "icon" })
       <dialog
         ref={ref}
         className={s.dialog}
-        aria-labelledby={`acct-${variant}`}
+        aria-labelledby={shown ? `acct-${variant}` : undefined}
+        onToggle={(e) => {
+          if (e.newState === "open") {
+            clearTimeout(hideTimer.current);
+            setShown(true);
+          }
+        }}
+        onClose={() => {
+          // let the 0.25s fade-out finish before the contents go
+          hideTimer.current = setTimeout(() => setShown(false), 300);
+        }}
         onClick={(e) => {
           if (e.target === ref.current) ref.current.close(); // tap outside closes
         }}
       >
-        <button type="button" className={s.close} onClick={() => ref.current?.close()} aria-label="Close">
-          <X size={18} aria-hidden="true" />
-        </button>
-        {user && reset && !resetDone && variant === "side" ? (
-          <NewPassword
-            id={`acct-${variant}`}
-            onDone={() => {
-              setResetDone(true);
-              ref.current?.close();
-            }}
-          />
-        ) : user ? (
-          <SignedIn id={`acct-${variant}`} email={name} initial={initial} status={STATUS_LABEL[status]} />
-        ) : (
-          <SignInForm id={`acct-${variant}`} failed={failed} />
+        {shown && (
+          <>
+            <button type="button" className={s.close} onClick={() => ref.current?.close()} aria-label="Close">
+              <X size={18} aria-hidden="true" />
+            </button>
+            {user && reset && !resetDone && variant === "side" ? (
+              <NewPassword
+                id={`acct-${variant}`}
+                onDone={() => {
+                  setResetDone(true);
+                  ref.current?.close();
+                }}
+              />
+            ) : user ? (
+              <SignedIn id={`acct-${variant}`} email={name} initial={initial} status={STATUS_LABEL[status]} />
+            ) : (
+              <SignInForm id={`acct-${variant}`} failed={failed} />
+            )}
+          </>
         )}
       </dialog>
     </>

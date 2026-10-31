@@ -23,7 +23,7 @@ export default async function FeedPage({ searchParams }: PageProps<"/app/feed">)
       <h1 className="sr-only">Idea feed{filter ? `: ${filter}` : ""}</h1>
       <FilterChips active={filter} />
       {/* key resets the feed position when the filter changes */}
-      <SwipeFeed key={filter ?? "all"} cards={cards} products={products} />
+      <SwipeFeed key={filter ?? "all"} cards={cards} products={products.slice(0, 15)} />
     </main>
   );
 }

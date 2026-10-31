@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { m } from "motion/react";
 
 /**
  * The "you are here" background. Render it inside the active item only: items sharing an `id`
@@ -9,7 +9,7 @@ import { motion } from "motion/react";
  */
 export default function Highlight({ id, className }: { id: string; className?: string }) {
   return (
-    <motion.span
+    <m.span
       layoutId={id}
       className={className}
       style={{ position: "absolute", inset: 0, zIndex: -1, borderRadius: "inherit" }}

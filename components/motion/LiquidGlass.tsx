@@ -24,35 +24,56 @@ export default function LiquidGlass({
   const id = useId().replace(/:/g, "");
   const ref = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<{ url: string; w: number; h: number } | null>(null);
-  const [angle, setAngle] = useState(135);
 
-  // Draw a displacement map the exact size of the glass, redrawn when it resizes
+  // Draw a displacement map for the glass: first when the browser is idle, then (debounced) when it resizes
   useEffect(() => {
     const el = ref.current;
     const ua = navigator.userAgent;
     if (!el || !/Chrome\//.test(ua) || /Firefox/.test(ua)) return;
+    let cancelled = false;
+    let idle: number | undefined;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let first = true;
     const draw = () => {
+      if (cancelled) return;
       const { width, height } = el.getBoundingClientRect();
       if (width && height) setMap({ url: displacementMap(Math.round(width), Math.round(height), radius), w: width, h: height });
     };
-    draw();
-    const ro = new ResizeObserver(draw);
+    const onResize = () => {
+      clearTimeout(timer);
+      if (first) {
+        first = false; // the observer's first call: start drawing when idle
+        if (typeof requestIdleCallback === "function") idle = requestIdleCallback(draw, { timeout: 500 });
+        else timer = setTimeout(draw, 0);
+      } else timer = setTimeout(draw, 150);
+    };
+    const ro = new ResizeObserver(onResize);
     ro.observe(el);
-    return () => ro.disconnect();
+    return () => {
+      cancelled = true;
+      ro.disconnect();
+      clearTimeout(timer);
+      if (idle !== undefined && typeof cancelIdleCallback === "function") cancelIdleCallback(idle);
+    };
   }, [radius]);
 
-  // The rim's shine leans toward the cursor
+  // The rim's shine leans toward the cursor. Written straight to the element (no re-render), only when it moved more than 2 degrees.
   useEffect(() => {
     if (matchMedia("(prefers-reduced-motion: reduce)").matches || !matchMedia("(hover: hover)").matches) return;
     let frame = 0;
+    let last = 135;
     const onMove = (e: PointerEvent) => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        const r = ref.current?.getBoundingClientRect();
-        if (!r) return;
+        const el = ref.current;
+        const r = el?.getBoundingClientRect();
+        if (!el || !r || (!r.width && !r.height)) return; // hidden (display: none)
         const dx = e.clientX - (r.left + r.width / 2);
         const dy = e.clientY - (r.top + r.height / 2);
-        setAngle((Math.atan2(dy, dx) * 180) / Math.PI + 90);
+        const angle = (Math.atan2(dy, dx) * 180) / Math.PI + 90;
+        if (Math.abs(((angle - last + 540) % 360) - 180) <= 2) return;
+        last = angle;
+        el.style.setProperty("--rim-angle", `${angle.toFixed(1)}deg`);
       });
     };
     window.addEventListener("pointermove", onMove, { passive: true });
@@ -66,7 +87,7 @@ export default function LiquidGlass({
     <div
       ref={ref}
       className={`${s.glass} ${className}`}
-      style={{ borderRadius: radius, "--rim-angle": `${angle}deg`, ...(map && { "--glass-bend": `url(#${id})` }) } as CSSProperties}
+      style={{ borderRadius: radius, ...(map && { "--glass-bend": `url(#${id})` }) } as CSSProperties}
     >
       {map && (
         <svg className={s.defs} width="0" height="0" aria-hidden="true">
@@ -83,21 +104,30 @@ export default function LiquidGlass({
   );
 }
 
+const SCALE = 4; // the map is drawn at 1/4 size; feImage stretches it to the glass (the bend is smooth, so little is lost)
+const maps = new Map<string, string>();
+
 /**
  * A map that is neutral (no bend) in the middle and pushes the backdrop inward near the rim,
  * so the edge magnifies what's behind it. R = horizontal shift, B = vertical, 128 = none.
+ * Cached by size, since the same glass is drawn on every page.
  */
-function displacementMap(w: number, h: number, radius: number) {
+function displacementMap(fullW: number, fullH: number, fullRadius: number) {
+  const key = `${fullW}x${fullH}r${fullRadius}`;
+  const hit = maps.get(key);
+  if (hit) return hit;
+  const w = Math.max(1, Math.round(fullW / SCALE));
+  const h = Math.max(1, Math.round(fullH / SCALE));
   const canvas = document.createElement("canvas");
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext("2d");
   if (!ctx) return "";
   const img = ctx.createImageData(w, h);
-  const band = Math.min(16, h / 2.5); // how deep the bending reaches in from the rim
+  const band = Math.min(16, fullH / 2.5) / SCALE; // how deep the bending reaches in from the rim
   const hw = w / 2;
   const hh = h / 2;
-  const r = Math.min(radius, hw, hh);
+  const r = Math.min(fullRadius / SCALE, hw, hh);
   const sdf = (x: number, y: number) => {
     const qx = Math.abs(x) - (hw - r);
     const qy = Math.abs(y) - (hh - r);
@@ -123,5 +153,8 @@ function displacementMap(w: number, h: number, radius: number) {
     }
   }
   ctx.putImageData(img, 0, 0);
-  return canvas.toDataURL();
+  const url = canvas.toDataURL();
+  if (maps.size > 12) maps.clear();
+  maps.set(key, url);
+  return url;
 }
