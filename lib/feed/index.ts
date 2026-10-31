@@ -79,7 +79,7 @@ export async function addToFeed(cards: Card[], topic: string, opts: { keepQuery?
     card: opts.keepQuery ? card : publicCard(card),
     topic,
     category: card.category,
-    score: card.scores.demand.value,
+    score: card.scores.demand.value - (card.signal === "early" ? 30 : 0), // early signals rank below proven problems
     updated_at: now,
   }));
   const { error: upsertError } = await db().from("feed_cards").upsert(rows);
@@ -105,7 +105,7 @@ async function pickTopics(n: number) {
 
 async function researchTopic(topic: string) {
   const cards: Card[] = [];
-  await runResearch({ message: `What problems do ${topic} complain about?`, history: [], cards: [], depth: "medium" }, (e: ResearchEvent) => {
+  await runResearch({ message: `What problems do ${topic} complain about?`, history: [], cards: [], depth: "high" }, (e: ResearchEvent) => {
     if (e.type === "result") cards.push(...e.cards);
   });
   return addToFeed(cards, topic, { keepQuery: true }); // Unmet's own niche, not anyone's question

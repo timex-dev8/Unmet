@@ -21,7 +21,7 @@ export default function IdeaCard({ card }: { card: Card }) {
             {card.category} · {card.trend === "rising" ? "↑ Rising" : card.trend === "falling" ? "↓ Falling" : "Steady"} · {e.threads}{" "}
             {e.threads === 1 ? "source" : "sources"}
           </span>
-          {card.sample && <span className={f.sample}>Sample</span>}
+          {card.sample ? <span className={f.sample}>Sample</span> : card.signal === "early" && <span className={f.sample}>Early signal</span>}
         </div>
         <h2 id={`h-${card.slug}`} className={f.headline}>
           {card.headline}
