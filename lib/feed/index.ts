@@ -11,7 +11,7 @@ import type { Card } from "@/lib/types";
 import { passesFeedBar } from "./bar";
 import { SEED_TOPICS } from "./topics";
 
-// The live feed: a daily job researches the most overdue niches (Medium depth) and keeps only
+// The live feed: a daily job researches the most overdue niches (High depth) and keeps only
 // problems that pass the feed bar. Research anyone runs can add to it too (cards hold only public
 // sources, never who asked). Repeats are merged, so evidence grows instead of duplicating.
 
