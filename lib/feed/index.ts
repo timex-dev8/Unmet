@@ -1,7 +1,7 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { z } from "zod/v4";
-import { generateJson } from "@/lib/llm";
+import { generateJson, LlmError } from "@/lib/llm";
 import { runResearch } from "@/lib/research";
 import { DEDUPE_SYSTEM } from "@/lib/research/prompts";
 import { publicCard } from "@/lib/research/store";
@@ -112,30 +112,31 @@ async function researchTopic(topic: string) {
 }
 
 /**
- * One feed run: researches up to `max` niches, two at a time, and stops starting new ones near the
- * time limit. Then drops cards with no new evidence in 30 days.
+ * One feed run: researches up to `max` niches one at a time (two at once overloads the free AI
+ * tier), and stops starting new ones near the time limit. Then drops cards with no new evidence in 30 days.
  */
 export async function runFeed({ max, deadline }: { max: number; deadline: number }) {
   if (!supabaseConfigured()) throw new Error("Supabase isn't connected.");
   const topics = await pickTopics(max);
   const report: { topic: string; added: number; error?: string }[] = [];
-  let next = 0;
-  await Promise.all(
-    [0, 1].map(async () => {
-      while (next < topics.length && Date.now() < deadline) {
-        const topic = topics[next++];
-        let added = 0;
-        try {
-          added = await researchTopic(topic);
-          report.push({ topic, added });
-        } catch (err) {
-          report.push({ topic, added: 0, error: err instanceof Error ? err.message : String(err) });
-        }
-        // Marked as run even when it failed, so a broken niche waits its turn instead of going first every run.
-        await db().from("feed_topics").update({ last_run: new Date().toISOString(), cards_found: added }).eq("topic", topic);
-      }
-    }),
-  );
+  for (const topic of topics) {
+    if (Date.now() >= deadline) break;
+    let added = 0;
+    try {
+      added = await researchTopic(topic).catch(async (err) => {
+        // The AI was busy: wait a little and try this niche once more, if there's time
+        const busy = (err instanceof LlmError && err.code === "rate_limited") || /busy/i.test(String(err));
+        if (!busy || Date.now() + 90_000 > deadline) throw err;
+        await new Promise((r) => setTimeout(r, 20_000));
+        return researchTopic(topic);
+      });
+      report.push({ topic, added });
+    } catch (err) {
+      report.push({ topic, added: 0, error: err instanceof Error ? err.message : String(err) });
+    }
+    // Marked as run even when it failed, so a broken niche waits its turn instead of going first every run.
+    await db().from("feed_topics").update({ last_run: new Date().toISOString(), cards_found: added }).eq("topic", topic);
+  }
   const cutoff = new Date(Date.now() - STALE_DAYS * 86400_000).toISOString();
   await db().from("feed_cards").delete().lt("updated_at", cutoff);
   return report;
