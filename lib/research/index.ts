@@ -24,6 +24,8 @@ import { searchStackExchange } from "./sources/stackexchange";
 // → (High) competitor check + strict review.
 
 const DAY = 86400;
+/** In gap mode the search for the product itself looks back this far (24 months). */
+const PRODUCT_WINDOW_DAYS = 730;
 
 type Config = {
   exaType: "lite" | "auto";
@@ -103,7 +105,7 @@ const NAMES: Record<ResearchSource["origin"], string> = {
 
 /** `signal` aborts when the visitor leaves: the pipeline stops between steps (and inside AI calls). */
 export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent) => void, signal?: AbortSignal) {
-  const cfg = DEPTH[req.depth];
+  const base = DEPTH[req.depth];
   const check = () => signal?.throwIfAborted();
   const isFirst = req.history.length === 0;
   const key = `${req.depth}:${req.message.toLowerCase().replace(/\s+/g, " ").trim()}`;
@@ -123,9 +125,17 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     return;
   }
 
+  // Gap mode lets Exa rank by meaning at every depth: new products have few reviews, so keywords alone miss them.
+  const cfg: Config = plan.product ? { ...base, exaType: "auto" } : base;
+
   const now = Math.floor(Date.now() / 1000);
   const since = now - WINDOW_DAYS * DAY;
   const sinceIso = new Date(since * 1000).toISOString();
+  // A product's own name gets a wider net: any site, last 24 months (launch threads, reviews and changelog complaints).
+  const wideSinceIso = new Date((now - PRODUCT_WINDOW_DAYS * DAY) * 1000).toISOString();
+  const productDomain = plan.product
+    ? req.message.match(/\b(?:[a-z0-9-]+\.)+(?:com|io|co|app|ai|dev|net|org|so|xyz|tech|me|sh)\b/i)?.[0].toLowerCase()
+    : undefined;
 
   // 2. Gather from every service that fits this topic, in parallel.
   const open = plan.angles.slice(0, cfg.openAngles);
@@ -141,6 +151,18 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
 
   const jobs: { name: string; run: Promise<Omit<ResearchSource, "id">[]> }[] = [
     ...open.map((a) => ({ name: NAMES.web, run: searchWeb(a.query, a.objective, { since: sinceIso, type: cfg.exaType, fullText: cfg.fullText }) })),
+    ...(plan.product
+      ? [
+          {
+            name: NAMES.web,
+            run: searchWeb(
+              `${plan.product}${productDomain && !plan.product.toLowerCase().includes(productDomain) ? ` ${productDomain}` : ""} review problems complaints`,
+              `Posts, reviews and discussions by people who used ${plan.product}${productDomain ? ` (${productDomain})` : ""}, or compared it with alternatives: what frustrated them.`,
+              { since: wideSinceIso, type: "auto", fullText: cfg.fullText },
+            ),
+          },
+        ]
+      : []),
     ...community.map((q) => ({
       name: "forums & review sites",
       run: searchWeb(q, `First-hand posts, questions and reviews from ${plan.audience} about their problems.`, {
@@ -192,7 +214,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   const serviceLine = [...perService].map(([name, e]) => (e.failed && !e.n ? `${name} failed` : `${name} ${e.n}`)).join(", ");
 
   // 3. Quality filter
-  const quality = filterSources(raw, WINDOW_DAYS);
+  const quality = filterSources(raw, plan.product ? PRODUCT_WINDOW_DAYS : WINDOW_DAYS);
   const sources = pickDiverse(quality.kept, cfg.maxSources);
   const rejectedCount = Object.values(quality.rejected).reduce((a, b) => a + b, 0);
   emit({
@@ -294,13 +316,13 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
 
   // 8. Ideas: turn the strongest problems into product ideas (each cites its complaints).
   // Medium and High also check whether each idea already exists (one Exa search per idea).
-  const ideaCards = cards.filter((c) => (complaintsOf.get(c.slug)?.length ?? 0) >= 2).slice(0, cfg.high ? 4 : cfg.exaType === "lite" ? 2 : 3);
+  const ideaCards = cards.filter((c) => (complaintsOf.get(c.slug)?.length ?? 0) >= 2).slice(0, cfg.high ? 4 : base.exaType === "lite" ? 2 : 3);
   if (ideaCards.length) {
     check();
     emit({ type: "step", label: `Turning ${ideaCards.length === 1 ? "the problem" : `the top ${ideaCards.length} problems`} into product ideas` });
     await Promise.all(
       ideaCards.map(async (card) => {
-        card.ideas = await generateIdeas(card, complaintsOf.get(card.slug)!, cfg.exaType !== "lite", plan.product).catch((err) => {
+        card.ideas = await generateIdeas(card, complaintsOf.get(card.slug)!, base.exaType !== "lite", plan.product).catch((err) => {
           console.warn("[research] ideas failed:", err instanceof Error ? err.message : err);
           return undefined;
         });

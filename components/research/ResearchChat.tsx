@@ -218,7 +218,7 @@ export default function ResearchChat({
               id="research-input"
               className={s.input}
               rows={1}
-              maxLength={500}
+              maxLength={800}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onKeyDown}

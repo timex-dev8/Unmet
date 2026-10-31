@@ -1,4 +1,5 @@
-import type { Card } from "./types";
+import type { Card, Product } from "./types";
+import { hostOf } from "./url";
 
 /** Starts a research seeded with a card, so the AI knows exactly which idea to dig into. */
 export function digDeeperHref(card: Pick<Card, "slug" | "headline">) {
@@ -14,6 +15,27 @@ export const searchHref = (q: string) => `/app/search?q=${encodeURIComponent(q)}
 
 /** Research link that digs into what people dislike about a product. */
 export const gapsHref = (name: string) => researchHref(`What do people hate about ${name}?`);
+
+const clip = (s: string, n: number) => {
+  const t = s
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/[.!?]+$/, "");
+  return t.length > n ? `${t.slice(0, n - 1).trimEnd()}…` : t;
+};
+
+/**
+ * Like `gapsHref`, but the question carries what we know about the product (site, what it does, who it's for,
+ * category). A new product has few reviews under its own name, so this lets the research look at similar tools too.
+ */
+export function productResearchHref(product: Pick<Product, "name" | "url" | "oneLine" | "forWho" | "category">) {
+  const host = hostOf(product.url);
+  const site = /^[\w-]+(\.[\w-]+)+$/.test(host) ? ` (${host})` : "";
+  const q =
+    `What do people hate about ${clip(product.name, 60)}${site}? It is ${clip(product.oneLine, 160)}, for ${clip(product.forWho.toLowerCase(), 70)}. ` +
+    `Also look at complaints about similar ${product.category.toLowerCase()} tools and why people switch between them.`;
+  return researchHref(q);
+}
 
 /**
  * Where to go after sign-in: a path on this site, or "/app". Browsers read "//x", "/\x" and paths

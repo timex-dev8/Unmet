@@ -51,10 +51,12 @@ export default function TopBar() {
         <span>Search ideas, research and actions</span>
         <kbd className={s.kbd}>⌘K</kbd>
       </button>
-      <button type="button" className={s.searchIcon} onClick={openPalette} aria-label="Search">
-        <Search size={21} aria-hidden="true" />
-      </button>
-      <AccountButton variant="icon" />
+      <div className={s.topActions}>
+        <button type="button" className={s.searchIcon} onClick={openPalette} aria-label="Search">
+          <Search size={21} aria-hidden="true" />
+        </button>
+        <AccountButton variant="icon" />
+      </div>
       {mounted && <CommandPalette open={open} onClose={() => setOpen(false)} />}
     </header>
   );

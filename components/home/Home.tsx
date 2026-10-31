@@ -11,7 +11,7 @@ import { useLowOnly } from "@/lib/auth";
 import { loadCard } from "@/lib/card-action";
 import { type HomeIdea, type HomeProduct, trendingPicks } from "@/lib/home";
 import { useInterests } from "@/lib/interests";
-import { gapsHref, ideaHref, researchHref } from "@/lib/links";
+import { ideaHref, productResearchHref, researchHref } from "@/lib/links";
 import { forYou, profileKeywords } from "@/lib/rank";
 import type { Depth } from "@/lib/research-types";
 import { useSaved } from "@/lib/saved";
@@ -140,7 +140,7 @@ function HomeCard({ card, i }: { card: HomeIdea; i: number }) {
 }
 
 function HomeProduct({ product, i }: { product: HomeProduct; i: number }) {
-  const gaps = gapsHref(product.name);
+  const gaps = productResearchHref(product);
   return (
     <article className={`${s.card} rise`} style={stagger(i)}>
       <div className={s.cardBody}>
@@ -163,7 +163,7 @@ function HomeProduct({ product, i }: { product: HomeProduct; i: number }) {
 }
 
 function TrendingCard({ product, i }: { product: HomeProduct; i: number }) {
-  const gaps = gapsHref(product.name);
+  const gaps = productResearchHref(product);
   const proof = product.proof[0];
   return (
     <article className={`${s.trendCard} rise`} style={stagger(i)}>

@@ -67,6 +67,12 @@
 .searchField {
   display: none;
 }
+/* phone: search and account icons sit together on the right */
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
 .searchIcon {
   width: 44px;
   height: 44px;
@@ -240,6 +246,9 @@
   .topBrand,
   .searchIcon {
     display: none;
+  }
+  .topActions {
+    display: contents;
   }
   .top {
     justify-content: center;

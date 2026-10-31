@@ -17,7 +17,7 @@ export const maxDuration = 300;
 const cut = (n: number) => z.string().transform((s) => s.slice(0, n));
 
 const Body = z.object({
-  message: z.string().trim().min(2).max(500),
+  message: z.string().trim().min(2).max(800),
   history: z
     .array(z.object({ role: z.enum(["user", "assistant"]), text: cut(2000) }))
     .max(12)
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
   }
 
   const parsed = Body.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) return Response.json({ error: "Please type a question between 2 and 500 characters." }, { status: 400 });
+  if (!parsed.success) return Response.json({ error: "Please type a question between 2 and 800 characters." }, { status: 400 });
   const { depth } = parsed.data;
 
   // Guests (no account) can use everything except deeper research: Medium and High need an account.

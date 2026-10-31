@@ -12,7 +12,7 @@ export type HomeIdea = Pick<Card, "slug" | "headline" | "summary" | "who" | "cat
   sample?: boolean;
 };
 
-export type HomeProduct = Pick<Product, "slug" | "name" | "url" | "oneLine" | "category" | "source" | "image"> & { proof: ProductProof[] };
+export type HomeProduct = Pick<Product, "slug" | "name" | "url" | "oneLine" | "forWho" | "category" | "source" | "image"> & { proof: ProductProof[] };
 
 export function homeIdea(c: Card): HomeIdea {
   return {
@@ -47,6 +47,7 @@ export function homeProducts(products: Product[]): HomeProduct[] {
     name: p.name,
     url: p.url,
     oneLine: p.oneLine,
+    forWho: p.forWho,
     category: p.category,
     source: p.source,
     image: p.image,
