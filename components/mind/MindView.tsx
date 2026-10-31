@@ -2,7 +2,7 @@
 
 import { useRef, useState, type CSSProperties, type FormEvent, type KeyboardEvent } from "react";
 import Link from "next/link";
-import { ArrowRight, ArrowUp, LoaderCircle, X } from "lucide-react";
+import { ArrowRight, ArrowUp, ChevronDown, LoaderCircle, X } from "lucide-react";
 import { researchHref } from "@/lib/links";
 import { addThought, removeThought, saveConclusion, useMind } from "@/lib/mind";
 import type { MindBrief } from "@/lib/mind-types";
@@ -176,7 +176,18 @@ export default function MindView({ configured }: { configured: boolean }) {
         </section>
 
         <section className={s.side} aria-live="polite" aria-label={brief ? "Your brief" : "Example brief"}>
-          {brief ? <Brief brief={brief} count={brief.count} quiet={stale} /> : <Brief brief={EXAMPLE} example />}
+          {brief ? (
+            <Brief brief={brief} count={brief.count} quiet={stale} />
+          ) : (
+            // The example stays folded away until asked for
+            <details className={s.exampleToggle}>
+              <summary>
+                See an example brief
+                <ChevronDown size={18} aria-hidden="true" />
+              </summary>
+              <Brief brief={EXAMPLE} example />
+            </details>
+          )}
         </section>
       </div>
     </div>

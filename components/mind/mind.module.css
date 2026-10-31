@@ -215,6 +215,45 @@
   }
 }
 
+/* "See an example brief": a quiet button with an arrow that unfolds the example */
+.exampleToggle summary {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 12px;
+  background: var(--gray);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background var(--t-fast) var(--ease);
+}
+.exampleToggle summary::-webkit-details-marker {
+  display: none;
+}
+.exampleToggle summary:hover {
+  background: #ebeef5;
+}
+.exampleToggle summary svg {
+  transition: transform var(--t-med) var(--ease);
+}
+.exampleToggle[open] summary svg {
+  transform: rotate(180deg);
+}
+.exampleToggle[open] > article {
+  margin-top: 12px;
+  animation: example-in var(--t-med) var(--ease);
+}
+@keyframes example-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
 /* The brief */
 .brief {
   padding: 24px 20px;
