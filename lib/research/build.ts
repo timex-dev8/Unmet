@@ -1,4 +1,5 @@
 import type { ResearchSource } from "@/lib/research-types";
+import { slugify } from "@/lib/text";
 import type { Card, Report, Score, Signal, SourceKind, Trend } from "@/lib/types";
 import type { Complaint } from "./extract";
 import type { DraftProblem } from "./group";
@@ -12,15 +13,6 @@ export const WINDOW_DAYS = 365;
 
 const label = (v: number): Score["label"] => (v >= 67 ? "High" : v >= 40 ? "Medium" : "Low");
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, Math.round(v)));
-
-function slugify(text: string) {
-  const base = text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 48);
-  return `${base}-${Math.random().toString(36).slice(2, 6)}`;
-}
 
 function trendOf(dates: number[], now: number): Trend {
   if (dates.length < 3) return "steady";
@@ -88,7 +80,8 @@ export function reportFor(own: Complaint[], used: ResearchSource[], sites: numbe
   if (used.length >= 3) add(used.length >= 5 ? 2 : 1, `${used.length} independent sources`);
   else add(0, `Only ${used.length} ${used.length === 1 ? "source" : "sources"} so far`);
   if (sites >= 3) add(1, `Shows up on ${sites} different sites`);
-  if (money >= 1) add(money >= 2 ? 2 : 1, money === 1 ? "1 person mentions paying, switching or price" : `${money} people mention paying, switching or price`);
+  if (money >= 1)
+    add(money >= 2 ? 2 : 1, money === 1 ? "1 person mentions paying, switching or price" : `${money} people mention paying, switching or price`);
   else add(0, "No one mentions paying for a fix yet");
   if (signals.workaround) add(1, `${signals.workaround} ${signals.workaround === 1 ? "person built a workaround" : "people built workarounds"}`);
   if (trend === "rising") add(1, "Mentions are rising");
@@ -123,13 +116,17 @@ export function buildCard(
   // how much engagement they got, and how fresh they are.
   const engagement = used.reduce((sum, s) => sum + (s.engagement?.score ?? 0), 0);
   const recent = dates.filter((d) => d > opts.now - 180 * DAY).length;
-  const demand = clamp(15 + used.length * 7 + (sites.size - 1) * 6 + Math.min(Math.log10(1 + engagement) * 6, 15) + (recent / Math.max(used.length, 1)) * 10, 5, 95);
+  const demand = clamp(
+    15 + used.length * 7 + (sites.size - 1) * 6 + Math.min(Math.log10(1 + engagement) * 6, 15) + (recent / Math.max(used.length, 1)) * 10,
+    5,
+    95,
+  );
   const engaged = used.filter((s) => s.engagement && s.engagement.score > 2).length;
   const engagementNote = engaged > 0 ? `, ${engaged} with votes or replies` : "";
 
   const trend = trendOf(dates, opts.now);
   return {
-    slug: slugify(p.headline),
+    slug: `${slugify(p.headline, 48)}-${Math.random().toString(36).slice(2, 6)}`,
     headline: p.headline,
     summary: p.summary,
     who: p.who,

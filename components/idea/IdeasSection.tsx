@@ -6,7 +6,6 @@ import { LENS_LABEL } from "@/lib/lenses";
 import type { Card, Idea } from "@/lib/types";
 import s from "./report.module.css";
 
-
 const TWISTS = ["More like this", "Make it B2B", "Make it cheaper", "Make it AI-first", "Make it for consumers"];
 
 type Validation = { headline: string; subhead: string; bullets: string[]; cta: string; questions: string[]; outreach: string };
@@ -74,7 +73,7 @@ export default function IdeasSection({ card }: { card: Card }) {
           <div className={s.chips}>
             {(ideas.length ? TWISTS : ["More like this"]).map((t) => (
               <button key={t} type="button" className={s.chip} disabled={!!busy} onClick={() => remix(t)}>
-                {busy === t && <LoaderCircle size={14} className={s.spin} aria-hidden="true" />}
+                {busy === t && <LoaderCircle size={14} className="spin" aria-hidden="true" />}
                 {ideas.length || t !== "More like this" ? t : "Generate ideas"}
               </button>
             ))}
@@ -157,8 +156,8 @@ function IdeaView({ idea, card }: { idea: Idea; card: Card }) {
       {plan ? (
         <ValidationPlan plan={plan} />
       ) : (
-        <button type="button" className={s.validate} onClick={validate} disabled={busy}>
-          {busy ? <LoaderCircle size={16} className={s.spin} aria-hidden="true" /> : <ClipboardCheck size={16} aria-hidden="true" />}
+        <button type="button" className={`glossy ${s.validate}`} onClick={validate} disabled={busy}>
+          {busy ? <LoaderCircle size={16} className="spin" aria-hidden="true" /> : <ClipboardCheck size={16} aria-hidden="true" />}
           Validate in a day
         </button>
       )}
@@ -184,7 +183,7 @@ function ValidationPlan({ plan }: { plan: Validation }) {
             <li key={b}>{b}</li>
           ))}
         </ul>
-        <span className={s.fakeBtn}>{plan.cta}</span>
+        <span className={`glossy ${s.fakeBtn}`}>{plan.cta}</span>
       </div>
 
       <p className={s.planLabel}>2 · Ask 5 people these questions</p>

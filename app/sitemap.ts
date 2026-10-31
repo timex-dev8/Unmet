@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { connection } from "next/server";
 import { getAllSlugs, getCard } from "@/lib/cards";
 import { readFeed } from "@/lib/feed";
+import { ideaHref } from "@/lib/links";
 
 const SITE = "https://unmet-ten.vercel.app";
 
@@ -15,7 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (card.sample || seen.has(card.slug)) continue;
     seen.add(card.slug);
     urls.push({
-      url: `${SITE}/app/idea/${card.slug}`,
+      url: `${SITE}${ideaHref(card.slug)}`,
       lastModified: card.evidence.updatedAt,
       changeFrequency: "weekly",
       priority: 0.7,
@@ -27,7 +28,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const card = await getCard(slug);
     if (!card || card.sample) continue;
     seen.add(slug);
-    urls.push({ url: `${SITE}/app/idea/${slug}`, lastModified: card.evidence.updatedAt, changeFrequency: "weekly", priority: 0.7 });
+    urls.push({ url: `${SITE}${ideaHref(slug)}`, lastModified: card.evidence.updatedAt, changeFrequency: "weekly", priority: 0.7 });
   }
   return urls;
 }

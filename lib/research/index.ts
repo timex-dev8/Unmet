@@ -2,6 +2,7 @@ import "server-only";
 import { searchWeb } from "@/lib/exa";
 import { searchHN } from "@/lib/hn";
 import type { Depth, ResearchEvent, ResearchRequest, ResearchSource } from "@/lib/research-types";
+import { formatMrr } from "@/lib/text";
 import type { Card } from "@/lib/types";
 import { buildCard, kindMix, medianAgeMonths, WINDOW_DAYS } from "./build";
 import { competitionFrom, findCompetitors, startupsFor } from "./competitors";
@@ -286,8 +287,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
         };
         // A competitor with verified revenue is proof people pay to solve this.
         const paid = found.filter((f) => f.mrr).sort((x, y) => (y.mrr ?? 0) - (x.mrr ?? 0))[0];
-        if (paid && card.report)
-          card.report.reasons.push(`Proven market: ${paid.name} earns $${Math.round(paid.mrr! / 100).toLocaleString("en-US")}/mo`);
+        if (paid && card.report) card.report.reasons.push(`Proven market: ${paid.name} earns ${formatMrr(paid.mrr!)}/mo`);
       }),
     );
   }

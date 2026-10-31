@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight, Sparkles } from "lucide-react";
+import { gapsHref } from "@/lib/links";
 import type { Product } from "@/lib/types";
 import ProductThumb from "./ProductThumb";
 import f from "./ideaCard.module.css";
@@ -8,7 +9,7 @@ import p from "./productCard.module.css";
 // The feed's "what's working" card: a real product, what it does, and the proof it's working.
 // The main action turns it into research: what do its users complain about?
 export default function ProductCard({ product }: { product: Product }) {
-  const gaps = `/app/research?q=${encodeURIComponent(`What do people hate about ${product.name}?`)}`;
+  const gaps = gapsHref(product.name);
   return (
     <article className={f.card} aria-labelledby={`p-${product.slug}`}>
       <div className={f.body}>

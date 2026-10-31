@@ -5,7 +5,9 @@ import { z } from "zod/v4";
 import { generateJson } from "@/lib/llm";
 import { PRODUCT_SYSTEM } from "@/lib/research/prompts";
 import { db, supabaseConfigured } from "@/lib/supabase/server";
+import { slugify } from "@/lib/text";
 import { CATEGORIES, type Product, type ProductSource } from "@/lib/types";
+import { hostOf } from "@/lib/url";
 import { appStoreGrossing } from "./sources/appstore";
 import { githubRising } from "./sources/github";
 import { productHunt } from "./sources/producthunt";
@@ -36,14 +38,6 @@ const CardsSchema = z.object({
 
 const warn = (what: string, err: unknown) => console.warn(`[products] ${what}:`, err instanceof Error ? err.message : err);
 
-const slugify = (s: string) =>
-  s
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 60);
-
 const shortHash = (s: string) => createHash("sha1").update(s).digest("hex").slice(0, 8);
 
 const STORE_PAGE = /(^|\.)(apps\.apple\.com|github\.com|producthunt\.com)$/i;
@@ -60,7 +54,7 @@ function isStorePage(url: string) {
 export function keyOf(p: { url: string; name: string }) {
   try {
     const u = new URL(p.url);
-    return `${u.hostname.replace(/^www\./, "")}${u.pathname.replace(/\/+$/, "")}`.toLowerCase();
+    return `${hostOf(p.url)}${u.pathname.replace(/\/+$/, "")}`.toLowerCase();
   } catch {
     return `name:${slugify(p.name) || shortHash(p.name)}`;
   }

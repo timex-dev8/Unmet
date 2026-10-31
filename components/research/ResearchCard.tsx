@@ -4,10 +4,10 @@ import type { CSSProperties, MouseEvent } from "react";
 import Link from "next/link";
 import { Quote } from "@/components/card/parts";
 import SaveButton from "@/components/card/SaveButton";
+import { ideaHref } from "@/lib/links";
+import { VERDICT } from "@/lib/verdict";
 import type { Card } from "@/lib/types";
 import s from "./research.module.css";
-
-const VERDICT = { strong: "Strong", maybe: "Worth a look", weak: "Weak signal" } as const;
 
 // A compact idea card for chat answers: the claim and its evidence, nothing else.
 // Scores, sources and AI ideas are one tap away (side panel on wide screens, idea page on phones).
@@ -44,11 +44,11 @@ export default function ResearchCard({
           </span>
           {card.signal === "early" && <span className={s.early}>Early signal</span>}
           {card.report && (
-            <span className={`${s.verdictTag} ${card.report.verdict === "strong" ? s.verdictStrong : ""}`}>{VERDICT[card.report.verdict]}</span>
+            <span className={`${s.verdictTag} ${card.report.verdict === "strong" ? s.verdictStrong : ""}`}>{VERDICT[card.report.verdict].short}</span>
           )}
         </div>
         <h3 id={`r-${card.slug}`} className={s.cardTitle}>
-          <Link href={`/app/idea/${card.slug}`} onClick={open}>
+          <Link href={ideaHref(card.slug)} onClick={open}>
             {card.headline}
           </Link>
         </h3>

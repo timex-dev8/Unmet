@@ -1,12 +1,7 @@
 import { Check, Minus } from "lucide-react";
 import type { Report, Signal } from "@/lib/types";
+import { VERDICT } from "@/lib/verdict";
 import s from "./report.module.css";
-
-const VERDICT = {
-  strong: { label: "Strong opportunity", note: "Real, repeated pain with signs people would pay." },
-  maybe: { label: "Worth a closer look", note: "Real pain, but the money signal is still thin." },
-  weak: { label: "Weak signal so far", note: "Too little evidence yet. Talk to people before building." },
-} as const;
 
 const SIGNALS: [Signal, string][] = [
   ["pays", "pay or would pay"],

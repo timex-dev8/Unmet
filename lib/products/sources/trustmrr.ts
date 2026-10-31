@@ -1,12 +1,9 @@
 import "server-only";
+import { formatMrr } from "@/lib/text";
 import { listStartups } from "@/lib/trustmrr";
 import type { RawProduct } from "./types";
 
 // TrustMRR: startups whose revenue is verified (Stripe, App Store…). The strongest proof we have.
-const money = (cents: number) => {
-  const d = cents / 100;
-  return d >= 1_000_000 ? `$${(d / 1_000_000).toFixed(1)}M` : d >= 1000 ? `$${Math.round(d / 1000)}k` : `$${Math.round(d)}`;
-};
 
 // Revenue first: the dedupe keeps the first entry, so a startup on both lists stays revenue-ranked.
 // Growth over 1000% is usually a tiny base or a data glitch, so it's neither shown nor counted.
@@ -25,7 +22,7 @@ export async function trustMrr(): Promise<RawProduct[]> {
         description: s.description.slice(0, 600),
         hint: s.category,
         proof: [
-          { kind: "mrr" as const, label: `${money(s.mrr)} MRR, verified`, url: s.url, site: "TrustMRR" },
+          { kind: "mrr" as const, label: `${formatMrr(s.mrr, "short")} MRR, verified`, url: s.url, site: "TrustMRR" },
           ...(growth ? [{ kind: "growth" as const, label: `↑ ${growth}% in 30 days`, url: s.url, site: "TrustMRR" }] : []),
         ],
         rising: growth >= 10,

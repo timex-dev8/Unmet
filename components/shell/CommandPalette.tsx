@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { House, Layers, LayoutGrid, Lightbulb, MessageSquare, NotebookPen, Plus, Search, Sparkles, type LucideIcon } from "lucide-react";
-import { researchHref } from "@/lib/links";
+import { ideaHref, researchHref, searchHref } from "@/lib/links";
 import { useThreads } from "@/lib/research-store";
 import { useSaved } from "@/lib/saved";
 import type { Card } from "@/lib/types";
@@ -49,7 +49,7 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
     const ideas: Item[] = [...ideaPool.values()]
       .filter((c) => matches(`${c.headline} ${c.summary} ${c.category}`, words))
       .slice(0, words.length ? 6 : 4)
-      .map((c) => ({ id: `i-${c.slug}`, group: "Ideas", label: c.headline, sub: c.category, href: `/app/idea/${c.slug}`, Icon: Lightbulb }));
+      .map((c) => ({ id: `i-${c.slug}`, group: "Ideas", label: c.headline, sub: c.category, href: ideaHref(c.slug), Icon: Lightbulb }));
     const research: Item[] = threads
       .filter((t) => matches(t.title, words))
       .slice(0, 4)
@@ -66,7 +66,7 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
             href: researchHref(q),
             Icon: Sparkles,
           },
-          { id: "q-search", group: "Actions", label: `Search ideas for “${q}”`, href: `/app/search?q=${encodeURIComponent(q)}`, Icon: Search },
+          { id: "q-search", group: "Actions", label: `Search ideas for “${q}”`, href: searchHref(q), Icon: Search },
         ]
       : [];
     return [...launch, ...ideas, ...research, ...actions];

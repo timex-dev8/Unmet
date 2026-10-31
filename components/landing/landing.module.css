@@ -482,11 +482,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background:
-    radial-gradient(120% 90% at 28% 0%, rgba(255, 255, 255, 0.38) 0, rgba(255, 255, 255, 0) 52%), linear-gradient(180deg, #2d5cf2 0%, #1c38ea 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.45),
-    0 12px 24px -12px rgba(28, 56, 234, 0.6);
+  background: var(--glossy);
+  box-shadow: var(--glossy-shadow);
 }
 .step h3 {
   margin: 24px 0 8px;

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Check, Plus } from "lucide-react";
+import { ideaHref } from "@/lib/links";
 import type { Card } from "@/lib/types";
 import s from "./landing.module.css";
 
@@ -114,7 +115,7 @@ export function RecentProblems({ cards }: { cards: Card[] }) {
       <ul className={s.problems}>
         {cards.map((c) => (
           <li key={c.slug}>
-            <Link href={`/app/idea/${c.slug}`}>{c.headline}</Link>
+            <Link href={ideaHref(c.slug)}>{c.headline}</Link>
             <span>{c.category}</span>
           </li>
         ))}

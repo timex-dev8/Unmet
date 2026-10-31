@@ -21,19 +21,6 @@
   gap: 12px;
   margin-bottom: 16px;
 }
-.linkBtn {
-  min-height: 44px;
-  border: 0;
-  background: none;
-  font: inherit;
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--muted);
-  cursor: pointer;
-}
-.linkBtn:hover {
-  color: var(--ink);
-}
 
 /* Hero */
 .hero {
@@ -97,9 +84,6 @@
   height: 46px;
   border: 0;
   border-radius: 12px;
-  background: var(--glossy);
-  box-shadow: var(--glossy-shadow);
-  color: var(--white);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -114,57 +98,6 @@
 .send:disabled {
   opacity: 0.35;
   cursor: default;
-}
-
-/* Interests */
-.interests {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 20px;
-  padding: 24px;
-  border-radius: 24px;
-  background: var(--surface);
-}
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 44px;
-  padding: 0 18px;
-  border: 0;
-  border-radius: var(--radius-pill);
-  background: var(--gray);
-  font: inherit;
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--ink);
-  cursor: pointer;
-  transition:
-    background var(--t-med) var(--ease),
-    color var(--t-med) var(--ease),
-    transform var(--t-fast) var(--ease);
-}
-.chip[aria-pressed="true"] {
-  background: var(--primary);
-  color: var(--white);
-}
-.chip:active {
-  transform: scale(0.97);
-}
-.check {
-  animation: check-in var(--t-med) var(--ease);
-}
-@keyframes check-in {
-  from {
-    opacity: 0;
-    transform: scale(0.4);
-  }
 }
 
 /* For you cards */
@@ -283,48 +216,6 @@
     transform: none;
   }
 }
-
-/* Plain-language interests ("I'm a nurse") and watched niches */
-.profileForm {
-  width: 100%;
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.profileInput {
-  flex: 1 1 260px;
-  min-height: 48px;
-  padding: 0 18px;
-  border: 0;
-  border-radius: var(--radius-pill);
-  background: var(--gray);
-  font: inherit;
-  font-size: 16px;
-  color: var(--ink);
-  outline: 0;
-  transition: box-shadow var(--t-fast) var(--ease);
-}
-.profileInput:focus {
-  box-shadow: 0 0 0 3px var(--tint);
-}
-.formError {
-  margin: 0;
-  font-size: 14px;
-  color: var(--early-ink);
-}
-.orPick {
-  margin: 4px 0 0;
-  font-size: 13px;
-  color: var(--muted);
-}
-.spin {
-  animation: spin 0.9s linear infinite;
-}
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
 .nichesTitle {
   margin-bottom: 14px;
 }
@@ -374,12 +265,6 @@
   background: var(--primary);
   color: var(--white);
 }
-.nicheNote {
-  width: 100%;
-  margin: 2px 0 0;
-  font-size: 13px;
-  color: var(--muted);
-}
 .nicheEdit {
   display: inline-flex;
   align-items: center;
@@ -420,9 +305,6 @@
   min-height: 40px;
   padding: 0 16px;
   border-radius: 10px;
-  background: var(--glossy);
-  box-shadow: var(--glossy-shadow);
-  color: var(--white);
   display: inline-flex;
   align-items: center;
   font-size: 14px;

@@ -1,73 +1,16 @@
 .bar {
   height: 56px;
-  padding: 0 8px 0 16px;
+  padding: 0 8px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex: none;
 }
-.brand {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-}
 .right {
   display: flex;
   align-items: center;
   gap: 2px;
-}
-.iconLink {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.iconLink:hover {
-  background: rgba(0, 0, 0, 0.04);
-}
-.researchLink {
-  min-height: 44px;
   min-width: 44px;
-  padding: 0 12px;
-  border-radius: var(--radius-pill);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--navy);
-  background: var(--tint);
-  margin-right: 2px;
-}
-@media (max-width: 400px) {
-  .researchLabel {
-    display: none;
-  }
-}
-.savedLink {
-  min-height: 44px;
-  padding: 0 14px;
-  border-radius: var(--radius-pill);
-  background: var(--white);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  font-weight: 600;
-}
-.savedLink svg {
-  color: var(--blue);
-}
-.bump {
-  animation: bump 0.35s ease;
-}
-@keyframes bump {
-  40% {
-    transform: scale(1.15);
-  }
 }
 .back {
   display: inline-flex;
@@ -77,10 +20,6 @@
   padding-right: 10px;
   font-size: 17px;
   color: var(--link);
-}
-.barTitle {
-  font-size: 15px;
-  font-weight: 600;
 }
 
 /* Filter chips */
@@ -131,7 +70,6 @@
 
 @media (min-width: 900px) {
   .bar {
-    padding: 0 8px;
     height: 64px;
   }
   .chips {

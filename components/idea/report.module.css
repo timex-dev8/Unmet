@@ -28,14 +28,6 @@
   color: var(--early-ink);
   font-size: 14px;
 }
-.spin {
-  animation: spin 0.9s linear infinite;
-}
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
 
 /* Verdict */
 .verdict {
@@ -259,9 +251,6 @@
   padding: 0 18px;
   border: 0;
   border-radius: 12px;
-  background: var(--glossy);
-  box-shadow: var(--glossy-shadow);
-  color: var(--white);
   font: inherit;
   font-size: 15px;
   font-weight: 500;
@@ -299,7 +288,6 @@
   gap: 6px;
   padding: 18px;
   border-radius: 18px;
-  background: var(--studio-bg);
   background-color: var(--tint);
   font-size: 14px;
 }
@@ -318,9 +306,6 @@
   margin-top: 4px;
   padding: 8px 16px;
   border-radius: 10px;
-  background: var(--glossy);
-  box-shadow: var(--glossy-shadow);
-  color: var(--white);
   font-weight: 500;
 }
 .questions {

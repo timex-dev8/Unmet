@@ -17,8 +17,3 @@ export type MindBrief = {
   matchSlug: string;
   matchHeadline: string;
 };
-
-export type MindRequest = {
-  thoughts: { id: string; text: string }[];
-  ideas: { slug: string; headline: string; summary: string }[];
-};

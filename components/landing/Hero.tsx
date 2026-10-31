@@ -1,8 +1,8 @@
 import Link from "next/link";
+import { ideaHref } from "@/lib/links";
 import type { Card } from "@/lib/types";
+import { VERDICT } from "@/lib/verdict";
 import s from "./landing.module.css";
-
-const VERDICT = { strong: "Strong opportunity", maybe: "Worth a closer look", weak: "Weak signal so far" } as const;
 
 // The sky hero: serif headline, two buttons, and a real answer from the live feed floating below.
 export default function Hero({ example, fallbackSlug }: { example: Card | null; fallbackSlug: string }) {
@@ -17,7 +17,7 @@ export default function Hero({ example, fallbackSlug }: { example: Card | null; 
           <Link href="/welcome" className={`glossy ${s.btn}`}>
             Find your first idea
           </Link>
-          <Link href={`/app/idea/${example?.slug ?? fallbackSlug}`} className={s.ghost}>
+          <Link href={ideaHref(example?.slug ?? fallbackSlug)} className={s.ghost}>
             See an example
           </Link>
         </div>
@@ -30,7 +30,7 @@ export default function Hero({ example, fallbackSlug }: { example: Card | null; 
 
 function Preview({ example }: { example: Card | null }) {
   const ideas = (example?.ideas ?? []).slice(0, 2);
-  const verdict = example?.report ? VERDICT[example.report.verdict] : "Strong opportunity";
+  const verdict = example?.report ? VERDICT[example.report.verdict].label : VERDICT.strong.label;
   return (
     <div className={s.previewWrap}>
       <figure className={s.previewGlass} aria-label="An example answer from Unmet">
@@ -69,7 +69,7 @@ function Preview({ example }: { example: Card | null }) {
                 </div>
               </>
             )}
-            <Link href={example ? `/app/idea/${example.slug}` : "/welcome"} className={`glossy ${s.btn} ${s.sideBtn}`}>
+            <Link href={example ? ideaHref(example.slug) : "/welcome"} className={`glossy ${s.btn} ${s.sideBtn}`}>
               Validate in a day
             </Link>
           </aside>

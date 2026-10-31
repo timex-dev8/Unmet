@@ -8,7 +8,7 @@ import { TrendBadge, windowLabel } from "@/components/card/parts";
 import Highlight from "@/components/motion/Highlight";
 import { entryFor, moveTo, nextStage, prevStage, setNote, STAGES, stageLabel, useBoard, type Stage } from "@/lib/board";
 import { STAGE_COLORS } from "@/lib/colors";
-import { digDeeperHref } from "@/lib/links";
+import { digDeeperHref, ideaHref } from "@/lib/links";
 import { useSaved } from "@/lib/saved";
 import type { Card } from "@/lib/types";
 import s from "./board.module.css";
@@ -149,7 +149,7 @@ function Item({ card, stage, note, onRemove }: { card: Card; stage: Stage; note:
           </button>
         </div>
         <h3 className={s.itemTitle}>
-          <Link href={`/app/idea/${card.slug}`}>{card.headline}</Link>
+          <Link href={ideaHref(card.slug)}>{card.headline}</Link>
         </h3>
         <p className={s.evidence}>
           <strong>{e.posts} mentions</strong> · {e.site} · {windowLabel(e.days)}
@@ -181,7 +181,7 @@ function Item({ card, stage, note, onRemove }: { card: Card; stage: Stage; note:
             </button>
           )}
           {next ? (
-            <button type="button" className={s.moveBtn} onClick={() => moveTo(card.slug, next)}>
+            <button type="button" className={`glossy ${s.moveBtn}`} onClick={() => moveTo(card.slug, next)}>
               {stageLabel(next)} <ArrowRight size={15} aria-hidden="true" />
             </button>
           ) : (

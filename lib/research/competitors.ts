@@ -1,5 +1,6 @@
 import "server-only";
 import { searchProducts } from "@/lib/exa";
+import { formatMrr } from "@/lib/text";
 import { listStartups, trustmrrConfigured, type Startup } from "@/lib/trustmrr";
 import type { Card, Competitor } from "@/lib/types";
 import { kindOf } from "./quality";
@@ -9,7 +10,13 @@ import { kindOf } from "./quality";
 
 const LISTICLE = /\b\d+\s+(best|top)\b|alternatives|\bvs\.?\s|review|guide|how to|%|\bwhy\b|\bstop\b|template|lessons/i;
 const STOP = new Set(["their", "about", "which", "there", "would", "could", "people", "every", "after", "before", "without"]);
-const keywords = (s: string) => new Set(s.toLowerCase().split(/[^a-z]+/).filter((w) => w.length > 4 && !STOP.has(w)));
+const keywords = (s: string) =>
+  new Set(
+    s
+      .toLowerCase()
+      .split(/[^a-z]+/)
+      .filter((w) => w.length > 4 && !STOP.has(w)),
+  );
 
 // A product page is a homepage or a shallow page (example.com/ or example.com/features), not an article.
 const isProductPage = (url: string) => {
@@ -22,7 +29,10 @@ const isProductPage = (url: string) => {
 
 // Use the short brand part of the title; fall back to the domain name when the title reads like a sentence.
 export function productName(title: string, site: string) {
-  const parts = title.split(/\s[|–—-]\s|:\s/).map((p) => p.trim()).filter(Boolean);
+  const parts = title
+    .split(/\s[|–—-]\s|:\s/)
+    .map((p) => p.trim())
+    .filter(Boolean);
   const short = parts.find((p) => p.split(/\s+/).length <= 3 && !/^(how|why|what|the)\b/i.test(p));
   if (short) return short.slice(0, 40);
   const label = site.split(".").slice(-2, -1)[0] ?? site;
@@ -65,7 +75,7 @@ export function competitionFrom(found: Competitor[]) {
   const top = verified.reduce((m, c) => Math.max(m, c.mrr ?? 0), 0);
   const value = Math.min(92, 20 + found.length * 13 + (top > 1_000_000 ? 10 : 0));
   const reason = found.length
-    ? `${found.length} existing ${found.length === 1 ? "product" : "products"} found${top ? `, top verified revenue $${Math.round(top / 100).toLocaleString("en-US")}/mo` : ""}`
+    ? `${found.length} existing ${found.length === 1 ? "product" : "products"} found${top ? `, top verified revenue ${formatMrr(top)}/mo` : ""}`
     : "Few existing products found in a quick search";
   return { value, reason };
 }

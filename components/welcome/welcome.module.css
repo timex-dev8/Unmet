@@ -237,10 +237,8 @@
   padding: 0 20px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: var(--white);
   font: inherit;
   font-size: 16px;
-  color: var(--ink);
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -253,11 +251,12 @@
 .nicheChip:active {
   transform: scale(0.97);
 }
+.nicheOff {
+  background: var(--white);
+  color: var(--ink);
+}
 .nicheOn {
-  background: var(--glossy);
   border-color: transparent;
-  box-shadow: var(--glossy-shadow);
-  color: var(--white);
 }
 .addBtn {
   width: 52px;
@@ -297,12 +296,4 @@
   background: var(--early-tint);
   color: var(--early-ink);
   font-size: 14px;
-}
-.spin {
-  animation: spin 0.9s linear infinite;
-}
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
 }

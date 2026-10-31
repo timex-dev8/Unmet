@@ -81,7 +81,11 @@ export function useThread(id: string | undefined) {
 
 /** True once the browser store is readable (avoids a "not found" flash while hydrating). */
 export function useStoreReady() {
-  return useSyncExternalStore(subscribe, () => true, () => false);
+  return useSyncExternalStore(
+    subscribe,
+    () => true,
+    () => false,
+  );
 }
 
 export function createThread(title: string) {
@@ -93,10 +97,6 @@ export function createThread(title: string) {
 
 export function updateThread(id: string, fn: (messages: ChatMessage[]) => ChatMessage[]) {
   write(getSnapshot().map((t) => (t.id === id ? { ...t, messages: fn(t.messages), updatedAt: Date.now() } : t)));
-}
-
-export function deleteThread(id: string) {
-  write(getSnapshot().filter((t) => t.id !== id));
 }
 
 /** Finds an idea card from past research in this browser (for /app/idea/[slug]). */
@@ -115,12 +115,21 @@ export const threadsSync: Syncable<Thread[]> = {
   get: () => storable(getSnapshot()),
   // A chat that's mid-answer here keeps its local copy, so the running research isn't lost.
   replace: (list) => {
-    const busy = new Map(getSnapshot().filter((t) => t.messages.some((m) => m.pending)).map((t) => [t.id, t]));
+    const busy = new Map(
+      getSnapshot()
+        .filter((t) => t.messages.some((m) => m.pending))
+        .map((t) => [t.id, t]),
+    );
     write(list.map((t) => busy.get(t.id) ?? t));
   },
   // Same thread on both sides: keep the one touched last.
   merge: (local, remote) =>
-    unionBy(local, remote, (t) => t.id, (a, b) => (b.updatedAt > a.updatedAt ? b : a)).sort((a, b) => b.updatedAt - a.updatedAt),
+    unionBy(
+      local,
+      remote,
+      (t) => t.id,
+      (a, b) => (b.updatedAt > a.updatedAt ? b : a),
+    ).sort((a, b) => b.updatedAt - a.updatedAt),
   subscribe: (l: () => void) => {
     listeners.add(l);
     return () => void listeners.delete(l);

@@ -28,7 +28,6 @@ const GroupSchema = z.object({
 });
 
 export type DraftProblem = z.infer<typeof GroupSchema>["problems"][number];
-export type Grouped = z.infer<typeof GroupSchema>;
 
 export async function groupComplaints(complaints: Complaint[], sources: ResearchSource[], ctx: { topic: string; request: string }) {
   const byId = new Map(sources.map((s) => [s.id, s]));
@@ -45,9 +44,7 @@ export async function groupComplaints(complaints: Complaint[], sources: Research
 }
 
 const CritiqueSchema = z.object({
-  problems: z.array(
-    z.object({ index: z.number().int(), keep: z.boolean(), mergeInto: z.number().int(), headline: z.string(), reason: z.string() }),
-  ),
+  problems: z.array(z.object({ index: z.number().int(), keep: z.boolean(), mergeInto: z.number().int(), headline: z.string(), reason: z.string() })),
 });
 
 /** High mode: a second, strict pass that drops generic problems, merges duplicates and sharpens headlines. */
@@ -58,7 +55,13 @@ export async function critique(problems: DraftProblem[], complaints: Complaint[]
     system: CRITIQUE_SYSTEM,
     timeoutMs: 30_000,
     prompt: problems
-      .map((p, i) => `#${i} ${p.headline}\n${p.summary}\nQuotes: ${p.complaintIds.slice(0, 5).map((id) => `“${quotes.get(id) ?? ""}”`).join(" ")}`)
+      .map(
+        (p, i) =>
+          `#${i} ${p.headline}\n${p.summary}\nQuotes: ${p.complaintIds
+            .slice(0, 5)
+            .map((id) => `“${quotes.get(id) ?? ""}”`)
+            .join(" ")}`,
+      )
       .join("\n\n"),
   });
 

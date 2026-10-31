@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Search, Sparkles } from "lucide-react";
 import { CardTags } from "@/components/card/parts";
 import { searchCards } from "@/lib/cards";
+import { ideaHref, searchHref } from "@/lib/links";
 import s from "./search.module.css";
 
 export const metadata: Metadata = { title: "Search" };
@@ -47,7 +48,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/app/searc
             <p className={s.label}>Try</p>
             <div className={s.chips}>
               {suggestions.map((t) => (
-                <Link key={t} href={`/app/search?q=${encodeURIComponent(t)}`} className={s.chip}>
+                <Link key={t} href={searchHref(t)} className={s.chip}>
                   {t}
                 </Link>
               ))}
@@ -63,7 +64,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/app/searc
             <ul className={s.results}>
               {results.map((card) => (
                 <li key={card.slug}>
-                  <Link href={`/app/idea/${card.slug}`} className={s.result}>
+                  <Link href={ideaHref(card.slug)} className={s.result}>
                     <CardTags card={card} />
                     <span className={s.resultTitle}>{card.headline}</span>
                     <span className={s.resultText}>{card.summary}</span>
@@ -82,7 +83,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/app/searc
             <p className={s.emptyTitle}>Nothing on “{query}” yet.</p>
             <p className={s.emptyText}>We only show problems backed by real posts. Pulling fresh posts for any topic arrives in the next update.</p>
             {/* Stage 2: searches Hacker News + the web and builds cards on demand. */}
-            <button type="button" className="pill pill-blue" disabled aria-disabled="true">
+            <button type="button" className="pill glossy" disabled aria-disabled="true">
               <Sparkles size={16} aria-hidden="true" />
               Pull fresh posts
             </button>

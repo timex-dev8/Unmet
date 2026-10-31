@@ -1,6 +1,7 @@
 import "server-only";
 import { plain } from "@/lib/hn";
 import type { ResearchSource } from "@/lib/research-types";
+import { hostOf } from "@/lib/url";
 
 // Stack Exchange API: questions people ask, with votes and views. Free: 300 requests/day per IP,
 // 10,000 with STACKEXCHANGE_KEY. Only questions from the research window are kept.
@@ -34,7 +35,7 @@ export async function searchStackExchange(query: string, sites: string[], sinceS
       return items.map((i) => ({
         title: plain(i.title),
         url: i.link,
-        site: new URL(i.link).hostname.replace(/^www\./, ""),
+        site: hostOf(i.link),
         postedAt: new Date(i.creation_date * 1000).toISOString(),
         text: plain(`${i.title}. ${i.body ?? ""}`).slice(0, 2000),
         origin: "stackexchange" as const,

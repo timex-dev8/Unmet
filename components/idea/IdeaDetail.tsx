@@ -5,6 +5,7 @@ import { AiSuggestions, CardTags, kindBadge, Quote, shortDate, sourceMeta, Spark
 import SaveButton from "@/components/card/SaveButton";
 import ShareButton from "@/components/card/ShareButton";
 import { digDeeperHref } from "@/lib/links";
+import { formatMrr } from "@/lib/text";
 import type { Card } from "@/lib/types";
 import IdeasSection from "./IdeasSection";
 import WorthBuilding from "./WorthBuilding";
@@ -17,7 +18,7 @@ export default function IdeaDetail({ card, backHref = "/app/feed", backLabel = "
     // data-hide-tabs: on phones the idea's own action bar replaces the tab bar (one bar, not two)
     <div className={s.page} data-hide-tabs>
       <div className={s.wrap}>
-        <AppBar variant="back" backHref={backHref} backLabel={backLabel} />
+        <AppBar backHref={backHref} backLabel={backLabel} />
         <IdeaSections card={card} />
       </div>
 
@@ -135,7 +136,7 @@ export function IdeaSections({ card, headingLevel = 1 }: { card: Card; headingLe
                   <span>
                     <span className={s.sourceTitle}>
                       {c.name}
-                      {c.mrr ? <span className={s.mrr}>${Math.round(c.mrr / 100).toLocaleString("en-US")}/mo verified</span> : null}
+                      {c.mrr ? <span className={s.mrr}>${formatMrr(c.mrr)}/mo verified</span> : null}
                     </span>
                     {c.note && <span className={s.meta}>{c.note}</span>}
                   </span>

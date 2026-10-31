@@ -4,10 +4,8 @@ import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { authHeaders } from "@/lib/auth";
 import { toggleWatch, useInterests } from "@/lib/interests";
+import { researchHref } from "@/lib/links";
 import s from "./home.module.css";
-
-// Research depth for niche links: Low works for everyone, guests included.
-const researchHref = (niche: string) => `/app/research?q=${encodeURIComponent(`What problems do ${niche} complain about?`)}&depth=low`;
 
 /** Watching a niche ranks it first here and adds it to Unmet's daily research (app/api/watch). */
 export function useWatch() {
@@ -35,7 +33,7 @@ export function Niches() {
           <strong>Tell Unmet who you build for</strong>
           <span>Get problems from your niches first, and have them researched every few days.</span>
         </span>
-        <span className={s.setupGo}>Set up</span>
+        <span className={`glossy ${s.setupGo}`}>Set up</span>
       </Link>
     );
   }
@@ -46,7 +44,7 @@ export function Niches() {
         const on = watched.includes(n);
         return (
           <div key={n} className={s.niche}>
-            <Link href={researchHref(n)} className={s.nicheName}>
+            <Link href={researchHref(`What problems do ${n} complain about?`, "low")} className={s.nicheName}>
               {n}
             </Link>
             <button type="button" className={`${s.watch} ${on ? s.watchOn : ""}`} aria-pressed={on} onClick={() => watch(n, on)}>

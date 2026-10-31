@@ -1,5 +1,6 @@
 import "server-only";
 import type { ProductProof } from "@/lib/types";
+import { hostOf } from "@/lib/url";
 import { headers } from "./types";
 
 // Traffic, from Cloudflare Radar's domain ranking (free token). Google Analytics only covers your
@@ -12,12 +13,8 @@ export function radarConfigured() {
 
 export async function trafficRank(siteUrl: string): Promise<ProductProof | null> {
   const token = process.env.CLOUDFLARE_RADAR_TOKEN;
-  let domain: string;
-  try {
-    domain = new URL(siteUrl).hostname.replace(/^www\./, "");
-  } catch {
-    return null;
-  }
+  if (!URL.canParse(siteUrl)) return null;
+  const domain = hostOf(siteUrl);
   if (!token || /apps\.apple\.com|github\.com/.test(domain)) return null;
   const res = await fetch(`https://api.cloudflare.com/client/v4/radar/ranking/domain/${domain}`, {
     headers: { ...headers, Authorization: `Bearer ${token}` },

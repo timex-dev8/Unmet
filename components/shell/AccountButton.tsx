@@ -203,7 +203,7 @@ export function SignInForm({ id, failed, bare = false }: { id: string; failed: b
       {GOOGLE_ENABLED && (
         <>
           <button type="button" className={s.google} onClick={() => void run("google", signInWithGoogle)} disabled={!!busy}>
-            {busy === "google" ? <LoaderCircle size={18} className={s.spin} aria-hidden="true" /> : <GoogleLogo />}
+            {busy === "google" ? <LoaderCircle size={18} className="spin" aria-hidden="true" /> : <GoogleLogo />}
             Continue with Google
           </button>
           <div className={s.or}>
@@ -265,7 +265,7 @@ export function SignInForm({ id, failed, bare = false }: { id: string; failed: b
           </>
         )}
         <button type="submit" className="pill pill-dark" disabled={!!busy || !address || (mode === "password" && !password)}>
-          {busy === "submit" && <LoaderCircle size={17} className={s.spin} aria-hidden="true" />}
+          {busy === "submit" && <LoaderCircle size={17} className="spin" aria-hidden="true" />}
           {action}
         </button>
       </form>
@@ -361,7 +361,7 @@ function NewPassword({ id, onDone }: { id: string; onDone: () => void }) {
           onChange={(e) => setPassword(e.target.value)}
         />
         <button type="submit" className="pill pill-dark" disabled={busy || password.length < 8}>
-          {busy && <LoaderCircle size={17} className={s.spin} aria-hidden="true" />}
+          {busy && <LoaderCircle size={17} className="spin" aria-hidden="true" />}
           Save password
         </button>
       </form>

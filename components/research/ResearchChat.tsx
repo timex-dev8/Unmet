@@ -7,7 +7,7 @@ import { ArrowUp, BookmarkPlus, Check, ChevronRight, ExternalLink, LoaderCircle,
 import SaveButton from "@/components/card/SaveButton";
 import ShareButton from "@/components/card/ShareButton";
 import { IdeaSections } from "@/components/idea/IdeaDetail";
-import { digDeeperHref } from "@/lib/links";
+import { digDeeperHref, ideaHref } from "@/lib/links";
 import { createThread, newId, updateThread, useStoreReady, useThread, useThreads, type ChatMessage } from "@/lib/research-store";
 import type { Depth, ResearchEvent } from "@/lib/research-types";
 import { authHeaders, useGuest, useLowOnly, useUser } from "@/lib/auth";
@@ -226,8 +226,8 @@ export default function ResearchChat({
               disabled={!configured}
             />
             <DepthPicker value={depth} onChange={setDepth} disabled={busy} placement={empty ? "down" : "up"} />
-            <button type="submit" className={s.send} disabled={!input.trim() || busy || !configured} aria-label="Send">
-              {busy ? <LoaderCircle size={20} className={s.spin} aria-hidden="true" /> : <ArrowUp size={20} aria-hidden="true" />}
+            <button type="submit" className={`glossy ${s.send}`} disabled={!input.trim() || busy || !configured} aria-label="Send">
+              {busy ? <LoaderCircle size={20} className="spin" aria-hidden="true" /> : <ArrowUp size={20} aria-hidden="true" />}
             </button>
           </form>
           {empty && configured && !about && <PastResearch onTry={send} />}
@@ -239,7 +239,7 @@ export default function ResearchChat({
           <div className={s.panelBar}>
             <span className={s.panelLabel}>Idea</span>
             <div className={s.panelTools}>
-              <Link href={`/app/idea/${openCard.slug}`} className={s.panelBtn} aria-label="Open as a full page">
+              <Link href={ideaHref(openCard.slug)} className={s.panelBtn} aria-label="Open as a full page">
                 <ExternalLink size={16} aria-hidden="true" />
               </Link>
               <button type="button" className={s.panelBtn} onClick={() => setOpenCard(null)} aria-label="Close panel">
@@ -279,7 +279,7 @@ function StepList({ steps, pending }: { steps: string[]; pending?: boolean }) {
         const running = pending && i === steps.length - 1;
         return (
           <li key={i} className={`rise ${running ? s.stepRunning : ""}`}>
-            {running ? <LoaderCircle size={15} className={s.spin} aria-hidden="true" /> : <Check size={15} className={s.pop} aria-hidden="true" />}
+            {running ? <LoaderCircle size={15} className="spin" aria-hidden="true" /> : <Check size={15} className={s.pop} aria-hidden="true" />}
             {step}
           </li>
         );
@@ -328,7 +328,7 @@ function Reply({
       )}
       {m.pending && steps.length === 0 && (
         <p className={s.thinking}>
-          <LoaderCircle size={15} className={s.spin} aria-hidden="true" /> Starting research…
+          <LoaderCircle size={15} className="spin" aria-hidden="true" /> Starting research…
         </p>
       )}
       {m.text && <p className={m.error ? s.error : s.answer}>{m.text}</p>}

@@ -5,8 +5,6 @@ import type { ReactNode } from "react";
 export const OG_SIZE = { width: 1200, height: 630 };
 export const OG_TYPE = "image/png";
 
-export const OG_VERDICT = { strong: "Strong opportunity", maybe: "Worth a closer look", weak: "Weak signal so far" } as const;
-
 const SHADOW = "0 2px 28px rgba(7, 58, 139, 0.35)";
 
 export function OgFrame({ children, footer }: { children: ReactNode; footer?: ReactNode }) {

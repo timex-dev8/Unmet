@@ -15,9 +15,6 @@
   --blue: #1c38ea; /* buttons, bars */
   --link: #1c38ea; /* text links */
   --navy: #1c38ea; /* brand blue: "Strong", selected */
-  --deep: #073a8b; /* the logo */
-  --mid: #2d5cf2;
-  --sky: #84b8ef;
   --tint: #eef1fb; /* highlight marker, selected chips */
 
   /* The sky (DESIGN.md "v3"): deep blue fading to pale and white, a warm sun glow */
@@ -36,14 +33,10 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.45), inset -2px -2px 4px rgba(191, 229, 251, 0.35), inset 2px 2px 3px rgba(19, 26, 228, 0.12),
     0 10px 22px -10px rgba(28, 56, 234, 0.65);
 
-  --brand-gradient: linear-gradient(180deg, var(--navy) 0%, var(--mid) 58%, var(--sky) 100%);
-
   /* Studio (see DESIGN.md): calm surfaces, one ink, one soft accent. */
   --studio-bg: var(--paper);
   --surface: #ffffff;
   --text-3: #9a9aab;
-  --ai-tint: var(--gray);
-  --ai-ink: var(--ink);
   --early-tint: #fdf3cf;
   --early-ink: #6b5200;
 
@@ -66,7 +59,6 @@
 
   --radius-tile: 28px;
   --radius-pill: 980px;
-  --max: 1040px;
 }
 
 *,
@@ -136,21 +128,20 @@ summary:focus-visible {
   cursor: default;
   transform: none;
 }
-.pill-white {
-  background: var(--white);
-  color: var(--navy);
-}
-.pill-glass {
-  background: rgba(255, 255, 255, 0.16);
-  color: var(--white);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-}
-.pill-blue,
 .pill-dark,
 .glossy {
   background: var(--glossy);
   box-shadow: var(--glossy-shadow);
   color: var(--white);
+}
+/* A spinning icon (LoaderCircle) */
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 /* Section titles fade from ink to gray, left to right */
 .fade-text {

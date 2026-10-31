@@ -24,7 +24,7 @@ export default function SaveButton({ card, load, label = "Save", small = false }
       type="button"
       onClick={() => void toggle()}
       aria-pressed={saved}
-      className={`${s.act} ${saved ? s.actSaved : s.actPrimary} ${small ? s.actSmall : ""}`}
+      className={`${s.act} ${saved ? s.actSaved : "glossy"} ${small ? s.actSmall : ""}`}
     >
       {/* keyed so the icon and label re-enter (pop / fade) each time the state flips */}
       {saved ? (

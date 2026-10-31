@@ -1,5 +1,4 @@
 import "server-only";
-import { cacheLife } from "next/cache";
 
 // TrustMRR: startups with revenue verified through Stripe, App Store and others
 // (trustmrr.com/docs/api). Used as market proof and competitor evidence, never as complaints.
@@ -59,13 +58,4 @@ export async function listStartups(params: { category?: string; sort: "growth-de
     if (!body.meta?.hasMore) break;
   }
   return out;
-}
-
-/** "Startups growing now" on Home, refreshed hourly. */
-export async function growingStartups() {
-  "use cache";
-  cacheLife("hours");
-  const list = await listStartups({ sort: "growth-desc", pages: 1 });
-  // Skip anonymous "Stealth company" listings: nothing to learn from them.
-  return list.filter((s) => s.mrr > 0 && !/^stealth/i.test(s.name)).slice(0, 6);
 }

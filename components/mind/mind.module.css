@@ -206,14 +206,6 @@
   color: var(--early-ink);
   font-size: 14px;
 }
-.spin {
-  animation: spin 0.9s linear infinite;
-}
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
 
 /* "See an example brief": a quiet button with an arrow that unfolds the example */
 .exampleToggle summary {

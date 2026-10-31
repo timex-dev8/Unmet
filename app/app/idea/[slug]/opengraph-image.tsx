@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { getCard } from "@/lib/cards";
-import { clip, OG_SIZE, OG_TYPE, OG_VERDICT, OgFrame, OgHeadline } from "@/lib/og";
+import { clip, OG_SIZE, OG_TYPE, OgFrame, OgHeadline } from "@/lib/og";
+import { VERDICT } from "@/lib/verdict";
 
 export const alt = "An idea on Unmet, backed by real complaints";
 export const size = OG_SIZE;
@@ -21,7 +22,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
   }
 
   const headline = clip(card.headline, 120);
-  const verdict = card.report ? OG_VERDICT[card.report.verdict] : null;
+  const verdict = card.report ? VERDICT[card.report.verdict].label : null;
   const sources = card.evidence.threads;
   return new ImageResponse(
     <OgFrame footer={`${card.category} · unmet-ten.vercel.app`}>

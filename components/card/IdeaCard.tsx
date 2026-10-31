@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
-import { digDeeperHref } from "@/lib/links";
+import { digDeeperHref, ideaHref } from "@/lib/links";
 import type { Card } from "@/lib/types";
 import { ScoreChips, Sparkline, windowLabel } from "./parts";
 import SaveButton from "./SaveButton";
@@ -51,7 +51,7 @@ export default function IdeaCard({ card }: { card: Card }) {
               <ShareButton card={card} />
             </span>
           </div>
-          <Link href={`/app/idea/${card.slug}`} className={f.details} draggable={false}>
+          <Link href={ideaHref(card.slug)} className={f.details} draggable={false}>
             Details and AI ideas
             <ArrowRight size={16} aria-hidden="true" />
           </Link>

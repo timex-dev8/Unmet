@@ -16,7 +16,7 @@ export default function SourcesSheet({ card, compact }: { card: Card; compact?: 
     <>
       <button
         type="button"
-        className={compact ? `${s.act} ${s.iconBtn}` : s.act}
+        className={compact ? `${s.act} ${s.actQuiet} ${s.iconBtn}` : `${s.act} ${s.actQuiet}`}
         onClick={() => ref.current?.showModal()}
         aria-label={compact ? `Sources (${count})` : undefined}
       >

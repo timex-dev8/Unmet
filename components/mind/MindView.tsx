@@ -3,7 +3,7 @@
 import { useRef, useState, type CSSProperties, type FormEvent, type KeyboardEvent } from "react";
 import Link from "next/link";
 import { ArrowRight, ArrowUp, ChevronDown, LoaderCircle, X } from "lucide-react";
-import { researchHref } from "@/lib/links";
+import { ideaHref, researchHref } from "@/lib/links";
 import { addThought, removeThought, saveConclusion, useMind } from "@/lib/mind";
 import type { MindBrief } from "@/lib/mind-types";
 import { useThreads } from "@/lib/research-store";
@@ -156,7 +156,7 @@ export default function MindView({ configured }: { configured: boolean }) {
           {showButton && (
             <div className={s.action}>
               <button type="button" className={`pill glossy ${s.shape}`} onClick={shape} disabled={!canShape}>
-                {loading && <LoaderCircle size={18} className={s.spin} aria-hidden="true" />}
+                {loading && <LoaderCircle size={18} className="spin" aria-hidden="true" />}
                 {loading ? "Making it clear…" : brief ? "Update" : "Make it clear"}
               </button>
               {!configured ? (
@@ -245,7 +245,7 @@ function Brief({ brief, count, quiet, example }: { brief: MindBrief; count?: num
             Check demand <ArrowRight size={16} aria-hidden="true" />
           </Link>
           {brief.matchSlug && (
-            <Link href={`/app/idea/${brief.matchSlug}`} className={s.match}>
+            <Link href={ideaHref(brief.matchSlug)} className={s.match}>
               You’ve already found this problem: “{brief.matchHeadline || "see the evidence"}” →
             </Link>
           )}

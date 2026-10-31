@@ -1,6 +1,7 @@
 import "server-only";
 import Exa from "exa-js";
 import type { ResearchSource } from "./research-types";
+import { hostOf } from "./url";
 
 // Exa web search, following the build-with-exa skill: /search, `objective` because a model
 // writes the query, and a hard 12-month window because stale evidence is unacceptable here.
@@ -74,12 +75,4 @@ export async function searchProducts(query: string, since: string) {
     site: hostOf(r.url),
     text: ((r as { highlights?: string[] }).highlights ?? []).join(" … "),
   }));
-}
-
-export function hostOf(url: string) {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return url;
-  }
 }

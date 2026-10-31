@@ -45,9 +45,7 @@ export function CardTags({ card }: { card: Card }) {
   return (
     <div className={s.tagRow}>
       <div className={s.tags}>
-        <span className={s.tag}>
-          {card.category}
-        </span>
+        <span className={s.tag}>{card.category}</span>
         {card.sample && <span className={`${s.tag} ${s.tagSample}`}>Sample</span>}
         {card.fresh && <span className={`${s.tag} ${s.tagFresh}`}>Fresh</span>}
         {card.signal === "early" && <span className={`${s.tag} ${s.tagSample}`}>Early signal</span>}
@@ -108,47 +106,6 @@ export function Sparkline({ values, width = 96, height = 30 }: { values: number[
       <path d={`${line} L${width} ${height} L0 ${height} Z`} fill="var(--tint)" />
       <path d={line} fill="none" stroke="var(--blue)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
     </svg>
-  );
-}
-
-export function EvidenceBox({ card }: { card: Card }) {
-  const e = card.evidence;
-  return (
-    <div className={s.evidence}>
-      <div className={s.evidenceHead}>
-        <strong>Evidence</strong>
-        <span>{e.site}</span>
-      </div>
-      <div className={s.evidenceNumbers}>
-        <div>
-          <span className={s.count}>{e.posts} mentions</span>
-          <span className={s.countSub}> · {e.days} days</span>
-        </div>
-        <Sparkline values={e.weekly} />
-      </div>
-      <Quote text={card.quote} highlight={card.highlight} />
-    </div>
-  );
-}
-
-export function ScoreBars({ card }: { card: Card }) {
-  const rows = [
-    ["Demand", card.scores.demand],
-    ["Competition", card.scores.competition],
-    ["Difficulty", card.scores.difficulty],
-  ] as const;
-  return (
-    <div className={s.scores}>
-      {rows.map(([name, sc]) => (
-        <div key={name}>
-          <div className={s.scoreLabel}>{name}</div>
-          <div className={s.bar} role="img" aria-label={`${name}: ${sc.label}`}>
-            <i style={{ width: `${sc.value}%` }} />
-          </div>
-          <div className={s.scoreValue}>{sc.label}</div>
-        </div>
-      ))}
-    </div>
   );
 }
 

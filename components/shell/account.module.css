@@ -299,14 +299,6 @@
   color: var(--ink);
   cursor: pointer;
 }
-.spin {
-  animation: spin 0.9s linear infinite;
-}
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
 
 /* Password / Email link switch (the white pill glides, components/motion/Highlight.tsx) */
 .modes {

@@ -87,7 +87,7 @@ export default function Onboarding({ next }: { next: string }) {
                 autoFocus
               />
               <button type="submit" className="pill pill-dark" disabled={busy || text.trim().length < 2}>
-                {busy ? <LoaderCircle size={17} className={s.spin} aria-hidden="true" /> : null}
+                {busy ? <LoaderCircle size={17} className="spin" aria-hidden="true" /> : null}
                 Continue
                 {!busy && <ArrowRight size={17} aria-hidden="true" />}
               </button>
@@ -112,7 +112,7 @@ export default function Onboarding({ next }: { next: string }) {
                     key={n}
                     type="button"
                     aria-pressed={on}
-                    className={`${s.nicheChip} ${on ? s.nicheOn : ""}`}
+                    className={`${s.nicheChip} ${on ? `glossy ${s.nicheOn}` : s.nicheOff}`}
                     onClick={() => setPicked((p) => (on ? p.filter((x) => x !== n) : [...p, n]))}
                   >
                     {on && <Check size={15} aria-hidden="true" />}
@@ -140,7 +140,7 @@ export default function Onboarding({ next }: { next: string }) {
                 Back
               </button>
               <button type="button" className="pill pill-dark" onClick={finish} disabled={busy}>
-                {busy && <LoaderCircle size={17} className={s.spin} aria-hidden="true" />}
+                {busy && <LoaderCircle size={17} className="spin" aria-hidden="true" />}
                 Start exploring
               </button>
             </div>

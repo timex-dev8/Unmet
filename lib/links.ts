@@ -6,7 +6,14 @@ export function digDeeperHref(card: Pick<Card, "slug" | "headline">) {
   return `/app/research?about=${encodeURIComponent(card.slug)}&q=${encodeURIComponent(q)}`;
 }
 
-export const researchHref = (q: string) => `/app/research?q=${encodeURIComponent(q)}`;
+export const researchHref = (q: string, depth?: string) => `/app/research?q=${encodeURIComponent(q)}${depth ? `&depth=${depth}` : ""}`;
+
+export const ideaHref = (slug: string) => `/app/idea/${slug}`;
+
+export const searchHref = (q: string) => `/app/search?q=${encodeURIComponent(q)}`;
+
+/** Research link that digs into what people dislike about a product. */
+export const gapsHref = (name: string) => researchHref(`What do people hate about ${name}?`);
 
 /**
  * Where to go after sign-in: a path on this site, or "/app". Browsers read "//x", "/\x" and paths
