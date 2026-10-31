@@ -13,9 +13,11 @@ const researchHref = (niche: string) => `/app/research?q=${encodeURIComponent(`W
 export function useWatch() {
   return async (niche: string, watching: boolean) => {
     toggleWatch(niche);
-    if (watching) return;
-    const headers = { "Content-Type": "application/json", ...(await authHeaders()) };
-    await fetch("/api/watch", { method: "POST", headers, body: JSON.stringify({ niche }) }).catch(() => {});
+    // Signed in only (guests just rank locally). Un-watching takes it off the research list again.
+    const auth = await authHeaders();
+    if (!auth.Authorization) return;
+    const headers = { "Content-Type": "application/json", ...auth };
+    await fetch("/api/watch", { method: watching ? "DELETE" : "POST", headers, body: JSON.stringify({ niche }) }).catch(() => {});
   };
 }
 

@@ -1,47 +1,69 @@
-// Checks that a quote really appears in its source: same words in the same order, ignoring
-// punctuation and case, allowing at most one word different (a typo fix, a dropped "the").
-// Anything looser is treated as a paraphrase and thrown away.
+// Checks that a quote really appears in its source: the same words in the same order, ignoring
+// punctuation and case. Only a one-letter typo inside a longer word is forgiven; a dropped, added
+// or swapped word fails, since "this is not a problem" must never pass as "this is a problem".
+// What gets shown is the source's own text, never the model's version of it.
 
 export const MIN_QUOTE_WORDS = 4;
 export const MAX_QUOTE_WORDS = 15;
 
-const words = (s: string) =>
-  s
-    .toLowerCase()
-    .replace(/[‘’`]/g, "'")
-    .replace(/[^a-z0-9' ]+/g, " ")
-    .split(/\s+/)
-    .filter(Boolean);
+type Token = { word: string; start: number; end: number };
 
-/** Word-level edit distance, stopping early once it exceeds `limit`. */
-function distance(a: string[], b: string[], limit: number) {
-  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
-  for (let i = 1; i <= a.length; i++) {
-    const cur = [i];
-    let rowMin = i;
-    for (let j = 1; j <= b.length; j++) {
-      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
-      rowMin = Math.min(rowMin, cur[j]);
-    }
-    if (rowMin > limit) return limit + 1;
-    prev = cur;
+const norm = (s: string) => s.toLowerCase().normalize("NFKD").replace(/\p{M}/gu, "").replace(/[‘’`]/g, "'");
+
+/** Words with their position in the original text, so the matching span can be cut out of it. */
+function tokens(s: string): Token[] {
+  const out: Token[] = [];
+  for (const m of s.matchAll(/[\p{L}\p{N}'‘’`]+/gu)) {
+    const word = norm(m[0]).replace(/'/g, ""); // "can't" and "cant" are the same word
+    if (word) out.push({ word, start: m.index, end: m.index + m[0].length });
   }
-  return prev[b.length];
+  return out;
 }
 
-export function quoteFound(quote: string, sourceText: string) {
-  const q = words(quote);
-  if (q.length < MIN_QUOTE_WORDS || q.length > MAX_QUOTE_WORDS) return false;
-  const src = words(sourceText);
-  const joinedQ = q.join(" ");
-  if (` ${src.join(" ")} `.includes(` ${joinedQ} `)) return true;
-  // Slide a window over the source and allow one word of difference.
-  for (let i = 0; i + q.length - 1 <= src.length; i++) {
-    if (src[i] !== q[0] && src[i + 1] !== q[1]) continue; // quick skip: windows must start near a match
-    for (const len of [q.length - 1, q.length, q.length + 1]) {
-      if (len < 1 || i + len > src.length) continue;
-      if (distance(q, src.slice(i, i + len), 1) <= 1) return true;
+/** True when two words differ by at most one letter (added, dropped or changed). */
+function oneEditApart(a: string, b: string) {
+  if (Math.abs(a.length - b.length) > 1) return false;
+  let i = 0;
+  let j = 0;
+  let edits = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) {
+      i++;
+      j++;
+      continue;
+    }
+    if (++edits > 1) return false;
+    if (a.length > b.length) i++;
+    else if (b.length > a.length) j++;
+    else {
+      i++;
+      j++;
     }
   }
-  return false;
+  return edits + (a.length - i) + (b.length - j) <= 1;
+}
+
+// Short words ("not", "no", "is", "can") carry meaning in a single letter, so they must match exactly.
+const sameWord = (a: string, b: string) => a === b || (a.length >= 5 && b.length >= 5 && oneEditApart(a, b));
+
+/** The source's own text for `quote`, or null when the quote isn't really there. */
+export function findQuote(quote: string, sourceText: string): string | null {
+  const q = tokens(quote).map((t) => t.word);
+  if (q.length < MIN_QUOTE_WORDS || q.length > MAX_QUOTE_WORDS) return null;
+  const src = tokens(sourceText);
+  for (let i = 0; i + q.length <= src.length; i++) {
+    let typos = 0;
+    let k = 0;
+    for (; k < q.length; k++) {
+      const w = src[i + k].word;
+      if (w === q[k]) continue;
+      if (++typos > 1 || !sameWord(w, q[k])) break;
+    }
+    if (k === q.length)
+      return sourceText
+        .slice(src[i].start, src[i + q.length - 1].end)
+        .replace(/\s+/g, " ")
+        .trim();
+  }
+  return null;
 }

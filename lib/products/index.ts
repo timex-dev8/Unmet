@@ -1,4 +1,5 @@
 import "server-only";
+import { createHash } from "node:crypto";
 import { cacheLife, cacheTag } from "next/cache";
 import { z } from "zod/v4";
 import { generateJson } from "@/lib/llm";
@@ -43,31 +44,53 @@ const slugify = (s: string) =>
     .replace(/^-|-$/g, "")
     .slice(0, 60);
 
-// The same product from two sources: same web page, or same name. The path counts too, since one
-// company can host several products (example.com/apps/a, example.com/apps/b).
-function keyOf(p: RawProduct) {
+const shortHash = (s: string) => createHash("sha1").update(s).digest("hex").slice(0, 8);
+
+const STORE_PAGE = /(^|\.)(apps\.apple\.com|github\.com|producthunt\.com)$/i;
+function isStorePage(url: string) {
   try {
-    const u = new URL(p.url);
-    if (!/apps\.apple\.com|github\.com|producthunt\.com/.test(u.hostname))
-      return `${u.hostname.replace(/^www\./, "")}${u.pathname.replace(/\/$/, "")}`;
-  } catch {}
-  return slugify(p.name);
+    return STORE_PAGE.test(new URL(url).hostname);
+  } catch {
+    return false;
+  }
 }
 
+// A product's stable identity: its web page. The path counts too, since one company can host
+// several products (example.com/apps/a, example.com/apps/b), and every store page is its own product.
+export function keyOf(p: { url: string; name: string }) {
+  try {
+    const u = new URL(p.url);
+    return `${u.hostname.replace(/^www\./, "")}${u.pathname.replace(/\/+$/, "")}`.toLowerCase();
+  } catch {
+    return `name:${slugify(p.name) || shortHash(p.name)}`;
+  }
+}
+
+type Merged = RawProduct & { keys: string[] }; // every page it was found under
+
+// The same product from two sources: the same web page, or the same name when one side is a store
+// page (its App Store / GitHub / Product Hunt listing). Two websites with one name are two companies.
 function merge(all: RawProduct[]) {
-  const byKey = new Map<string, RawProduct>();
-  const byName = new Map<string, string>();
+  const byKey = new Map<string, Merged>();
+  const byName = new Map<string, Merged>();
+  const out: Merged[] = [];
   for (const p of all) {
-    const k = byName.get(slugify(p.name)) ?? keyOf(p);
-    const old = byKey.get(k);
+    const k = keyOf(p);
+    const name = slugify(p.name);
+    let old = byKey.get(k);
+    const sameName = name ? byName.get(name) : undefined;
+    if (!old && sameName && (isStorePage(p.url) || isStorePage(sameName.url))) old = sameName;
     if (!old) {
-      byKey.set(k, { ...p, proof: [...p.proof] });
-      byName.set(slugify(p.name), k);
+      const fresh: Merged = { ...p, proof: [...p.proof], keys: [k] };
+      out.push(fresh);
+      byKey.set(k, fresh);
+      if (name && !sameName) byName.set(name, fresh);
       continue;
     }
+    if (!old.keys.includes(k)) old.keys.push(k);
+    byKey.set(k, old);
     // Prefer the product's own website over a store page, and pool the proof
-    if (/apps\.apple\.com|github\.com|producthunt\.com/.test(old.url) && !/apps\.apple\.com|github\.com|producthunt\.com/.test(p.url))
-      old.url = p.url;
+    if (isStorePage(old.url) && !isStorePage(p.url)) old.url = p.url;
     // One piece of proof per kind and site: keep the first (strongest) one
     old.proof.push(...p.proof.filter((x) => !old.proof.some((y) => y.kind === x.kind && y.site === x.site)));
     old.weight += p.weight;
@@ -75,7 +98,7 @@ function merge(all: RawProduct[]) {
     old.hint ??= p.hint;
     old.image ??= p.image;
   }
-  return [...byKey.values()].sort((a, b) => b.weight - a.weight);
+  return out.sort((a, b) => b.weight - a.weight);
 }
 
 /** Takes new products from each source in turn, so one big source (the App Store) can't crowd out the rest. */
@@ -102,11 +125,15 @@ export async function collectProducts() {
   return { products: merge(all), counts };
 }
 
-/** Writes cards for new products (in the AI's own words) and drops the ones it flags. */
-export async function writeCards(raw: RawProduct[]): Promise<Product[]> {
+/** Writes cards for new products (in the AI's own words) and drops the ones it flags. No new batch starts after `deadline`. */
+export async function writeCards(raw: RawProduct[], deadline = Infinity): Promise<Product[]> {
   const now = new Date().toISOString();
   const out: Product[] = [];
   for (let start = 0; start < raw.length; start += 20) {
+    if (Date.now() > deadline) {
+      warn("write cards", `stopped at ${start} of ${raw.length}: out of time`);
+      break;
+    }
     const batch = raw.slice(start, start + 20);
     const res = await generateJson(CardsSchema, {
       system: PRODUCT_SYSTEM,
@@ -124,9 +151,12 @@ export async function writeCards(raw: RawProduct[]): Promise<Product[]> {
     for (const c of res.products) {
       const p = batch[c.index];
       if (!p || !c.keep) continue;
+      const key = keyOf(p);
       out.push({
         kind: "product",
-        slug: slugify(c.name || p.name),
+        // Names in other scripts slugify to nothing: a short hash of the key keeps the slug unique
+        slug: slugify(c.name || p.name) || `product-${shortHash(key)}`,
+        key,
         name: c.name || p.name,
         url: p.url,
         oneLine: c.oneLine,
@@ -148,23 +178,36 @@ export async function writeCards(raw: RawProduct[]): Promise<Product[]> {
  * The daily product run: collect, merge, refresh proof on products we already have, write cards
  * for new ones, add traffic rank when a Radar token is set, then drop products not seen in 3 weeks.
  */
-export async function runProducts() {
+export async function runProducts({ deadline = Infinity }: { deadline?: number } = {}) {
   if (!supabaseConfigured()) throw new Error("Supabase isn't connected.");
   const { products: raw, counts } = await collectProducts();
-  const scoreOf = new Map(raw.map((p) => [slugify(p.name), p.weight]));
+  const scoreOf = new Map(raw.map((p) => [keyOf(p), p.weight]));
 
+  // Stored products by their key (rows saved before `key` existed: from their stored URL), and
+  // which key owns each slug, so a new product never silently overwrites another one.
   const { data: known, error } = await db().from("feed_products").select("slug, product");
   if (error) throw error;
-  const byName = new Map(known.map((r) => [slugify((r.product as Product).name), r.product as Product]));
+  const byKey = new Map<string, Product>();
+  const slugOwner = new Map<string, string>();
+  for (const r of known) {
+    const p = r.product as Product;
+    const key = p.key ?? keyOf(p);
+    byKey.set(key, p);
+    slugOwner.set(r.slug as string, key);
+  }
 
   const now = new Date().toISOString();
   const refreshed: Product[] = [];
   const fresh: RawProduct[] = [];
   for (const p of raw) {
-    const old = byName.get(slugify(p.name));
-    if (old)
+    const old = p.keys.map((k) => byKey.get(k)).find(Boolean);
+    if (old) {
+      const key = keyOf(p);
+      slugOwner.set(old.slug, key);
       refreshed.push({
         ...old,
+        key,
+        url: p.url,
         proof: p.proof.slice(0, 4),
         rising: p.rising,
         image: p.image ?? old.image,
@@ -172,9 +215,14 @@ export async function runProducts() {
         source: old.source ?? p.source,
         updatedAt: now,
       });
-    else fresh.push(p);
+    } else fresh.push(p);
   }
-  const written = await writeCards(roundRobin(fresh, MAX_NEW));
+  const written = await writeCards(roundRobin(fresh, MAX_NEW), deadline);
+  for (const p of written) {
+    const owner = slugOwner.get(p.slug);
+    if (owner && owner !== p.key) p.slug = `${p.slug.slice(0, 50)}-${shortHash(p.key!)}`;
+    slugOwner.set(p.slug, p.key!);
+  }
 
   const all = [...refreshed, ...written];
   if (radarConfigured()) {
@@ -191,7 +239,7 @@ export async function runProducts() {
     slug: p.slug,
     product: p,
     category: p.category,
-    score: Math.round(scoreOf.get(slugify(p.name)) ?? 0),
+    score: Math.round(scoreOf.get(p.key ?? keyOf(p)) ?? 0),
     updated_at: now,
   }));
   if (rows.length) {

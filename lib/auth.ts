@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from "react";
 import type { User } from "@supabase/supabase-js";
 import { authConfigured, supabase } from "./supabase/client";
+import { flushSync } from "./sync";
 
 // Who is signed in, as a tiny external store fed by Supabase's auth events.
 // undefined = still checking, null = signed out.
@@ -145,5 +146,8 @@ export async function accessToken() {
 }
 
 export async function signOut() {
-  await supabase().auth.signOut();
+  // Upload the last changes while the session still works. Local scope: the default ("global")
+  // would also sign out every other device, before their unsaved changes upload.
+  await flushSync();
+  await supabase().auth.signOut({ scope: "local" });
 }

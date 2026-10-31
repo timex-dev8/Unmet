@@ -6,6 +6,7 @@ import { ArrowRight, Check, LoaderCircle, Plus } from "lucide-react";
 import Logo from "@/components/Logo";
 import { authHeaders } from "@/lib/auth";
 import { completeOnboarding, useInterests, type Profile } from "@/lib/interests";
+import { safeNext } from "@/lib/links";
 import s from "./welcome.module.css";
 
 const EXAMPLES = ["I'm a nurse", "small coffee shops", "indie game devs", "freelance designers"];
@@ -41,15 +42,17 @@ export default function Onboarding({ next }: { next: string }) {
   async function finish() {
     setBusy(true);
     completeOnboarding(profile, picked);
-    // Watched niches join Unmet's daily research (best effort; the app works either way).
-    const headers = { "Content-Type": "application/json", ...(await authHeaders()) };
-    await Promise.all(picked.map((niche) => fetch("/api/watch", { method: "POST", headers, body: JSON.stringify({ niche }) }).catch(() => null)));
-    router.replace(next);
+    // Watched niches join Unmet's daily research for accounts (best effort; the app works either way).
+    const auth = await authHeaders();
+    const headers = { "Content-Type": "application/json", ...auth };
+    if (auth.Authorization)
+      await Promise.all(picked.map((niche) => fetch("/api/watch", { method: "POST", headers, body: JSON.stringify({ niche }) }).catch(() => null)));
+    router.replace(safeNext(next)); // never off-site, whatever the page was given
   }
 
   function skip() {
     completeOnboarding(null, []);
-    router.replace(next);
+    router.replace(safeNext(next));
   }
 
   const niches = [...new Set([...(profile?.niches ?? []), ...picked])];

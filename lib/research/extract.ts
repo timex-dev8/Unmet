@@ -4,10 +4,10 @@ import { generateJson } from "@/lib/llm";
 import type { ResearchSource } from "@/lib/research-types";
 import type { Signal } from "@/lib/types";
 import { EXTRACT_SYSTEM } from "./prompts";
-import { quoteFound } from "./verify";
+import { findQuote } from "./verify";
 
 // Reads sources in parallel batches and keeps only first-hand, on-topic complaints whose
-// quotes are really in the text.
+// quotes are really in the text (stored as the source wrote them, not as the AI retyped them).
 
 const ExtractSchema = z.object({
   sources: z.array(
@@ -54,7 +54,7 @@ async function pool<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>
 
 export async function extractComplaints(
   sources: ResearchSource[],
-  opts: { topic: string; audience: string; batchSize: number; onBatch?: (done: number, total: number) => void },
+  opts: { topic: string; audience: string; batchSize: number; onBatch?: (done: number, total: number) => void; signal?: AbortSignal },
 ): Promise<ExtractReport> {
   const byId = new Map(sources.map((s) => [s.id, s]));
   const batches: ResearchSource[][] = [];
@@ -62,9 +62,11 @@ export async function extractComplaints(
 
   let done = 0;
   const results = await pool(batches, 3, async (batch) => {
+    opts.signal?.throwIfAborted(); // the visitor left: don't start more batches
     const out = await generateJson(ExtractSchema, {
       system: EXTRACT_SYSTEM,
       timeoutMs: 40_000,
+      signal: opts.signal,
       prompt: `Topic: ${opts.topic}\nAudience: ${opts.audience}\n\nSources:\n${batch
         .map((s) => `[${s.id}] ${s.title} (${s.site}${s.postedAt ? `, ${s.postedAt.slice(0, 10)}` : ""})\n${s.text.slice(0, 1800)}`)
         .join("\n\n")}`,
@@ -73,6 +75,7 @@ export async function extractComplaints(
     return out.sources;
   });
 
+  opts.signal?.throwIfAborted();
   if (results.every((r) => r.status === "rejected")) {
     const first = results[0] as PromiseRejectedResult | undefined;
     throw first?.reason ?? new Error("Couldn't read the sources.");
@@ -94,11 +97,12 @@ export async function extractComplaints(
         continue;
       }
       for (const c of s.complaints) {
-        if (quoteFound(c.quote, src.text))
+        const quote = findQuote(c.quote, src.text);
+        if (quote)
           report.complaints.push({
             id: `c${++n}`,
             sourceId: s.id,
-            quote: c.quote.trim(),
+            quote,
             pain: c.pain,
             who: s.who,
             signal: c.signal === "none" ? undefined : c.signal,

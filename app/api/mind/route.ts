@@ -1,10 +1,14 @@
 import { z } from "zod/v4";
 import { getAllCards } from "@/lib/cards";
 import { generateJson, LlmError, llmConfigured } from "@/lib/llm";
+import { takeHourlySlot } from "@/lib/rate-limit";
 import type { MindBrief } from "@/lib/mind-types";
 import { MIND_SYSTEM } from "@/lib/research/prompts";
 
 export const maxDuration = 60;
+
+// Ideas come from earlier AI answers: cut to size rather than refused. The notes are the person's own.
+const cut = (n: number) => z.string().transform((s) => s.slice(0, n));
 
 const Body = z.object({
   thoughts: z
@@ -12,7 +16,7 @@ const Body = z.object({
     .min(1)
     .max(120),
   ideas: z
-    .array(z.object({ slug: z.string().max(120), headline: z.string().max(200), summary: z.string().max(600) }))
+    .array(z.object({ slug: cut(120), headline: cut(200), summary: cut(600) }))
     .max(40)
     .default([]),
 });
@@ -28,20 +32,15 @@ const Answer = z.object({
   matchSlug: z.string().describe("Slug of an idea from the list that is clearly the same problem for the same people, or empty"),
 });
 
-// Simple per-visitor limit to protect the free AI tier.
-const hits = new Map<string, number[]>();
-
 export async function POST(request: Request) {
   if (!llmConfigured()) return Response.json({ error: "Shape isn't set up yet: the AI key is missing." }, { status: 503 });
 
   const parsed = Body.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "Write a note about your idea first." }, { status: 400 });
 
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
-  const now = Date.now();
-  const recent = (hits.get(ip) ?? []).filter((t) => now - t < 3600_000);
-  if (recent.length >= 10) return Response.json({ error: "That's 10 updates this hour. Try again a bit later." }, { status: 429 });
-  hits.set(ip, [...recent, now]);
+  // Per-visitor limit to protect the free AI tier (lib/rate-limit.ts).
+  if (!(await takeHourlySlot(request, "mind", 10)))
+    return Response.json({ error: "That's 10 updates this hour. Try again a bit later." }, { status: 429 });
 
   const { thoughts } = parsed.data;
   // The person's own saved/researched ideas plus the feed's ideas: the only problems the brief may link to.

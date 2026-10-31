@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 import { generateJson } from "@/lib/llm";
 import { runResearch } from "@/lib/research";
 import { DEDUPE_SYSTEM } from "@/lib/research/prompts";
+import { publicCard } from "@/lib/research/store";
 import type { ResearchEvent } from "@/lib/research-types";
 import { db, supabaseConfigured } from "@/lib/supabase/server";
 import type { Card } from "@/lib/types";
@@ -19,8 +20,19 @@ const DedupeSchema = z.object({ cards: z.array(z.object({ index: z.number().int(
 
 const warn = (what: string, err: unknown) => console.warn(`[feed] ${what}:`, err instanceof Error ? err.message : err);
 
-/** Adds the cards that pass the bar; merges each into an existing card when it's the same problem. */
-export async function addToFeed(cards: Card[], topic: string): Promise<number> {
+/** Same problem: keep the old slug (shared links keep working) and pool the sources. */
+function pool(card: Card, old: Card, now: string): Card {
+  const base = card.sources.length >= old.sources.length ? card : old;
+  const sources = [...new Map([...card.sources, ...old.sources].map((s) => [s.url, s])).values()].slice(0, 14);
+  return { ...base, slug: old.slug, sources, evidence: { ...base.evidence, threads: sources.length, updatedAt: now } };
+}
+
+/**
+ * Adds the cards that pass the bar; merges each into an existing card when it's the same problem.
+ * `topic` is stored publicly, so it must never be someone's own question. Cards lose `query` (what
+ * was searched) unless `keepQuery` says it's one of Unmet's own niches.
+ */
+export async function addToFeed(cards: Card[], topic: string, opts: { keepQuery?: boolean } = {}): Promise<number> {
   if (!supabaseConfigured()) return 0;
   const fresh = cards.filter((c) => passesFeedBar(c));
   if (!fresh.length) return 0;
@@ -53,20 +65,23 @@ export async function addToFeed(cards: Card[], topic: string): Promise<number> {
     dupes = new Map(out.cards.filter((d) => known.has(d.duplicateOf)).map((d) => [d.index, d.duplicateOf]));
   }
 
+  // Group by the slug each card lands on: two new cards can be the same existing problem, and one
+  // upsert can't write the same slug twice.
   const now = new Date().toISOString();
-  const rows = fresh.map((card, i) => {
-    const into = dupes.get(i);
-    const old = into ? known.get(into) : undefined;
-    // Same problem: keep the old slug (shared links keep working) and pool the sources.
-    const merged: Card = old
-      ? (() => {
-          const base = card.sources.length >= old.sources.length ? card : old;
-          const sources = [...new Map([...card.sources, ...old.sources].map((s) => [s.url, s])).values()].slice(0, 14);
-          return { ...base, slug: old.slug, sources, evidence: { ...base.evidence, threads: sources.length, updatedAt: now } };
-        })()
-      : card;
-    return { slug: merged.slug, card: merged, topic, category: merged.category, score: merged.scores.demand.value, updated_at: now };
+  const bySlug = new Map<string, Card>();
+  fresh.forEach((card, i) => {
+    const target = dupes.get(i) ?? card.slug;
+    const old = bySlug.get(target) ?? known.get(target);
+    bySlug.set(target, old ? pool(card, old, now) : card);
   });
+  const rows = [...bySlug.values()].map((card) => ({
+    slug: card.slug,
+    card: opts.keepQuery ? card : publicCard(card),
+    topic,
+    category: card.category,
+    score: card.scores.demand.value,
+    updated_at: now,
+  }));
   const { error: upsertError } = await db().from("feed_cards").upsert(rows);
   if (upsertError) {
     warn("write", upsertError);
@@ -93,7 +108,7 @@ async function researchTopic(topic: string) {
   await runResearch({ message: `What problems do ${topic} complain about?`, history: [], cards: [], depth: "medium" }, (e: ResearchEvent) => {
     if (e.type === "result") cards.push(...e.cards);
   });
-  return addToFeed(cards, topic);
+  return addToFeed(cards, topic, { keepQuery: true }); // Unmet's own niche, not anyone's question
 }
 
 /**
@@ -109,13 +124,15 @@ export async function runFeed({ max, deadline }: { max: number; deadline: number
     [0, 1].map(async () => {
       while (next < topics.length && Date.now() < deadline) {
         const topic = topics[next++];
+        let added = 0;
         try {
-          const added = await researchTopic(topic);
+          added = await researchTopic(topic);
           report.push({ topic, added });
-          await db().from("feed_topics").update({ last_run: new Date().toISOString(), cards_found: added }).eq("topic", topic);
         } catch (err) {
           report.push({ topic, added: 0, error: err instanceof Error ? err.message : String(err) });
         }
+        // Marked as run even when it failed, so a broken niche waits its turn instead of going first every run.
+        await db().from("feed_topics").update({ last_run: new Date().toISOString(), cards_found: added }).eq("topic", topic);
       }
     }),
   );

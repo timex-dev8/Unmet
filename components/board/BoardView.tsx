@@ -20,14 +20,16 @@ export default function BoardView() {
   const [dropTarget, setDropTarget] = useState<Stage | null>(null);
 
   const byStage = new Map<Stage, Card[]>(STAGES.map((st) => [st.id, []]));
-  for (const card of saved) byStage.get(entryFor(board, card.slug).stage)!.push(card);
+  // A stage this version doesn't know (synced from a newer or older one) shows as "Spotted".
+  for (const card of saved) (byStage.get(entryFor(board, card.slug).stage) ?? byStage.get("spotted")!).push(card);
   // Most recently moved first within each column.
   for (const list of byStage.values()) list.sort((a, b) => entryFor(board, b.slug).movedAt - entryFor(board, a.slug).movedAt);
 
   function onDrop(e: DragEvent, stage: Stage) {
     e.preventDefault();
     const slug = e.dataTransfer.getData("text/plain");
-    if (slug) moveTo(slug, stage);
+    // Only one of these cards: any text can be dragged in from another page.
+    if (saved.some((c) => c.slug === slug)) moveTo(slug, stage);
     setDropTarget(null);
   }
 

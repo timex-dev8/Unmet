@@ -1,15 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
+import { safeNext } from "@/lib/links";
 
 // Finishes a login: Google and the email link both land here with a one-time `code`,
 // which becomes a session cookie. Then back to where the person started.
 export async function GET(request: NextRequest) {
   const url = request.nextUrl;
   const code = url.searchParams.get("code");
-  const raw = url.searchParams.get("next") ?? "/app";
   // Only same-site paths, so the link can't bounce people to another website.
-  const next = raw.startsWith("/") && !raw.startsWith("//") ? raw : "/app";
+  const next = safeNext(url.searchParams.get("next") ?? "/app", url.origin);
 
   if (code) {
     const store = await cookies();

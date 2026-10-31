@@ -1,5 +1,6 @@
 import { z } from "zod/v4";
 import { generateJson, LlmError, llmConfigured } from "@/lib/llm";
+import { takeHourlySlot } from "@/lib/rate-limit";
 import { finishIdeas, IdeasSchema, ideasPrompt } from "@/lib/research/ideas";
 import { REMIX_SYSTEM, VALIDATE_SYSTEM } from "@/lib/research/prompts";
 
@@ -8,19 +9,28 @@ import { REMIX_SYSTEM, VALIDATE_SYSTEM } from "@/lib/research/prompts";
 // - validate: landing page copy, interview questions and an outreach message, in the customers' own words
 // The only evidence used is the verified quotes already on the card.
 
+// The card is AI-written: long text is cut to size rather than refused.
+const cut = (n: number) => z.string().transform((s) => s.slice(0, n));
+
 const Body = z.object({
   mode: z.enum(["remix", "validate"]),
   twist: z.string().max(80).default("more like this"),
   card: z.object({
-    headline: z.string().max(200),
-    summary: z.string().max(600),
-    who: z.string().max(200),
-    quotes: z.array(z.string().max(200)).min(1).max(12),
-    today: z.string().max(400).optional(),
-    workarounds: z.array(z.string().max(200)).max(5).default([]),
+    headline: cut(200),
+    summary: cut(600),
+    who: cut(200),
+    quotes: z
+      .array(cut(200))
+      .min(1)
+      .transform((q) => q.slice(0, 12)),
+    today: cut(400).optional(),
+    workarounds: z
+      .array(cut(200))
+      .default([])
+      .transform((w) => w.slice(0, 5)),
     verdict: z.enum(["strong", "maybe", "weak"]).optional(),
   }),
-  idea: z.object({ title: z.string().max(120), pitch: z.string().max(300) }).optional(),
+  idea: z.object({ title: cut(120), pitch: cut(300) }).optional(),
 });
 
 const ValidateSchema = z.object({
@@ -32,20 +42,16 @@ const ValidateSchema = z.object({
   outreach: z.string(),
 });
 
-// Light per-visitor limit; these calls are free-tier Gemini only.
+// Light per-visitor limit; these calls are free-tier Gemini only (lib/rate-limit.ts).
 const PER_HOUR = 30;
-const hits = new Map<string, number[]>();
 
 export async function POST(request: Request) {
   if (!llmConfigured()) return Response.json({ error: "The AI isn't set up yet." }, { status: 503 });
   const parsed = Body.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "Something about this idea is missing. Reload and try again." }, { status: 400 });
 
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
-  const now = Date.now();
-  const recent = (hits.get(ip) ?? []).filter((t) => now - t < 3600_000);
-  if (recent.length >= PER_HOUR) return Response.json({ error: "That's a lot of ideas for one hour. Try again a bit later." }, { status: 429 });
-  hits.set(ip, [...recent, now]);
+  if (!(await takeHourlySlot(request, "ideas", PER_HOUR)))
+    return Response.json({ error: "That's a lot of ideas for one hour. Try again a bit later." }, { status: 429 });
 
   const { mode, twist, card, idea } = parsed.data;
   const complaints = [...new Set(card.quotes)].map((quote, i) => ({ id: `q${i + 1}`, quote, pain: quote }));

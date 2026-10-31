@@ -31,19 +31,21 @@ function jsonSchemaFor(schema: z.ZodType) {
 }
 
 // Free-tier models get busy ("high demand", 503) or rate-limited (429). When that happens,
-// or a call is too slow, we retry once on a lighter free model.
+// a call is too slow, or the reply comes back empty (blocked), we retry once on a lighter free model.
 const FALLBACK_MODEL = process.env.LLM_FALLBACK_MODEL || "gemini-3.5-flash-lite";
 
 const BUSY_COOLDOWN_MS = 5 * 60_000;
 const busyUntil = new Map<string, number>();
 
 const isBusy = (msg: string) => /\b(429|503)\b|RESOURCE_EXHAUSTED|UNAVAILABLE|high demand|quota|overloaded/i.test(msg);
+// Only real overload puts a model on cooldown; one slow or empty answer doesn't.
+const isOverloaded = (msg: string) => /\b(429|503)\b|RESOURCE_EXHAUSTED|UNAVAILABLE/i.test(msg);
 const isTimeout = (err: unknown) => err instanceof Error && /abort|timeout/i.test(`${err.name} ${err.message}`);
 
 /** Asks the model for JSON matching `schema`; the reply is validated before it is returned. */
 export async function generateJson<T>(
   schema: z.ZodType<T>,
-  opts: { system: string; prompt: string; timeoutMs?: number },
+  opts: { system: string; prompt: string; timeoutMs?: number; signal?: AbortSignal },
 ): Promise<T> {
   const provider = process.env.LLM_PROVIDER ?? "gemini";
   if (provider !== "gemini") throw new LlmError(`LLM_PROVIDER "${provider}" is not supported yet`, "not_configured");
@@ -54,8 +56,11 @@ export async function generateJson<T>(
   if (models.length === 0) models.push(all[all.length - 1]);
   let text: string | undefined;
   let lastError = "";
+  const stopped = () => new LlmError("The research was stopped.", "failed");
 
   for (const model of models) {
+    if (opts.signal?.aborted) throw stopped();
+    const timeout = AbortSignal.timeout(opts.timeoutMs ?? 22_000);
     try {
       const res = await gemini().models.generateContent({
         model,
@@ -67,21 +72,29 @@ export async function generateJson<T>(
           temperature: 0.3,
           // Thinking makes answers slow; these are extraction tasks, so keep it light.
           thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
-          abortSignal: AbortSignal.timeout(opts.timeoutMs ?? 22_000),
+          abortSignal: opts.signal ? AbortSignal.any([timeout, opts.signal]) : timeout,
         },
       });
+      if (!res.text?.trim()) {
+        // Blocked by a safety filter or simply empty: the other model may still answer.
+        lastError = "empty reply";
+        console.warn(`[llm] ${model} returned no text`);
+        continue;
+      }
       text = res.text;
       break;
     } catch (err) {
+      if (opts.signal?.aborted) throw stopped();
       lastError = err instanceof Error ? err.message : String(err);
       console.warn(`[llm] ${model} failed:`, lastError.slice(0, 200));
       if (!isBusy(lastError) && !isTimeout(err)) {
         throw new LlmError(`AI request failed: ${lastError.slice(0, 200)}`, "failed");
       }
-      busyUntil.set(model, Date.now() + BUSY_COOLDOWN_MS);
+      if (isOverloaded(lastError)) busyUntil.set(model, Date.now() + BUSY_COOLDOWN_MS);
     }
   }
   if (text === undefined) {
+    if (lastError === "empty reply") throw new LlmError("The AI returned an empty answer. Try rewording, or try again.", "bad_output");
     throw new LlmError("The free AI models are busy right now. Try again in a minute.", "rate_limited");
   }
 

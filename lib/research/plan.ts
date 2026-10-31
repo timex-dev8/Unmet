@@ -34,9 +34,14 @@ export type Plan = z.infer<typeof PlanSchema>;
 
 // Search operators don't help Exa's plain-language search; strip any the model adds.
 const plain = (q: string) =>
-  q.replace(/\bsite:\S+/gi, "").replace(/\b(OR|AND)\b/g, " ").replace(/["()]/g, "").replace(/\s+/g, " ").trim();
+  q
+    .replace(/\bsite:\S+/gi, "")
+    .replace(/\b(OR|AND)\b/g, " ")
+    .replace(/["()]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 
-export async function makePlan(req: ResearchRequest): Promise<Plan> {
+export async function makePlan(req: ResearchRequest, signal?: AbortSignal): Promise<Plan> {
   const prompt = [
     req.history.length ? `Conversation so far:\n${req.history.map((t) => `${t.role}: ${t.text}`).join("\n")}` : "",
     req.cards.length ? `Ideas already found:\n${req.cards.map((c, i) => `#${i + 1} ${c.headline}: ${c.summary}`).join("\n")}` : "",
@@ -47,7 +52,7 @@ export async function makePlan(req: ResearchRequest): Promise<Plan> {
     .filter(Boolean)
     .join("\n\n");
 
-  const plan = await generateJson(PlanSchema, { system: PLAN_SYSTEM, prompt, timeoutMs: 20_000 });
+  const plan = await generateJson(PlanSchema, { system: PLAN_SYSTEM, prompt, timeoutMs: 20_000, signal });
 
   // Keep only allowed values and clean every query.
   return {

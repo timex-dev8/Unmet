@@ -8,6 +8,7 @@ import { SignInForm } from "@/components/shell/AccountButton";
 import AccountSync from "@/components/shell/AccountSync";
 import { continueAsGuest, useGuest, useUser } from "@/lib/auth";
 import { useInterests } from "@/lib/interests";
+import { safeNext } from "@/lib/links";
 import { useSyncStatus } from "@/lib/sync";
 import s from "./welcome.module.css";
 
@@ -25,7 +26,8 @@ export default function Welcome({ next, failed }: { next: string; failed: boolea
 
   useEffect(() => {
     if (!ready) return;
-    router.replace(interests.onboarded ? next : `/welcome/start?next=${encodeURIComponent(next)}`);
+    const to = safeNext(next); // checked again here: router.replace("/\\evil.com") would leave the site
+    router.replace(interests.onboarded ? to : `/welcome/start?next=${encodeURIComponent(to)}`);
   }, [ready, interests.onboarded, next, router]);
 
   return (

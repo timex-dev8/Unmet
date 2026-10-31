@@ -218,3 +218,95 @@ create index if not exists feed_products_rank_idx on feed_products (score desc);
 alter table feed_products enable row level security;
 drop policy if exists "public read products" on feed_products;
 create policy "public read products" on feed_products for select using (true);
+
+-- ---------------------------------------------------------------------------
+-- Stage 5: abuse limits. Safe to re-run. The app works before this is run (it falls back to the
+-- older checks), but limits only hold under parallel requests once it is.
+
+-- Research limits in one locked step (app/api/research): check and record together, so parallel
+-- requests can't all pass the same check. Accounts ("u:<user id>") have their own buckets, so guests
+-- can't use up the day for them. global_day_limit counts everyone of the same kind; 0 = none.
+alter table research_hits add column if not exists is_user boolean not null default false;
+
+create or replace function take_research_slot(
+  visitor text, is_user boolean, hour_limit int, day_limit int, global_day_limit int, cost int default 1
+) returns boolean
+language plpgsql
+set search_path = public
+as $$
+declare
+  day_start timestamptz := date_trunc('day', now() at time zone 'utc') at time zone 'utc';
+  hour_used int;
+  day_used int;
+  pool_used int;
+begin
+  perform pg_advisory_xact_lock(hashtext('take_research_slot'));
+  select coalesce(sum(h.cost) filter (where h.at > now() - interval '1 hour'), 0),
+         coalesce(sum(h.cost) filter (where h.at >= day_start), 0)
+    into hour_used, day_used
+    from research_hits h
+   where h.visitor = take_research_slot.visitor
+     and h.at >= least(day_start, now() - interval '1 hour');
+  if hour_used + take_research_slot.cost > hour_limit or day_used + take_research_slot.cost > day_limit then
+    return false;
+  end if;
+  if global_day_limit > 0 then
+    select coalesce(sum(h.cost), 0) into pool_used
+      from research_hits h
+     where h.is_user = take_research_slot.is_user and h.at >= day_start;
+    if pool_used + take_research_slot.cost > global_day_limit then
+      return false;
+    end if;
+  end if;
+  insert into research_hits (visitor, cost, is_user)
+  values (take_research_slot.visitor, take_research_slot.cost, take_research_slot.is_user);
+  return true;
+end;
+$$;
+
+-- Hourly limits for the AI-only routes (/api/mind, /api/ideas, /api/interests; lib/rate-limit.ts).
+create table if not exists rate_hits (
+  id bigint generated always as identity primary key,
+  bucket text not null,               -- route + SHA-256 of the IP, e.g. 'mind:3f2a…'
+  at timestamptz not null default now()
+);
+create index if not exists rate_hits_bucket_idx on rate_hits (bucket, at desc);
+create index if not exists rate_hits_at_idx on rate_hits (at);
+alter table rate_hits enable row level security;
+
+create or replace function take_rate_slot(bucket text, hour_limit int) returns boolean
+language plpgsql
+set search_path = public
+as $$
+begin
+  perform pg_advisory_xact_lock(hashtext('rate:' || take_rate_slot.bucket));
+  if (select count(*) from rate_hits r where r.bucket = take_rate_slot.bucket and r.at > now() - interval '1 hour') >= hour_limit then
+    return false;
+  end if;
+  insert into rate_hits (bucket) values (take_rate_slot.bucket);
+  if random() < 0.02 then
+    delete from rate_hits where at < now() - interval '2 hours'; -- keep the table small
+  end if;
+  return true;
+end;
+$$;
+
+-- Only the server (service role) may take slots; otherwise anyone with the public key could use up
+-- someone else's limit.
+revoke all on function take_research_slot(text, boolean, int, int, int, int) from public, anon, authenticated;
+revoke all on function take_rate_slot(text, int) from public, anon, authenticated;
+grant execute on function take_research_slot(text, boolean, int, int, int, int) to service_role;
+grant execute on function take_rate_slot(text, int) to service_role;
+
+-- Watched niches belong to whoever added them (app/api/watch): 10 per account, removed when that
+-- person stops watching, and gone with their account.
+alter table feed_topics add column if not exists owner uuid references auth.users(id) on delete cascade;
+create index if not exists feed_topics_owner_idx on feed_topics (owner);
+
+-- Feed cards and shared ideas used to keep `query` (the topic someone searched) and research
+-- topics: strip it from the public copies. Unmet's own seed niches keep theirs.
+update ideas set card = card - 'query' where card ? 'query';
+update feed_cards set card = card - 'query'
+ where card ? 'query' and topic not in (select topic from feed_topics where origin = 'seed');
+update feed_cards set topic = category
+ where topic not in (select topic from feed_topics);

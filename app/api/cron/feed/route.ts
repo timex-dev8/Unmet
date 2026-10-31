@@ -17,35 +17,39 @@ export async function GET(request: Request) {
   const result: Record<string, unknown> = {};
   let changed = false;
 
-  if (params.get("slot") === "evening" || params.get("products") === "1") {
-    try {
-      const products = await runProducts();
-      result.products = products;
-      changed ||= products.added + products.refreshed > 0;
-      console.log(`[products] ${products.added} added, ${products.refreshed} refreshed`, products.counts);
-    } catch (err) {
-      console.error("[products]", err);
-      result.products = { error: err instanceof Error ? err.message : "Product run failed" };
+  try {
+    if (params.get("slot") === "evening" || params.get("products") === "1") {
+      try {
+        // No new AI batch after 2 minutes, so the niches below still get their turn.
+        const products = await runProducts({ deadline: started + 120_000 });
+        result.products = products;
+        changed ||= products.added + products.refreshed > 0;
+        console.log(`[products] ${products.added} added, ${products.refreshed} refreshed`, products.counts);
+      } catch (err) {
+        console.error("[products]", err);
+        result.products = { error: err instanceof Error ? err.message : "Product run failed" };
+      }
     }
-  }
 
-  const perDay = Math.max(0, Number(process.env.FEED_DAILY_TOPICS ?? 10));
-  const max = Math.ceil(perDay / 3);
-  if (max && params.get("products") !== "1") {
-    try {
-      // Stop starting new niches after 4 minutes, so the run ends inside Vercel's 5-minute limit.
-      const report = await runFeed({ max, deadline: started + 240_000 });
-      const added = report.reduce((n, r) => n + r.added, 0);
-      changed ||= added > 0;
-      result.added = added;
-      result.report = report;
-      console.log(`[feed] ${report.length} niches, ${added} cards added or merged in ${Math.round((Date.now() - started) / 1000)}s`);
-    } catch (err) {
-      console.error("[feed]", err);
-      return Response.json({ ...result, error: err instanceof Error ? err.message : "Feed run failed" }, { status: 500 });
+    const perDay = Math.max(0, Number(process.env.FEED_DAILY_TOPICS ?? 10));
+    const max = Math.ceil(perDay / 3);
+    if (max && params.get("products") !== "1") {
+      try {
+        // No new niche after 150s: a Medium research can take a couple of minutes, and it must end
+        // inside Vercel's 5-minute limit.
+        const report = await runFeed({ max, deadline: started + 150_000 });
+        const added = report.reduce((n, r) => n + r.added, 0);
+        changed ||= added > 0;
+        result.added = added;
+        result.report = report;
+        console.log(`[feed] ${report.length} niches, ${added} cards added or merged in ${Math.round((Date.now() - started) / 1000)}s`);
+      } catch (err) {
+        console.error("[feed]", err);
+        return Response.json({ ...result, error: err instanceof Error ? err.message : "Feed run failed" }, { status: 500 });
+      }
     }
+    return Response.json(result);
+  } finally {
+    if (changed) revalidateTag("feed", "max"); // show the new cards on the next visit, even after a failure
   }
-
-  if (changed) revalidateTag("feed", "max"); // show the new cards on the next visit
-  return Response.json(result);
 }

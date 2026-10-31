@@ -10,7 +10,7 @@ import { IdeaSections } from "@/components/idea/IdeaDetail";
 import { digDeeperHref } from "@/lib/links";
 import { createThread, newId, updateThread, useStoreReady, useThread, useThreads, type ChatMessage } from "@/lib/research-store";
 import type { Depth, ResearchEvent } from "@/lib/research-types";
-import { authHeaders, useLowOnly } from "@/lib/auth";
+import { authHeaders, useGuest, useLowOnly, useUser } from "@/lib/auth";
 import { useSaved } from "@/lib/saved";
 import type { Card } from "@/lib/types";
 import DepthPicker from "./DepthPicker";
@@ -51,6 +51,10 @@ export default function ResearchChat({
   const [input, setInput] = useState("");
   const [depth, setDepth] = useState<Depth>(initialDepth ?? "medium");
   const lowOnly = useLowOnly(); // guests research on Low only
+  // Both are undefined until the session and guest flag are read; until then lowOnly isn't final.
+  const user = useUser();
+  const guest = useGuest();
+  const authKnown = user !== undefined && guest !== undefined;
   const [openCard, setOpenCard] = useState<Card | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const busy = messages.some((m) => m.pending);
@@ -68,16 +72,17 @@ export default function ResearchChat({
     return () => window.removeEventListener("keydown", onKey);
   }, [openCard]);
 
-  // Arriving with ?q= (Home, Dig deeper, Mind): start that research once.
+  // Arriving with ?q= (Home, Dig deeper, Mind): start that research once, after we know who's
+  // signed in, so an account's ?depth=high doesn't run as a guest's Low.
   const started = useRef(false);
   useEffect(() => {
-    if (started.current || !initialQuery || threadId) return;
+    if (started.current || !initialQuery || threadId || !authKnown) return;
     started.current = true;
     if (configured) void send(initialQuery);
     else router.replace("/app/research", { scroll: false });
-    // Runs once on arrival.
+    // Runs once on arrival, as soon as the account is known.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [authKnown]);
 
   async function send(text: string) {
     const message = text.trim();

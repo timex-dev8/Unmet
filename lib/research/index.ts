@@ -42,9 +42,51 @@ type Config = {
 };
 
 const DEPTH: Record<Depth, Config> = {
-  low: { exaType: "lite", openAngles: 2, communityAngles: 0, reddit: 0, fullText: false, stack: false, apps: false, github: false, maxSources: 24, batchSize: 12, minSources: 2, minSites: 1, high: false },
-  medium: { exaType: "auto", openAngles: 2, communityAngles: 2, reddit: 0, fullText: true, stack: true, apps: true, github: false, maxSources: 45, batchSize: 10, minSources: 3, minSites: 2, high: false },
-  high: { exaType: "auto", openAngles: 4, communityAngles: 2, reddit: 0, fullText: true, stack: true, apps: true, github: true, maxSources: 70, batchSize: 10, minSources: 3, minSites: 2, high: true },
+  low: {
+    exaType: "lite",
+    openAngles: 2,
+    communityAngles: 0,
+    reddit: 0,
+    fullText: false,
+    stack: false,
+    apps: false,
+    github: false,
+    maxSources: 24,
+    batchSize: 12,
+    minSources: 2,
+    minSites: 1,
+    high: false,
+  },
+  medium: {
+    exaType: "auto",
+    openAngles: 2,
+    communityAngles: 2,
+    reddit: 0,
+    fullText: true,
+    stack: true,
+    apps: true,
+    github: false,
+    maxSources: 45,
+    batchSize: 10,
+    minSources: 3,
+    minSites: 2,
+    high: false,
+  },
+  high: {
+    exaType: "auto",
+    openAngles: 4,
+    communityAngles: 2,
+    reddit: 0,
+    fullText: true,
+    stack: true,
+    apps: true,
+    github: true,
+    maxSources: 70,
+    batchSize: 10,
+    minSources: 3,
+    minSites: 2,
+    high: true,
+  },
 };
 
 const NAMES: Record<ResearchSource["origin"], string> = {
@@ -58,8 +100,10 @@ const NAMES: Record<ResearchSource["origin"], string> = {
   discourse: "community forums",
 };
 
-export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent) => void) {
+/** `signal` aborts when the visitor leaves: the pipeline stops between steps (and inside AI calls). */
+export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent) => void, signal?: AbortSignal) {
   const cfg = DEPTH[req.depth];
+  const check = () => signal?.throwIfAborted();
   const isFirst = req.history.length === 0;
   const key = `${req.depth}:${req.message.toLowerCase().replace(/\s+/g, " ").trim()}`;
   // Same first question at the same depth in the last 6 hours: answer from the cache (lib/research/store.ts).
@@ -71,7 +115,8 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
 
   // 1. Plan
   emit({ type: "step", label: "Planning the research" });
-  const plan = await makePlan(req);
+  const plan = await makePlan(req, signal);
+  check();
   if (plan.mode === "answer" && req.cards.length) {
     emit({ type: "result", answer: plan.answer, cards: [], sourceCount: 0 });
     return;
@@ -128,6 +173,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   if (plan.product) emit({ type: "step", label: `Looking for what ${plan.product} users complain about` });
   emit({ type: "step", label: `Searching ${[...new Set(jobs.map((j) => j.name))].join(", ")}` });
   const settled = await Promise.allSettled(jobs.map((j) => j.run));
+  check();
   const raw = settled.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
   if (settled.every((r) => r.status === "rejected")) throw new Error("Search failed. Check the EXA_API_KEY and try again.");
 
@@ -153,7 +199,12 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     label: `Found ${raw.length} sources (${serviceLine}), kept ${sources.length} after quality checks${rejectedCount ? ` (${quality.rejected.old} too old, ${quality.rejected.untrusted} vendor pages or listicles, ${quality.rejected.duplicate + quality.rejected.thin} duplicates or too thin)` : ""}`,
   });
   if (sources.length === 0) {
-    emit({ type: "result", answer: `I couldn't find recent first-hand posts about “${plan.topic}”. Try different wording or a narrower audience.`, cards: [], sourceCount: 0 });
+    emit({
+      type: "result",
+      answer: `I couldn't find recent first-hand posts about “${plan.topic}”. Try different wording or a narrower audience.`,
+      cards: [],
+      sourceCount: 0,
+    });
     return;
   }
 
@@ -163,7 +214,9 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     topic: plan.topic,
     audience: plan.audience,
     batchSize: cfg.batchSize,
-    onBatch: (done, total) => total > 1 && emit({ type: "step", label: `Read ${Math.min(done * cfg.batchSize, sources.length)} of ${sources.length} sources` }),
+    signal,
+    onBatch: (done, total) =>
+      total > 1 && emit({ type: "step", label: `Read ${Math.min(done * cfg.batchSize, sources.length)} of ${sources.length} sources` }),
   });
   const withComplaints = new Set(extracted.complaints.map((c) => c.sourceId));
   emit({
@@ -182,6 +235,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   }
 
   // 5. Group into problems (+ strict review in High)
+  check();
   emit({ type: "step", label: `Grouping ${extracted.complaints.length} complaints into problems` });
   const grouped = await groupComplaints(extracted.complaints, sources, { topic: plan.topic, request: req.message });
   let problems = grouped.problems;
@@ -189,6 +243,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     emit({ type: "step", label: "Reviewing the problems: dropping generic ones, merging duplicates" });
     problems = await critique(problems, extracted.complaints).catch(() => problems);
   }
+  check();
 
   // 6. Build cards with scores from real signals. Problems that meet the bar come first;
   // ones backed by exactly 2 sources follow as clearly tagged "early signals".
@@ -204,13 +259,18 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
       card = buildCard(p, extracted.complaints, sources, { ...opts, minSources: 2, minSites: 1 });
       if (card) early.push((card = { ...card, signal: "early" }));
     }
-    if (card) complaintsOf.set(card.slug, [...new Set(p.complaintIds)].map((id) => byId.get(id)).filter((c): c is Complaint => Boolean(c)));
+    if (card)
+      complaintsOf.set(
+        card.slug,
+        [...new Set(p.complaintIds)].map((id) => byId.get(id)).filter((c): c is Complaint => Boolean(c)),
+      );
   }
   const byDemand = (a: Card, b: Card) => b.scores.demand.value - a.scores.demand.value;
   const cards = [...strong.sort(byDemand), ...early.sort(byDemand)].slice(0, 6);
 
   // 7. High: who already solves the top problems (web + TrustMRR verified revenue)
   if (cfg.high && cards.length) {
+    check();
     emit({ type: "step", label: "Checking who already solves the top problems" });
     const startups = await startupsJob;
     await Promise.all(
@@ -218,10 +278,16 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
         const found = await findCompetitors(card, startups).catch(() => []);
         card.competitors = found;
         const c = competitionFrom(found);
-        card.scores.competition = { value: c.value, label: c.value >= 67 ? "High" : c.value >= 40 ? "Medium" : "Low", basis: "data", reason: c.reason };
+        card.scores.competition = {
+          value: c.value,
+          label: c.value >= 67 ? "High" : c.value >= 40 ? "Medium" : "Low",
+          basis: "data",
+          reason: c.reason,
+        };
         // A competitor with verified revenue is proof people pay to solve this.
         const paid = found.filter((f) => f.mrr).sort((x, y) => (y.mrr ?? 0) - (x.mrr ?? 0))[0];
-        if (paid && card.report) card.report.reasons.push(`Proven market: ${paid.name} earns $${Math.round(paid.mrr! / 100).toLocaleString("en-US")}/mo`);
+        if (paid && card.report)
+          card.report.reasons.push(`Proven market: ${paid.name} earns $${Math.round(paid.mrr! / 100).toLocaleString("en-US")}/mo`);
       }),
     );
   }
@@ -230,6 +296,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   // Medium and High also check whether each idea already exists (one Exa search per idea).
   const ideaCards = cards.filter((c) => (complaintsOf.get(c.slug)?.length ?? 0) >= 2).slice(0, cfg.high ? 4 : cfg.exaType === "lite" ? 2 : 3);
   if (ideaCards.length) {
+    check();
     emit({ type: "step", label: `Turning ${ideaCards.length === 1 ? "the problem" : `the top ${ideaCards.length} problems`} into product ideas` });
     await Promise.all(
       ideaCards.map(async (card) => {
@@ -263,10 +330,13 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     grouped.notFound,
   ].filter(Boolean);
 
+  check();
   const result = { type: "result" as const, answer: notes.join(" "), cards, sourceCount: sources.length, mix: mixLine(sources, now) };
   // Save before answering so a share link works the moment the cards appear.
   await Promise.all([isFirst && cards.length ? setCached(key, result) : null, saveIdeas(cards)]);
-  console.log(`[research] ${req.depth} "${plan.topic}": ${raw.length} found, ${sources.length} kept, ${extracted.complaints.length} complaints, ${cards.length} cards`);
+  console.log(
+    `[research] ${req.depth} "${plan.topic}": ${raw.length} found, ${sources.length} kept, ${extracted.complaints.length} complaints, ${cards.length} cards`,
+  );
   emit(result);
 }
 

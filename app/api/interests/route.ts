@@ -1,5 +1,6 @@
 import { z } from "zod/v4";
 import { generateJson, LlmError, llmConfigured } from "@/lib/llm";
+import { takeHourlySlot } from "@/lib/rate-limit";
 import { PROFILE_SYSTEM } from "@/lib/research/prompts";
 import { CATEGORIES } from "@/lib/types";
 
@@ -13,18 +14,14 @@ const ProfileSchema = z.object({
   category: z.enum(CATEGORIES),
 });
 
-const hits = new Map<string, number[]>();
-
 export async function POST(request: Request) {
   if (!llmConfigured()) return Response.json({ error: "The AI isn't set up yet." }, { status: 503 });
   const parsed = Body.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "Tell Unmet a little more, in a sentence or two." }, { status: 400 });
 
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
-  const now = Date.now();
-  const recent = (hits.get(ip) ?? []).filter((t) => now - t < 3600_000);
-  if (recent.length >= 20) return Response.json({ error: "Too many changes this hour. Try again later." }, { status: 429 });
-  hits.set(ip, [...recent, now]);
+  // Per-visitor limit to protect the free AI tier (lib/rate-limit.ts).
+  if (!(await takeHourlySlot(request, "interests", 20)))
+    return Response.json({ error: "Too many changes this hour. Try again later." }, { status: 429 });
 
   try {
     const profile = await generateJson(ProfileSchema, {

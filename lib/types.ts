@@ -99,6 +99,7 @@ export type ProductProof = {
 export type Product = {
   kind: "product";
   slug: string;
+  key?: string; // stable identity from its web page (lib/products keyOf), to find it again next run
   name: string;
   url: string; // the product's own site or store page
   oneLine: string; // what it is, in our own words
