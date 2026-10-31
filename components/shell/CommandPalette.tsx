@@ -25,7 +25,7 @@ type Item = { id: string; group: "Actions" | "Ideas" | "Research"; label: string
 
 const ACTIONS: Item[] = [
   { id: "a-new", group: "Actions", label: "New research", href: "/app/research", Icon: Plus },
-  { id: "a-mind", group: "Actions", label: "Add a thought", sub: "Mind", href: "/app/mind", Icon: NotebookPen },
+  { id: "a-mind", group: "Actions", label: "Shape an idea", sub: "Shape", href: "/app/mind", Icon: NotebookPen },
   { id: "a-home", group: "Actions", label: "Go to Home", href: "/app", Icon: House },
   { id: "a-feed", group: "Actions", label: "Go to Feed", href: "/app/feed", Icon: Layers },
   { id: "a-board", group: "Actions", label: "Go to Board", href: "/app/board", Icon: LayoutGrid },

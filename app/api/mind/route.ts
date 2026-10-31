@@ -1,15 +1,15 @@
 import { z } from "zod/v4";
 import { getAllCards } from "@/lib/cards";
 import { generateJson, LlmError, llmConfigured } from "@/lib/llm";
-import type { MindConclusion } from "@/lib/mind-types";
+import type { MindBrief } from "@/lib/mind-types";
 import { MIND_SYSTEM } from "@/lib/research/prompts";
 
 export const maxDuration = 60;
 
 const Body = z.object({
   thoughts: z
-    .array(z.object({ id: z.string().max(20), text: z.string().max(500) }))
-    .min(2)
+    .array(z.object({ id: z.string().max(20), text: z.string().max(2000) }))
+    .min(1)
     .max(120),
   ideas: z
     .array(z.object({ slug: z.string().max(120), headline: z.string().max(200), summary: z.string().max(600) }))
@@ -18,31 +18,24 @@ const Body = z.object({
 });
 
 const Answer = z.object({
-  core: z.string().describe("One sentence: the thread these thoughts keep coming back to"),
-  themes: z
-    .array(z.object({ name: z.string().describe("2-3 word theme name"), thoughtIds: z.array(z.string()) }))
-    .max(5),
-  checks: z
-    .array(
-      z.object({
-        claim: z.string().describe("A belief or assumption stated in the thoughts, rephrased as a short claim"),
-        ideaSlug: z.string().describe("Slug of the evidence-backed idea that is clearly the same problem, or empty"),
-      }),
-    )
-    .max(4),
-  tension: z.string().describe("Where the thoughts contradict each other or pull in different directions; empty if none"),
-  nextStep: z.string().describe("One concrete, small next step, under 25 words"),
+  idea: z.string().describe("The idea in one sentence: what it is and for whom"),
+  forWho: z.string().describe("Who it's for, from the notes; empty if never said"),
+  problem: z.string().describe("The problem it solves, as the notes describe or clearly imply it; empty if unclear"),
+  buildFirst: z.array(z.string()).max(5).describe("3-5 must-haves for a first version, only features named in the notes"),
+  later: z.array(z.string()).max(6).describe("Named features that can wait; empty if none"),
+  questions: z.array(z.string()).max(4).describe("2-4 gaps, doubts or contradictions, each as a short question"),
+  nextStep: z.string().describe("One concrete step this week to learn whether people want it, under 25 words"),
+  matchSlug: z.string().describe("Slug of an idea from the list that is clearly the same problem for the same people, or empty"),
 });
-
 
 // Simple per-visitor limit to protect the free AI tier.
 const hits = new Map<string, number[]>();
 
 export async function POST(request: Request) {
-  if (!llmConfigured()) return Response.json({ error: "Mind isn't set up yet: the AI key is missing." }, { status: 503 });
+  if (!llmConfigured()) return Response.json({ error: "Shape isn't set up yet: the AI key is missing." }, { status: 503 });
 
   const parsed = Body.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) return Response.json({ error: "Add at least two thoughts first." }, { status: 400 });
+  if (!parsed.success) return Response.json({ error: "Write a note about your idea first." }, { status: 400 });
 
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
   const now = Date.now();
@@ -51,7 +44,7 @@ export async function POST(request: Request) {
   hits.set(ip, [...recent, now]);
 
   const { thoughts } = parsed.data;
-  // The person's own saved/researched ideas plus the feed's ideas: the only evidence a claim may link to.
+  // The person's own saved/researched ideas plus the feed's ideas: the only problems the brief may link to.
   const feed = (await getAllCards()).map(({ slug, headline, summary }) => ({ slug, headline, summary }));
   const ideas = [...parsed.data.ideas, ...feed].filter((c, i, all) => all.findIndex((x) => x.slug === c.slug) === i);
 
@@ -59,25 +52,24 @@ export async function POST(request: Request) {
     const out = await generateJson(Answer, {
       system: MIND_SYSTEM,
       timeoutMs: 30_000,
-      prompt: `Thoughts:\n${thoughts.map((t) => `[${t.id}] ${t.text}`).join("\n")}\n\nEvidence-backed ideas:\n${ideas
+      prompt: `Notes, in the order written:\n${thoughts.map((t) => `- ${t.text}`).join("\n")}\n\nSaved and researched ideas (slug: headline. summary):\n${ideas
         .map((c) => `${c.slug}: ${c.headline}. ${c.summary}`)
         .join("\n")}`,
     });
 
-    // Keep only ids and slugs that really exist.
-    const ids = new Set(thoughts.map((t) => t.id));
-    const bySlug = new Map(ideas.map((c) => [c.slug, c]));
-    const result: MindConclusion = {
-      core: out.core,
-      themes: out.themes
-        .map((t) => ({ name: t.name, thoughtIds: t.thoughtIds.filter((id) => ids.has(id)) }))
-        .filter((t) => t.thoughtIds.length),
-      checks: out.checks.map((c) => {
-        const idea = bySlug.get(c.ideaSlug);
-        return { claim: c.claim, idea: idea ? { slug: idea.slug, headline: idea.headline } : null };
-      }),
-      tension: out.tension,
+    // Keep only a slug that really exists.
+    const match = ideas.find((c) => c.slug === out.matchSlug);
+    const clean = (list: string[]) => list.map((x) => x.trim()).filter(Boolean);
+    const result: MindBrief = {
+      idea: out.idea,
+      forWho: out.forWho,
+      problem: out.problem,
+      buildFirst: clean(out.buildFirst),
+      later: clean(out.later),
+      questions: clean(out.questions),
       nextStep: out.nextStep,
+      matchSlug: match?.slug ?? "",
+      matchHeadline: match?.headline ?? "",
     };
     return Response.json(result);
   } catch (err) {

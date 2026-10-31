@@ -3,8 +3,8 @@ import MindView from "@/components/mind/MindView";
 import { llmConfigured } from "@/lib/llm";
 
 export const metadata: Metadata = {
-  title: "Mind · Unmet Studio",
-  description: "Dump your thoughts. Unmet groups them, checks them against real evidence, and tells you what they add up to.",
+  title: "Shape · Unmet Studio",
+  description: "Describe your idea in your own words. Unmet turns it into a clear plan.",
 };
 
 export default function MindPage() {
