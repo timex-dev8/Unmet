@@ -231,7 +231,7 @@
   position: sticky;
   bottom: var(--shell-bottom, 0px);
   padding: 10px 16px 14px;
-  background: linear-gradient(to top, var(--gray) 75%, rgba(245, 245, 247, 0));
+  background: linear-gradient(to top, var(--paper) 70%, rgba(255, 255, 255, 0));
 }
 .chatEmpty .composerWrap {
   position: static;

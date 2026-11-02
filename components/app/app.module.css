@@ -77,3 +77,21 @@
     padding-bottom: 8px;
   }
 }
+
+/* Source filter row (second row of chips on the Feed) */
+.sourceChips {
+  padding-top: 0;
+  align-items: center;
+}
+.chipLabel {
+  flex: none;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--slate, var(--muted));
+}
+.chipSolid {
+  background: var(--primary);
+  color: var(--white);
+}

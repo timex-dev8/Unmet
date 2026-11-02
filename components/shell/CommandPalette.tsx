@@ -123,7 +123,6 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
             aria-activedescendant={items[current] ? `pal-${items[current].id}` : undefined}
             autoFocus
           />
-          <kbd className={s.kbd}>Esc</kbd>
         </div>
         <ul id="palette-list" className={s.list} role="listbox" aria-label="Results">
           {items.map((item, i) => {
