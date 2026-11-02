@@ -8,11 +8,11 @@ Calm, bright and confident. A big serif headline on a sky that fades into a whit
 
 ## Type
 
-| Role           | Font                                   | Notes                                                                                                                                            |
-| -------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Display        | EB Garamond 500 (`--font-serif`)       | Hero headlines (46–88px, line-height 0.97), Studio page titles (every `h1` inside `.shell`), card headlines, big tile numbers, the welcome title |
-| Section titles | Geist 500 with the fade (`.fade-text`) | 34–56px on the landing, 26px in the Studio; ink fading to gray, left to right                                                                    |
-| Text and UI    | Geist 400/500 (`--font`)               | Body 16–19px / 1.5, captions 13–14px, buttons 15–16px / 500                                                                                      |
+| Role           | Font                                               | Notes                                                                                                                                                     |
+| -------------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Display        | EB Garamond 500 (`--font-serif`)                   | Hero headlines (42px on phones, 46–84px on desktop), Studio page titles (every `h1` inside `.shell`), card headlines, big tile numbers, the welcome title |
+| Section titles | Geist 500; the Studio uses the fade (`.fade-text`) | 30–42px on the landing (plain ink), 26px in the Studio (ink fading to gray, left to right)                                                                |
+| Text and UI    | Geist 400/500 (`--font`)                           | Body 16–19px / 1.5, captions 13–14px, buttons 15–16px / 500                                                                                               |
 
 Captions lead with a bold phrase: "**Every claim links to a real post.** If a quote can't be traced…". Small uppercase labels: Geist 500, 12–13px, 0.14em tracking, `--slate`.
 
@@ -38,18 +38,20 @@ Captions lead with a bold phrase: "**Every claim links to a real post.** If a qu
 
 ## Space and shape
 
-4px base step. Landing sections 160px apart on desktop, 96px on phones; Studio sections 64px. Radius: 12px buttons and inputs, 10px small buttons and nav items, 18px the composer, 20px Studio cards, 24–28px landing cards and the sign-in card, chips fully round. Rings instead of borders; soft blue-tinted shadows only on floating things (nav, composer, preview, sheets).
+4px base step. Landing sections 128px apart on desktop, 96px on phones; Studio sections 64px. Radius: 12px buttons and inputs, 10px small buttons and nav items, 18px the composer, 20px Studio cards, 24–28px landing cards and the sign-in card, chips fully round. Rings instead of borders; soft blue-tinted shadows only on floating things (nav, composer, preview, sheets).
 
 ## Landing
 
+One responsive page: phone values are the base, the wide layout starts at 860px. Section titles are plain ink Geist 500 (30px phone, 42px desktop), left-aligned, 128px (desktop) or 96px (phone) apart.
+
 1. The nav: a floating, rounded bar of liquid glass (`components/motion/LiquidGlass.tsx`, after rdev/liquid-glass-react): clear over the sky, frosted white with dark text once the page scrolls. The rim bends what passes under it (Chromium) and catches the light toward the cursor; a glass bubble glides behind the current section's link. On phones the links open in a rounded glass sheet under the bar.
-2. The sky hero: the serif headline, a shiny "Find your first idea" and a glass "See an example", then a real answer from the live feed in a frosted frame (question → verdict → headline → two ideas → "Validate in a day").
-3. Sources strip.
-4. How it works: three mist cards, each a 64px shiny blue icon tile, a short title and one line.
-5. (Trust points now sit inside How it works.)
+2. The sky hero: "Code doesn't make you money. The right [shiny lightbulb tile] idea does.", one line of copy and one shiny "Find your first idea →". Six floating 3D glass tiles (`GlassTile`: eight stacked layers, tones clear / `b1` deep blue / `b2` light blue / `gb` for pale panels, a gentle drift that reduced motion turns off) sit beside the headline from 1121px up; below that a static row of three. Then one example card: a search bar, "People are saying" + a real quote, "You could build" + one idea, a rule, "Found in N places" and "See the proof". The card is pinned to one real feed card; its search topic and idea are written by hand (`app/page.tsx`). If it's missing, the live example's own query, quote and first idea are used; with none, the sample question and idea show with no quote and no count.
+3. Sources: quiet tiles with labels (phones show three).
+4. What people are complaining about: three real problems, each with a quiet category icon tile, then "See all problems".
+5. How it works: three picture panels (a search, three glass tiles, a lightbulb) with a step title each.
 6. Pricing: a mist "Guest" card and a blue "Account" card.
-7. FAQ.
-8. The closing sky with the footer inside it.
+7. FAQ: three questions (data, Reddit, free), a quiet icon each and a plus.
+8. The closing sky with glass tiles, a headline, "Find my idea, free" and the footer inside it.
 
 The page canvas is deep sky, so the overscroll bounce never shows white. Copy is specific, with no invented numbers or testimonials.
 
@@ -70,7 +72,7 @@ Landing CTAs → `/welcome`: the full-screen sky with a frosted white card in th
 
 - One shiny blue action per card or screen; everything else is a quiet gray button or a blue text link.
 - At most one meta line per card.
-- Icons sit in shiny blue tiles only on the landing steps; elsewhere they're inline and quiet.
+- Icons sit in quiet pale tiles or inline; the only shiny blue icon tile is the lightbulb in the landing headline, and glass tiles are decoration only.
 
 ## Motion
 

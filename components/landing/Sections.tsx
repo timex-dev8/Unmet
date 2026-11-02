@@ -1,115 +1,138 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
-import { Check, Plus } from "lucide-react";
+import {
+  ArrowRight,
+  Briefcase,
+  Bug,
+  Check,
+  CircleDollarSign,
+  CircleQuestionMark,
+  Code,
+  Gift,
+  Globe,
+  HeartPulse,
+  House,
+  Lightbulb,
+  ListTodo,
+  MessageSquare,
+  Plus,
+  Search,
+  Star,
+  TrendingUp,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { ideaHref } from "@/lib/links";
 import type { Card } from "@/lib/types";
+import GlassTile from "./GlassTile";
 import s from "./landing.module.css";
 
-const SOURCES = ["Hacker News", "Stack Exchange", "App Store reviews", "GitHub issues", "Bluesky", "Community forums"];
+// A quiet tile: a pale blue rounded square with a line icon. Its size is set by `className`.
+function Tile({ children, className, pearl, fill }: { children: ReactNode; className?: string; pearl?: boolean; fill?: boolean }) {
+  return (
+    <span className={`${s.tile} ${pearl ? s.pearl : ""} ${fill ? s.tileFill : ""} ${className ?? ""}`} aria-hidden="true">
+      {children}
+    </span>
+  );
+}
+
+// Where Unmet reads. Phones show the first three.
+const SOURCES: { name: string; icon: LucideIcon; fill?: boolean }[] = [
+  { name: "Hacker News", icon: MessageSquare, fill: true },
+  { name: "App Store reviews", icon: Star, fill: true },
+  { name: "GitHub issues", icon: Bug, fill: true },
+  { name: "Stack Exchange", icon: CircleQuestionMark },
+  { name: "Community forums", icon: Users },
+];
 
 export function SourceStrip() {
   return (
-    <section className={s.sources} aria-label="Where Unmet looks">
-      <p className={s.label}>Reads what people write in public</p>
-      <ul>
-        {SOURCES.map((x) => (
-          <li key={x}>{x}</li>
+    <section className={`${s.section} ${s.sourcesSection}`} aria-label="Where Unmet looks">
+      <ul className={s.sources}>
+        {SOURCES.map(({ name, icon: Icon, fill }) => (
+          <li key={name}>
+            <Tile pearl fill={fill} className={s.sourceTile}>
+              <Icon strokeWidth={1.8} />
+            </Tile>
+            <p>{name}</p>
+          </li>
         ))}
       </ul>
     </section>
   );
 }
 
-const STEPS = [
-  {
-    title: "Name a market",
-    text: "“Wedding photographers” or “Calendly”.",
-    icon: (
-      <>
-        <circle cx="11" cy="11" r="7" />
-        <path d="m20 20-3.5-3.5" />
-      </>
-    ),
-  },
-  {
-    title: "We read real posts",
-    text: "Complaints from public posts, reviews and issues.",
-    icon: (
-      <>
-        <path d="M4 6h16M4 12h10M4 18h7" />
-        <path d="m15 17 2 2 4-4" />
-      </>
-    ),
-  },
-  {
-    title: "Get ideas worth building",
-    text: "A clear verdict, and products to make.",
-    icon: (
-      <>
-        <path d="M9 18h6M10 21h4" />
-        <path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2.2h5c.1-1 .5-1.7 1.1-2.2A6 6 0 0 0 12 3z" />
-      </>
-    ),
-  },
-];
-
-const NOTES = [
-  { lead: "Ideas cite their complaints.", text: "Each one points to the people it helps and where to find the first ten." },
-  { lead: "Checked against what exists.", text: "Unmet looks for products that already do it, and names the gap." },
-];
-
+// The picture on each step says what it does: a search, a few posts, an idea.
 export function HowItWorks() {
   return (
     <section id="how" className={s.section}>
-      <h2 className={`fade-text ${s.h2}`}>From a hunch to a problem with proof</h2>
-      <p className={s.sub}>About a minute, and every claim links to a real post.</p>
+      <h2 className={s.h2}>How it works</h2>
       <ol className={s.steps}>
-        {STEPS.map((step) => (
-          <li key={step.title} className={s.step}>
-            <span className={s.icon} aria-hidden="true">
-              <svg
-                width="30"
-                height="30"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#fff"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                {step.icon}
-              </svg>
-            </span>
-            <h3>{step.title}</h3>
-            <p>{step.text}</p>
-          </li>
-        ))}
+        <li className={s.step}>
+          <div className={`${s.pic} ${s.picSearch}`} aria-hidden="true">
+            <Tile pearl>
+              <Search strokeWidth={2} />
+            </Tile>
+            <div className={s.pill}>Wedding photographers</div>
+          </div>
+          <h3>Name a market</h3>
+        </li>
+        <li className={s.step}>
+          <div className={`${s.pic} ${s.picRead}`} aria-hidden="true">
+            <div className={s.cluster}>
+              <GlassTile icon={MessageSquare} size={56} tone="gb" className={s.rMsg} />
+              <GlassTile icon={Check} size={72} tone="gb" line strokeWidth={2.2} className={s.rCheck} />
+              <GlassTile icon={Star} size={56} tone="gb" className={s.rStar} />
+            </div>
+          </div>
+          <h3>We read real posts</h3>
+        </li>
+        <li className={s.step}>
+          <div className={`${s.pic} ${s.picIdeas}`} aria-hidden="true">
+            <GlassTile icon={Lightbulb} size={72} strokeWidth={1.6} />
+          </div>
+          <h3>Get ideas worth building</h3>
+        </li>
       </ol>
-      <div className={s.notes}>
-        {NOTES.map((n) => (
-          <p key={n.lead} className={s.cap}>
-            <b>{n.lead}</b> {n.text}
-          </p>
-        ))}
-      </div>
     </section>
   );
 }
 
-// A quiet list of real problems: gives visitors (and search engines) a way into the idea pages.
+// Each category gets a quiet icon; anything else gets the default.
+const CATEGORY_ICON: Partial<Record<string, LucideIcon>> = {
+  "Dev tools": Code,
+  Productivity: ListTodo,
+  Money: CircleDollarSign,
+  Work: Briefcase,
+  Health: HeartPulse,
+  Home: House,
+};
+
+// A short list of real problems: gives visitors (and search engines) a way into the idea pages.
 export function RecentProblems({ cards }: { cards: Card[] }) {
   if (cards.length === 0) return null;
   return (
-    <section id="problems" className={s.section}>
-      <h2 className={`fade-text ${s.h2}`}>Recent problems</h2>
-      <p className={s.sub}>A few of the complaints Unmet has read lately, each with its sources.</p>
+    <section id="problems" className={`${s.section} ${s.problemsSection}`}>
+      <h2 className={s.h2}>What people are complaining about</h2>
       <ul className={s.problems}>
-        {cards.map((c) => (
-          <li key={c.slug}>
-            <Link href={ideaHref(c.slug)}>{c.headline}</Link>
-            <span>{c.category}</span>
-          </li>
-        ))}
+        {cards.map((c) => {
+          const Icon = CATEGORY_ICON[c.category] ?? MessageSquare;
+          return (
+            <li key={c.slug}>
+              <Link href={ideaHref(c.slug)} className={s.problem}>
+                <Tile className={s.problemTile}>
+                  <Icon strokeWidth={1.8} />
+                </Tile>
+                <span className={s.problemText}>{c.headline}</span>
+                <ArrowRight className={s.arrow} size={20} strokeWidth={2} aria-hidden="true" />
+              </Link>
+            </li>
+          );
+        })}
       </ul>
+      <Link href="/app/feed" className={s.all}>
+        See all problems
+      </Link>
     </section>
   );
 }
@@ -133,7 +156,7 @@ const PLANS = [
 export function Pricing() {
   return (
     <section id="pricing" className={s.section}>
-      <h2 className={`fade-text ${s.h2}`}>Free while we build it with you</h2>
+      <h2 className={s.h2}>Free while we build it with you</h2>
       <div className={s.plans}>
         {PLANS.map((p) => (
           <div key={p.name} className={`${s.plan} ${p.featured ? s.planBlue : s.planMist}`}>
@@ -161,38 +184,36 @@ export function Pricing() {
 const FAQ = [
   {
     q: "Where does the data come from?",
-    a: "Public posts: Hacker News, Stack Exchange, App Store reviews, GitHub issues, Bluesky, community forums and the open web, from the last 12 months. Every card links back to the original posts.",
+    a: "Public posts from the last 12 months, each linked back to its source. The complaints are real. The ideas are AI-generated and labeled.",
+    icon: Globe,
   },
   {
     q: "Do you use Reddit?",
-    a: "Not directly. Unmet doesn’t scrape Reddit or use resellers of its data. If a Reddit thread shows up in normal web results, it can be read like any other page.",
+    a: "Not directly. Unmet doesn’t scrape Reddit or buy its data from resellers. A Reddit thread is read only if it shows up in normal web results.",
+    icon: MessageSquare,
   },
   {
     q: "Is it really free?",
-    a: "Yes, for now. Guests get quick research; a free account adds deeper research and sync. If paid plans come later, what’s free today stays free.",
-  },
-  {
-    q: "What’s an “early signal”?",
-    a: "A problem backed by only two sources. It might be real, but it isn’t proven yet, so it’s labeled and never reaches the public feed.",
-  },
-  {
-    q: "Are the ideas AI-generated?",
-    a: "The ideas are, and they’re labeled. The evidence isn’t: complaints are real posts with checked quotes, and the “worth building?” verdict is computed from them.",
+    a: "Yes. If paid plans come later, what’s free today stays free.",
+    icon: Gift,
   },
 ];
 
 export function Faq() {
   return (
-    <section id="faq" className={s.section}>
-      <h2 className={`fade-text ${s.h2}`}>Questions</h2>
+    <section id="faq" className={`${s.section} ${s.faqSection}`}>
+      <h2 className={s.h2}>Questions</h2>
       <div className={s.faq}>
-        {FAQ.map((f) => (
-          <details key={f.q}>
+        {FAQ.map(({ q, a, icon: Icon }) => (
+          <details key={q}>
             <summary>
-              {f.q}
-              <Plus size={22} aria-hidden="true" />
+              <Tile pearl className={s.faqTile}>
+                <Icon strokeWidth={2} />
+              </Tile>
+              <span className={s.faqQ}>{q}</span>
+              <Plus size={18} strokeWidth={2} aria-hidden="true" />
             </summary>
-            <p>{f.a}</p>
+            <p>{a}</p>
           </details>
         ))}
       </div>
@@ -204,8 +225,12 @@ export function Faq() {
 export function Closing() {
   return (
     <footer className={s.closing}>
+      <div className={s.closingTiles}>
+        <GlassTile icon={MessageSquare} size={56} className={`${s.closingSide} ${s.c1}`} />
+        <GlassTile icon={Lightbulb} size={72} tone="b1" strokeWidth={1.7} className={s.c2} />
+        <GlassTile icon={TrendingUp} size={56} line className={`${s.closingSide} ${s.c3}`} />
+      </div>
       <h2 className={s.closingTitle}>Don’t spend months on the wrong idea.</h2>
-      <p className={s.closingSub}>Start with what people already complain about.</p>
       <Link href="/welcome" className={`glossy ${s.btn}`}>
         Find my idea, free
       </Link>
