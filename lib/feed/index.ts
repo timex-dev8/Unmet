@@ -142,20 +142,39 @@ export async function runFeed({ max, deadline }: { max: number; deadline: number
   return report;
 }
 
+/** Ranking: demand, minus points per day since new evidence, so fresh cards reach the top instead of the same strong card staying there. */
+function freshScore(row: { score: number; updated_at: string }, now: number) {
+  const days = Math.max(0, now - new Date(row.updated_at).getTime()) / 86400_000;
+  return row.score - Math.min(60, days * 12);
+}
+
+/** Older cards collected Hacker News sources on non-developer topics; hide them (new research no longer adds any). */
+function withoutOffTopicHn(card: Card): Card {
+  if (card.category === "Dev tools") return card;
+  const sources = card.sources.filter((x) => x.kind !== "hn");
+  if (!sources.length || sources.length === card.sources.length) return card;
+  const report = card.report && {
+    ...card.report,
+    reasons: card.report.reasons.map((r) => (/^\d+ independent sources$/.test(r) ? `${sources.length} independent sources` : r)),
+  };
+  return { ...card, sources, report, evidence: { ...card.evidence, threads: sources.length } };
+}
+
 /** Live feed cards, best first. Cached for days (tag "feed"; the feed job revalidates it). */
 export async function readFeed(opts: { category?: string; rising?: boolean; limit?: number } = {}): Promise<Card[]> {
   "use cache";
   cacheLife("days");
   cacheTag("feed");
   if (!supabaseConfigured()) return [];
-  let q = db().from("feed_cards").select("card").order("score", { ascending: false }).order("updated_at", { ascending: false });
+  let q = db().from("feed_cards").select("card, score, updated_at").order("score", { ascending: false }).order("updated_at", { ascending: false });
   if (opts.category) q = q.eq("category", opts.category);
   const { data, error } = await q.limit(opts.limit ?? 120);
   if (error) {
     warn("read feed", error);
     return [];
   }
-  const cards = data.map((r) => r.card as Card);
+  const now = Date.now();
+  const cards = [...data].sort((a, b) => freshScore(b, now) - freshScore(a, now)).map((r) => withoutOffTopicHn(r.card as Card));
   return opts.rising ? cards.filter((c) => c.trend === "rising") : cards;
 }
 
