@@ -181,5 +181,3 @@ For each product:
 - category: one of Dev tools, Productivity, Money, Work, Health, Home.
 - why: one short sentence on what the proof shows about demand, without repeating its numbers. E.g. a top-grossing app: "People pay for this every month."; fast GitHub stars: "Developers picked it up fast."; Show HN points: "Builders on Hacker News rallied around it."; verified MRR: "Customers pay for it, and the revenue is verified." Never invent facts.
 Plain words, no hype, no emoji.`;
-
-export const AI_PICK_SYSTEM = `You pick the one problem from this list most worth building for this week, for a solo founder or small team. Prefer repeated evidence from different sources, signs people pay or switch, and a first version one developer could ship. Skip problems that are vague or already well solved. Return its slug, and why: one plain sentence under 25 words, based only on the data given, that a stranger understands. Never invent numbers.`;
