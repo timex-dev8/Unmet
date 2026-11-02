@@ -4,7 +4,7 @@ import FilterChips from "@/components/app/FilterChips";
 import SwipeFeed from "@/components/feed/SwipeFeed";
 import { getAllCards, getCards, isCategory, type FeedFilter } from "@/lib/cards";
 import { readProducts } from "@/lib/products";
-import { SOURCE_KINDS, type ProductSource } from "@/lib/types";
+import { SOURCE_KINDS, type Product, type ProductSource } from "@/lib/types";
 import s from "@/components/feed/feed.module.css";
 
 export const metadata: Metadata = { title: "Feed" };
@@ -13,6 +13,17 @@ export const metadata: Metadata = { title: "Feed" };
 export const instant = false;
 
 const PRODUCT_SOURCES: readonly ProductSource[] = ["TrustMRR", "Product Hunt", "App Store", "GitHub"];
+
+/** Takes turns between sources, each strongest first, so one source's high scores don't fill the feed. */
+function mixSources(products: Product[]) {
+  const turn = new Map<string, number>();
+  const ranked = products.map((p) => {
+    const n = turn.get(p.source) ?? 0;
+    turn.set(p.source, n + 1);
+    return { p, n };
+  });
+  return ranked.sort((a, b) => a.n - b.n).map((x) => x.p);
+}
 
 export default async function FeedPage({ searchParams }: PageProps<"/app/feed">) {
   const { topic, source: sourceParam } = await searchParams;
@@ -44,7 +55,7 @@ export default async function FeedPage({ searchParams }: PageProps<"/app/feed">)
         </div>
       ) : (
         /* key resets the feed position when a filter changes */
-        <SwipeFeed key={`${filter ?? "all"}|${source ?? ""}`} cards={cards} products={shownProducts.slice(0, 15)} />
+        <SwipeFeed key={`${filter ?? "all"}|${source ?? ""}`} cards={cards} products={mixSources(shownProducts).slice(0, 15)} />
       )}
     </main>
   );

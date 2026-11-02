@@ -241,6 +241,8 @@ export async function runProducts({ deadline = Infinity }: { deadline?: number }
   }
   const cutoff = new Date(Date.now() - STALE_DAYS * 86400_000).toISOString();
   await db().from("feed_products").delete().lt("updated_at", cutoff);
+  // Show HN is no longer collected; clear the cards it left behind.
+  await db().from("feed_products").delete().eq("product->>source", "Hacker News");
   return {
     counts,
     merged: raw.length,
@@ -277,6 +279,6 @@ export async function readProducts(opts: { category?: string; rising?: boolean }
       const p = r.product as Product;
       return { ...p, source: p.source ?? sourceFromSite(p.proof[0]?.site) };
     })
-    .filter((p) => p.source !== "Hacker News");
+    .filter((p) => p.source !== "Hacker News" && !/^anonymous/i.test(p.name));
   return opts.rising ? list.filter((p) => p.rising) : list;
 }
