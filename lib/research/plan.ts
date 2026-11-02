@@ -6,7 +6,7 @@ import { PLAN_SYSTEM } from "./prompts";
 import { STACK_SITES, TRUSTMRR_CATEGORIES } from "./sources/sites";
 
 const PlanSchema = z.object({
-  mode: z.enum(["search", "gap", "answer", "discover"]),
+  mode: z.enum(["search", "gap", "answer", "discover", "clarify"]),
   product: z.string().describe("Only for mode 'gap': the product or product category named; otherwise empty"),
   answer: z.string().describe("Only for mode 'answer'; otherwise empty"),
   topic: z.string(),
@@ -31,6 +31,30 @@ const PlanSchema = z.object({
   suggestions: z.array(z.string()).max(3).describe("Searches to try next; empty only for mode 'answer'"),
 });
 
+// Ordinary groups for a mixed search; a few are picked at random each time so results don't repeat.
+const DISCOVER_GROUPS = [
+  "dental hygienists",
+  "wedding photographers",
+  "school teachers",
+  "farmers",
+  "physiotherapists",
+  "truck drivers",
+  "restaurant owners",
+  "nurses",
+  "dog groomers",
+  "real estate agents",
+  "parents of young kids",
+  "hair stylists",
+  "fitness coaches",
+  "landlords",
+  "carers for elderly parents",
+  "tattoo artists",
+  "musicians",
+  "event planners",
+  "auto mechanics",
+  "small-town pharmacists",
+];
+
 export type Plan = z.infer<typeof PlanSchema>;
 
 // Search operators don't help Exa's plain-language search; strip any the model adds.
@@ -42,12 +66,22 @@ const plain = (q: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
+function pickGroups(n: number) {
+  const pool = [...DISCOVER_GROUPS];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, n);
+}
+
 export async function makePlan(req: ResearchRequest, signal?: AbortSignal): Promise<Plan> {
   const prompt = [
     req.history.length ? `Conversation so far:\n${req.history.map((t) => `${t.role}: ${t.text}`).join("\n")}` : "",
     req.cards.length ? `Ideas already found:\n${req.cards.map((c, i) => `#${i + 1} ${c.headline}: ${c.summary}`).join("\n")}` : "",
     `Allowed Stack Exchange sites: ${STACK_SITES.join(", ")}`,
     `Allowed TrustMRR categories: ${TRUSTMRR_CATEGORIES.join(", ")}`,
+    `Groups for a "discover" or "clarify" plan: ${pickGroups(4).join(", ")}`,
     `New message: ${req.message}`,
   ]
     .filter(Boolean)

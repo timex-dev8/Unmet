@@ -91,9 +91,10 @@ const ORIGIN_CAP: Partial<Record<ResearchSource["origin"], number>> = { reddit: 
 export function pickDiverse(sources: ResearchSource[], max: number): ResearchSource[] {
   const byOrigin = new Map<string, ResearchSource[]>();
   for (const s of [...sources].sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0))) {
-    const list = byOrigin.get(s.origin) ?? [];
-    if (list.length < (ORIGIN_CAP[s.origin] ?? Infinity)) list.push(s);
-    byOrigin.set(s.origin, list);
+    const key = s.group ?? s.origin; // discover-mode sources are balanced by group; a group key has no cap
+    const list = byOrigin.get(key) ?? [];
+    if (list.length < (s.group ? Infinity : (ORIGIN_CAP[s.origin] ?? Infinity))) list.push(s);
+    byOrigin.set(key, list);
   }
   const out: ResearchSource[] = [];
   while (out.length < max && [...byOrigin.values()].some((l) => l.length)) {

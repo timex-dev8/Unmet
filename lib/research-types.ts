@@ -13,15 +13,16 @@ export type ResearchSource = {
   kind?: SourceKind;
   engagement?: { score: number; label: string };
   weight?: number; // quality × freshness, set by the quality filter
+  group?: string; // the discover-mode search that found it; sources are balanced across these
 };
 
 export type Depth = "low" | "medium" | "high";
 
-/** Depth levels in slider order, with what each one does and how long it takes. */
-export const DEPTHS: { id: Depth; label: string; what: string; time: string }[] = [
-  { id: "low", label: "Quick", what: "Quick look", time: "about 30 seconds" },
-  { id: "medium", label: "Deep", what: "Web, forums, reviews, Q&A, App Store", time: "about 45 seconds" },
-  { id: "high", label: "Deepest", what: "Every source + competitor check", time: "1–2 minutes" },
+/** Depth levels in slider order, with what each one does. */
+export const DEPTHS: { id: Depth; label: string; what: string }[] = [
+  { id: "low", label: "Quick", what: "Quick look" },
+  { id: "medium", label: "Deep", what: "Web, forums, reviews, Q&A, App Store" },
+  { id: "high", label: "Deepest", what: "Every source + competitor check" },
 ];
 
 /** The searches offered to a first-time visitor. A daily job runs them ahead of time (/api/cron/examples), so they open instantly. */

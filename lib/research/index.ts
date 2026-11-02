@@ -100,6 +100,13 @@ const NAMES: Record<ResearchSource["origin"], string> = {
   discourse: "community forums",
 };
 
+const CLARIFY_OPTIONS = [
+  "Surprise me with a mix of problems",
+  "Problems in healthcare",
+  "Problems for local shops and trades",
+  "Problems for parents and families",
+];
+
 /** `signal` aborts when the visitor leaves: the pipeline stops between steps (and inside AI calls). */
 export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent) => void, signal?: AbortSignal, fresh = false) {
   const base = DEPTH[req.depth];
@@ -124,8 +131,23 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     return;
   }
 
-  // Discover mode casts a wide net, one search per group of people.
-  const cfg: Config = plan.mode === "discover" ? { ...base, openAngles: Math.max(base.openAngles, 4) } : base;
+  // First message with no audience named: ask who to look at instead of searching.
+  if ((plan.mode === "clarify" || plan.mode === "discover") && isFirst) {
+    const result = {
+      type: "result" as const,
+      answer: "Happy to help. Ideas work best in a world you know, so who should we look at? Pick one, or type your job or a hobby.",
+      cards: [],
+      sourceCount: 0,
+      suggestions: CLARIFY_OPTIONS,
+    };
+    await setCached(key, result);
+    emit(result);
+    return;
+  }
+
+  // Discover mode casts a wide net, one search per group of people. A later "clarify" turn is treated as "discover".
+  const discover = plan.mode === "discover" || plan.mode === "clarify";
+  const cfg: Config = discover ? { ...base, openAngles: Math.max(base.openAngles, 4) } : base;
 
   const now = Math.floor(Date.now() / 1000);
   const since = now - WINDOW_DAYS * DAY;
@@ -149,46 +171,59 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   const useGithub = cfg.github && plan.segment !== "consumer" && plan.githubPhrase.length > 0;
 
   const jobs: { name: string; run: Promise<Omit<ResearchSource, "id">[]> }[] = [
-    ...open.map((a) => ({ name: NAMES.web, run: searchWeb(a.query, a.objective, { since: sinceIso, type: "auto", fullText: cfg.fullText }) })),
-    ...(plan.product
-      ? [
-          {
-            name: NAMES.web,
+    ...open.map((a) => ({
+      name: NAMES.web,
+      run: searchWeb(a.query, a.objective, { since: sinceIso, type: "auto", fullText: cfg.fullText }).then((r) =>
+        discover ? r.map((x) => ({ ...x, group: a.query })) : r,
+      ),
+    })),
+    ...(discover
+      ? []
+      : [
+          ...(plan.product
+            ? [
+                {
+                  name: NAMES.web,
+                  run: searchWeb(
+                    `${plan.product}${productDomain && !plan.product.toLowerCase().includes(productDomain) ? ` ${productDomain}` : ""} review problems complaints`,
+                    `Posts, reviews and discussions by people who used ${plan.product}${productDomain ? ` (${productDomain})` : ""}, or compared it with alternatives: what frustrated them.`,
+                    { since: wideSinceIso, type: "auto", fullText: cfg.fullText },
+                  ),
+                },
+              ]
+            : []),
+          ...community.map((q) => ({
+            name: "forums & review sites",
+            run: searchWeb(q, `First-hand posts, questions and reviews from ${plan.audience} about their problems.`, {
+              since: sinceIso,
+              type: "auto",
+              fullText: cfg.fullText,
+              includeDomains: COMMUNITY_DOMAINS,
+            }),
+          })),
+          ...reddit.map((q) => ({
+            name: NAMES.reddit,
             run: searchWeb(
-              `${plan.product}${productDomain && !plan.product.toLowerCase().includes(productDomain) ? ` ${productDomain}` : ""} review problems complaints`,
-              `Posts, reviews and discussions by people who used ${plan.product}${productDomain ? ` (${productDomain})` : ""}, or compared it with alternatives: what frustrated them.`,
-              { since: wideSinceIso, type: "auto", fullText: cfg.fullText },
+              q,
+              `First-hand Reddit posts and comments where ${plan.audience} describe their own problems, frustrations and workarounds.`,
+              {
+                since: sinceIso,
+                type: "auto",
+                fullText: cfg.fullText,
+                includeDomains: ["reddit.com"],
+                origin: "reddit",
+              },
             ),
-          },
-        ]
-      : []),
-    ...community.map((q) => ({
-      name: "forums & review sites",
-      run: searchWeb(q, `First-hand posts, questions and reviews from ${plan.audience} about their problems.`, {
-        since: sinceIso,
-        type: "auto",
-        fullText: cfg.fullText,
-        includeDomains: COMMUNITY_DOMAINS,
-      }),
-    })),
-    ...reddit.map((q) => ({
-      name: NAMES.reddit,
-      run: searchWeb(q, `First-hand Reddit posts and comments where ${plan.audience} describe their own problems, frustrations and workarounds.`, {
-        since: sinceIso,
-        type: "auto",
-        fullText: cfg.fullText,
-        includeDomains: ["reddit.com"],
-        origin: "reddit",
-      }),
-    })),
-    // Hacker News leans technical, so outside developer topics it only joins in High.
-    ...(plan.segment === "developer" || cfg.high ? [{ name: NAMES.hn, run: searchHN(plan.hnQuery, since, cfg.high ? 15 : 10) }] : []),
-    // Bluesky on every level: free, fast, real people. It matches keywords, so use short queries.
-    { name: NAMES.bluesky, run: searchBluesky([plan.hnQuery, plan.communityQuery.split(" ").slice(0, 4).join(" ")], sinceIso) },
-    ...(useDiscourse ? [{ name: NAMES.discourse, run: searchDiscourse(plan.hnQuery, sinceIso) }] : []),
-    ...(useStack ? [{ name: NAMES.stackexchange, run: searchStackExchange(plan.stackQuery, plan.stackSites, since) }] : []),
-    ...(useApps ? [{ name: NAMES.appstore, run: searchAppReviews(plan.appTerms, since) }] : []),
-    ...(useGithub ? [{ name: NAMES.github, run: searchGithubIssues(plan.githubPhrase, since) }] : []),
+          })),
+          // Hacker News leans technical, so outside developer topics it only joins in High.
+          ...(plan.segment === "developer" || cfg.high ? [{ name: NAMES.hn, run: searchHN(plan.hnQuery, since, cfg.high ? 15 : 10) }] : []),
+          // Bluesky on every level: free, fast, real people. It matches keywords, so use short queries.
+          { name: NAMES.bluesky, run: searchBluesky([plan.hnQuery, plan.communityQuery.split(" ").slice(0, 4).join(" ")], sinceIso) },
+          ...(useDiscourse ? [{ name: NAMES.discourse, run: searchDiscourse(plan.hnQuery, sinceIso) }] : []),
+          ...(useStack ? [{ name: NAMES.stackexchange, run: searchStackExchange(plan.stackQuery, plan.stackSites, since) }] : []),
+          ...(useApps ? [{ name: NAMES.appstore, run: searchAppReviews(plan.appTerms, since) }] : []),
+          ...(useGithub ? [{ name: NAMES.github, run: searchGithubIssues(plan.githubPhrase, since) }] : []),
+        ]),
   ];
   const startupsJob = cfg.high ? startupsFor(plan.trustmrrCategory) : Promise.resolve([]);
 
@@ -261,7 +296,12 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   // 5. Group into problems (+ strict review in High)
   check();
   emit({ type: "step", label: `Grouping ${extracted.complaints.length} complaints into problems` });
-  const grouped = await groupComplaints(extracted.complaints, sources, { topic: plan.topic, request: req.message, segment: plan.segment });
+  const grouped = await groupComplaints(extracted.complaints, sources, {
+    topic: plan.topic,
+    request: req.message,
+    segment: plan.segment,
+    light: fresh,
+  });
   let problems = grouped.problems;
   if (cfg.high && problems.length > 1) {
     emit({ type: "step", label: "Reviewing the problems: dropping generic ones, merging duplicates" });

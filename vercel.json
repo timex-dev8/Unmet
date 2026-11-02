@@ -1,7 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
-    { "path": "/api/cron/examples", "schedule": "30 5 * * *" },
+    { "path": "/api/cron/examples", "schedule": "0 5 * * *" },
+    { "path": "/api/cron/examples", "schedule": "0 11 * * *" },
+    { "path": "/api/cron/examples", "schedule": "0 17 * * *" },
+    { "path": "/api/cron/examples", "schedule": "0 23 * * *" },
     { "path": "/api/cron/feed?slot=morning", "schedule": "0 6 * * *" },
     { "path": "/api/cron/feed?slot=day", "schedule": "0 12 * * *" },
     { "path": "/api/cron/feed?slot=evening", "schedule": "0 18 * * *" }

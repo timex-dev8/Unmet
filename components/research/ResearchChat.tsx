@@ -194,7 +194,7 @@ export default function ResearchChat({
         ) : (
           <div className={s.thread} aria-live="polite">
             <h1 className={s.threadTitle}>{thread?.title ?? "Research"}</h1>
-            {messages.map((m) =>
+            {messages.map((m, idx) =>
               m.role === "user" ? (
                 <UserBubble key={m.id} text={m.text} />
               ) : (
@@ -202,7 +202,7 @@ export default function ResearchChat({
                   key={m.id}
                   m={m}
                   isLast={m.id === lastAnswerId}
-                  firstQuery={messages.find((x) => x.role === "user")?.text ?? ""}
+                  lastQuery={messages.slice(0, idx).findLast((x) => x.role === "user")?.text ?? ""}
                   onAsk={(q) => send(q)}
                   onOpen={setOpenCard}
                   openSlug={openCard?.slug}
@@ -296,14 +296,14 @@ function StepList({ steps, pending }: { steps: string[]; pending?: boolean }) {
 function Reply({
   m,
   isLast,
-  firstQuery,
+  lastQuery,
   onAsk,
   onOpen,
   openSlug,
 }: {
   m: ChatMessage;
   isLast: boolean;
-  firstQuery: string;
+  lastQuery: string; // the question this reply answers
   onAsk: (q: string) => void;
   onOpen: (card: Card) => void;
   openSlug?: string;
@@ -317,10 +317,11 @@ function Reply({
   const popular = cards.filter((c) => c.signal !== "niche");
   const both = niche.length > 0 && popular.length > 0;
   const suggestions = m.suggestions ?? [];
+  // The button shows `label`; tapping it sends `query`.
   const followUps = [
-    ...(firstQuery ? [`Find more niche problems: ${firstQuery}`] : []),
-    ...(cards.length > 1 ? ["Which is easiest to build?"] : []),
-    ...suggestions,
+    ...(lastQuery ? [{ label: "Find more niche problems", query: `Find more niche problems: ${lastQuery}` }] : []),
+    ...(cards.length > 1 ? [{ label: "Which is easiest to build?", query: "Which is easiest to build?" }] : []),
+    ...suggestions.map((q) => ({ label: q, query: q })),
   ];
   const showFootnote = !m.pending && !m.error && m.sourceCount && cards.length > 0;
   const group = (list: Card[], heading: string | null, offset: number) => (
@@ -337,12 +338,12 @@ function Reply({
   return (
     <div className={s.reply}>
       {steps.length > 0 && m.pending && <StepList steps={steps} pending />}
-      {steps.length > 0 && !m.pending && (
+      {steps.length > 0 && !m.pending && m.mix && (
         // Once done, the steps fold into one line; the detail is a tap away.
         <details className={s.stepsFold}>
           <summary>
             <Check size={14} aria-hidden="true" />
-            {m.mix ?? `${steps.length} steps`}
+            {m.mix}
           </summary>
           <StepList steps={steps} />
         </details>
@@ -371,10 +372,10 @@ function Reply({
             {allSaved ? <Check size={15} aria-hidden="true" /> : <BookmarkPlus size={15} aria-hidden="true" />}
             {allSaved ? "On your board" : cards.length > 1 ? `Add all ${cards.length} to board` : "Add to board"}
           </button>
-          {followUps.map((q, i) => (
+          {followUps.map((f, i) => (
             // The first follow-up is the main next step: the one glossy button.
-            <button key={q} type="button" className={i === 0 ? `glossy ${s.nextStep}` : s.example} onClick={() => onAsk(q)}>
-              {q}
+            <button key={f.label} type="button" className={i === 0 ? `glossy ${s.nextStep}` : s.example} onClick={() => onAsk(f.query)}>
+              {f.label}
             </button>
           ))}
         </div>

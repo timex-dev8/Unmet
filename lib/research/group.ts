@@ -30,11 +30,12 @@ const GroupSchema = z.object({
 
 export type DraftProblem = z.infer<typeof GroupSchema>["problems"][number];
 
-export async function groupComplaints(complaints: Complaint[], sources: ResearchSource[], ctx: { topic: string; request: string; segment: string }) {
+export async function groupComplaints(complaints: Complaint[], sources: ResearchSource[], ctx: { topic: string; request: string; segment: string; light?: boolean }) {
   const byId = new Map(sources.map((s) => [s.id, s]));
   return generateJson(GroupSchema, {
     system: GROUP_SYSTEM,
     timeoutMs: 45_000,
+    light: ctx.light,
     prompt: `Topic: ${ctx.topic}\nThe person asked: ${ctx.request}\nSegment: ${ctx.segment}\nCategories: ${CATEGORIES.join(", ")}\n\nVerified complaints:\n${complaints
       .map((c) => {
         const s = byId.get(c.sourceId)!;

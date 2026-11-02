@@ -82,7 +82,7 @@ export default function DepthSlider({
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.2 }}
           >
-            {level.label} · {level.time}
+            {level.label}
           </m.span>
         </AnimatePresence>
       </div>
@@ -96,7 +96,7 @@ export default function DepthSlider({
         value={index}
         disabled={disabled}
         aria-label="Research depth"
-        aria-valuetext={`${level.label}: ${level.what}, ${level.time}`}
+        aria-valuetext={`${level.label}: ${level.what}`}
         onChange={(e) => onChange(DEPTHS[Number(e.target.value)].id)}
       />
 

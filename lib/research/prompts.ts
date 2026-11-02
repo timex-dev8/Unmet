@@ -7,9 +7,10 @@ First decide the mode:
 - "search": the person names a market, audience, job or problem space, or asks for more evidence.
 - "gap": the person names a specific product, app or product category and wants to know what its users hate, where it falls short, or how to compete with it ("what do people hate about Calendly", "gaps in Notion for teams", "how could I beat Booksy"). Set product to its name.
 - "answer": the person asks about ideas already found in this conversation ("compare #1 and #2", "which is easiest?"). Answer only from those ideas, in 2–5 sentences, citing them as #1, #2. If they don't cover the question, choose "search".
-- "discover": the person wants something to build but names no audience, market or product ("i want to start a business but dont know what", "give me startup ideas", "what should I build?"). They are NOT asking about founders or how to find ideas, so never research those.
+- "discover": they were already asked who to look at and want a mix, or they reply without naming anyone ("surprise me with a mix", "idk"). They are NOT asking about founders or how to find ideas, so never research those.
+- "clarify": this is the first message, and the person wants something to build but names no audience, market or product ("i want to start a business but dont know what", "give me startup ideas", "what should I build?"). Fill in the plan exactly as you would for "discover", because it is used if they ask for a mix. If they name any audience, market, job, hobby or product, even vaguely ("something for students"), use "search" instead.
 
-For "discover": spread the research across 4 unrelated groups of ordinary people with regular, costly chores (for example: trades, clinics, parents, shop owners, teachers, drivers). If the conversation shows what they know or like, use that instead. topic is "everyday problems worth solving"; audience is "people describing a specific, repeated frustration in their own work or daily life"; segment is "business". Write exactly 4 angles of type pain or workaround, each naming a different group ("plumbers chasing unpaid invoices every month"). communityQuery and hnQuery name the first group. Leave githubPhrase empty.
+For "discover": spread the research across the 4 groups given in the request, unless the conversation shows what they know or like. Each angle must describe a chore or frustration specific to that group's own work or life ("dental hygienists re-entering the same chart notes"). Avoid invoicing, late payments, taxes and generic admin paperwork, because almost every group has those and they crowd out more interesting problems. topic is "everyday problems worth solving"; audience is "people describing a specific, repeated frustration in their own work or daily life"; segment is "business". Write exactly 4 angles of type pain or workaround, each naming a different group ("plumbers chasing unpaid invoices every month"). communityQuery and hnQuery name the first group. Leave githubPhrase empty.
 
 If they ask for more niche or smaller problems, use "search" on the same topic and aim every angle at a narrow subgroup or an unusual situation, not the whole market ("mobile dog groomers" rather than "pet owners").
 
@@ -48,6 +49,7 @@ Definitions:
 - First-hand: the author describes their own experience, or a customer or user they directly work with. Re-reports ("users on forums say…"), vendor marketing, listicles, news summaries and SEO articles are NOT first-hand.
 - Complaint: a frustration, a workaround they had to invent, money or time they lose, or a wish for something that doesn't exist. Opinions, feature announcements and how-to tips are not complaints.
 - Relevance (0–3): 3 = squarely about the topic's audience and their problem; 2 = clearly related; 1 = tangential; 0 = off-topic.
+- If the topic is "everyday problems worth solving", relevance means how concrete the frustration is in the author's own work or daily life: any group of people counts.
 - Advice about starting a business, finding startup ideas or founder life counts as relevance 0, unless the topic is about founders.
 
 For each source:
@@ -77,7 +79,7 @@ Rules:
 - Prefer problems that several different sources describe, and order problems from most to least evidence. Also keep a problem from a single source when it is concrete: a named situation, a real cost, or a workaround someone invented. These narrow problems are valuable, so do not stretch or merge them just to reach more sources. Skip single complaints that are vague or true of almost anyone.
 - headline: under 10 words, names who and the pain ("Barbers lose a full slot to no-shows on busy days"). A stranger must understand it on first read. No hype, no "Lack of…", no generic phrasing like "Better tools for X".
 - Unless the segment is "developer", describe what the affected person experiences, and skip problems only a developer would notice (API limits, SDK bugs, deployment errors).
-- If the topic is "everyday problems worth solving", keep problems from different groups of people separate and aim for 4 to 6 of them.
+- If the topic is "everyday problems worth solving", keep problems from different groups of people separate and aim for 4 to 6 of them, with no more than 2 problems about the same group of people. When choosing what to keep, prefer the widest range of groups.
 - summary: two short sentences in your own words: what happens, and what it costs them. Write as if explaining to a friend outside the industry. Avoid words like pain point, friction, workflow, stakeholder, leverage and solution.
 - who: the specific people affected.
 - category: the closest from the list.
