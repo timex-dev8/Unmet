@@ -47,14 +47,14 @@ export default function Welcome({ next, failed }: { next: string; failed: boolea
       </header>
 
       <main className={s.center}>
-        <h1 className={s.title}>Find problems worth solving</h1>
+        <h1 className={s.title}>Find out what people actually want</h1>
         <div className={s.card}>
-          <SignInForm id="welcome" failed={failed} bare />
-          <div className={s.or}>or</div>
-          <button type="button" className={s.guestBtn} onClick={() => continueAsGuest()}>
+          <button type="button" className={`pill pill-dark ${s.guestBtn}`} onClick={() => continueAsGuest()}>
             Continue as guest
           </button>
-          <p className={s.guestNote}>Everything works; research runs on Low (quick) only.</p>
+          <p className={s.guestNote}>No account needed.</p>
+          <div className={s.or}>or</div>
+          <SignInForm id="welcome" failed={failed} bare />
         </div>
       </main>
     </div>

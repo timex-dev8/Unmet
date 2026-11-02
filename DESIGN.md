@@ -46,7 +46,7 @@ Captions lead with a bold phrase: "**Every claim links to a real post.** If a qu
 2. The sky hero: the serif headline, a shiny "Find your first idea" and a glass "See an example", then a real answer from the live feed in a frosted frame (question → verdict → headline → two ideas → "Validate in a day").
 3. Sources strip.
 4. How it works: three mist cards, each a 64px shiny blue icon tile, a short title and one line.
-5. Why trust it: three bold-lead captions over a hairline.
+5. (Trust points now sit inside How it works.)
 6. Pricing: a mist "Guest" card and a blue "Account" card.
 7. FAQ.
 8. The closing sky with the footer inside it.
@@ -55,7 +55,7 @@ The page canvas is deep sky, so the overscroll bounce never shows white. Copy is
 
 ## Entry flow
 
-Landing CTAs → `/welcome`: the full-screen sky with a frosted white card in the middle (Password / Email link, then "or", then Continue as guest). → `/welcome/start` onboarding → Studio. Guests can use everything except Medium and High research.
+Landing CTAs → `/welcome`: the full-screen sky with a frosted white card in the middle (Password / Email link, then "or", then Continue as guest). → `/welcome/start` onboarding → Studio. Guests can use everything except Deep and Deepest research.
 
 ## Studio
 
@@ -81,6 +81,6 @@ Smooth, quick, never in the way. Only `transform` and `opacity` (plus `block-siz
 - **"You are here" backgrounds** glide between items with `components/motion/Highlight.tsx`.
 - **Depth control:**
   - It works like ChatGPT's Thinking control: a pill in the composer (`DepthPicker`) opens a popover with the `DepthSlider`.
-  - Guests see Medium and High locked.
+  - Guests see Deep and Deepest locked.
 - **Dialogs and sheets** animate in and out with `@starting-style` + `allow-discrete`.
 - **Reduced motion:** CSS animations are off in `globals.css`; `MotionProvider` sets `reducedMotion="user"`.

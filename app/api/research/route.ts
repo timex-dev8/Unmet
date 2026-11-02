@@ -52,12 +52,12 @@ async function limited(visitor: string, isUser: boolean, depth: Depth) {
   let ok = await takeResearchSlot(slot);
   if (ok === null) {
     // The limit couldn't be checked: never open the costly depths; Low only within this server's own count.
-    if (depth !== "low") return "Deeper research is paused for a moment. Try Low, or again in a minute.";
+    if (depth !== "low") return "Deeper research is paused for a moment. Try Quick, or again in a minute.";
     ok = takeMemorySlot(slot);
   }
   if (ok) return null;
   return cost > 1
-    ? "Not enough research left right now for High. Try Medium, or wait a bit."
+    ? "Not enough research left right now for Deepest. Try Deep, or wait a bit."
     : "You've used your research for now. Try again a bit later.";
 }
 
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
   // When accounts exist but the token can't be verified (no service key, auth down), they stay closed.
   const user = await requestUser(request);
   if (depth !== "low" && accountsConfigured() && !user) {
-    return Response.json({ error: "Medium and High research need a free account. Sign in, or use Low." }, { status: 403 });
+    return Response.json({ error: "Deep and Deepest research need a free account. Sign in, or use Quick." }, { status: 403 });
   }
 
   const blocked = await limited(user ? `u:${user.id}` : visitorId(clientIp(request)), Boolean(user), depth);

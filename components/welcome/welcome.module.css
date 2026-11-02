@@ -96,24 +96,13 @@
 .guestBtn {
   width: 100%;
   min-height: 50px;
-  border: 0;
-  border-radius: 12px;
-  background: var(--white);
-  box-shadow: inset 0 0 0 1px #dfe3ec;
-  font: inherit;
   font-size: 16px;
-  font-weight: 500;
+}
+/* The sign-in form's own submit stays a quiet gray button; the guest button is the one main action. */
+.card form :global(.pill-dark) {
+  background: var(--gray);
+  box-shadow: none;
   color: var(--ink);
-  cursor: pointer;
-  transition:
-    background var(--t-fast) var(--ease),
-    transform var(--t-fast) var(--ease);
-}
-.guestBtn:hover {
-  background: #f7f8fb;
-}
-.guestBtn:active {
-  transform: scale(0.98);
 }
 .guestNote {
   margin: -6px 0 0;
@@ -280,7 +269,18 @@
   justify-content: space-between;
   align-items: center;
 }
+.finishBtn {
+  min-width: 0; /* a long niche shortens with an ellipsis instead of pushing "Back" off the row */
+}
+.finishText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .back {
+  flex: none;
+  margin-right: 12px;
   min-height: 44px;
   border: 0;
   background: none;

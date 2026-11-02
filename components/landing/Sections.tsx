@@ -32,7 +32,7 @@ const STEPS = [
   },
   {
     title: "We read real posts",
-    text: "Every quote checked against its source.",
+    text: "Complaints from public posts, reviews and issues.",
     icon: (
       <>
         <path d="M4 6h16M4 12h10M4 18h7" />
@@ -50,6 +50,11 @@ const STEPS = [
       </>
     ),
   },
+];
+
+const NOTES = [
+  { lead: "Ideas cite their complaints.", text: "Each one points to the people it helps and where to find the first ten." },
+  { lead: "Checked against what exists.", text: "Unmet looks for products that already do it, and names the gap." },
 ];
 
 export function HowItWorks() {
@@ -79,25 +84,10 @@ export function HowItWorks() {
           </li>
         ))}
       </ol>
-    </section>
-  );
-}
-
-const TRUST = [
-  { lead: "Every claim links to a real post.", text: "If a quote can’t be traced to its page, it isn’t shown." },
-  { lead: "Ideas cite their complaints.", text: "Each one points to the people it helps and where to find the first ten." },
-  { lead: "Checked against what exists.", text: "Unmet looks for products that already do it, and names the gap." },
-];
-
-export function Trust() {
-  return (
-    <section id="trust" className={`${s.section} ${s.center}`}>
-      <h2 className={`fade-text ${s.h2}`}>Evidence first. Opinions labeled.</h2>
-      <p className={s.sub}>Most idea tools make things up. Unmet shows its work.</p>
-      <div className={s.trio}>
-        {TRUST.map((t) => (
-          <p key={t.lead} className={s.cap}>
-            <b>{t.lead}</b> {t.text}
+      <div className={s.notes}>
+        {NOTES.map((n) => (
+          <p key={n.lead} className={s.cap}>
+            <b>{n.lead}</b> {n.text}
           </p>
         ))}
       </div>
@@ -128,13 +118,13 @@ const PLANS = [
   {
     name: "Guest",
     note: "No account",
-    items: ["The live feed and every report", "Quick research (Low)", "Saved on this device"],
+    items: ["The live feed and every report", "Quick research", "Saved on this device"],
     cta: "Try it now",
   },
   {
     name: "Account",
     note: "Email and password",
-    items: ["Everything in Guest", "Deeper research: Medium and High", "Synced on every device"],
+    items: ["Everything in Guest", "Deeper research: Deep and Deepest", "Synced on every device"],
     cta: "Create a free account",
     featured: true,
   },
@@ -214,10 +204,10 @@ export function Faq() {
 export function Closing() {
   return (
     <footer className={s.closing}>
-      <h2 className={s.closingTitle}>Your next idea is already out there</h2>
-      <p className={s.closingSub}>Someone just complained about it.</p>
+      <h2 className={s.closingTitle}>Don’t spend months on the wrong idea.</h2>
+      <p className={s.closingSub}>Start with what people already complain about.</p>
       <Link href="/welcome" className={`glossy ${s.btn}`}>
-        Find it, free
+        Find my idea, free
       </Link>
       <nav aria-label="Footer" className={s.footer}>
         <span>Unmet · Ideas from real complaints, with the proof</span>

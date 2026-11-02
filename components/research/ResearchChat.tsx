@@ -22,7 +22,6 @@ const EXAMPLES = [
   "What do people hate about Calendly?",
   "What frustrates freelance designers?",
   "Problems dog owners have with daycare",
-  "Pain points of running a small restaurant",
 ];
 
 type Context = Pick<Card, "slug" | "headline" | "summary">;
@@ -308,7 +307,7 @@ function Reply({
 
   const followUps =
     cards.length >= 2
-      ? ["Compare #1 and #2", "Who already solves #1?", "Which is easiest to start?"]
+      ? ["Who already solves #1?", "Compare #1 and #2", "Which is easiest to start?"]
       : cards.length === 1
         ? ["Who already solves this?", "Find more evidence for #1"]
         : [];
@@ -348,8 +347,9 @@ function Reply({
             {allSaved ? <Check size={15} aria-hidden="true" /> : <BookmarkPlus size={15} aria-hidden="true" />}
             {allSaved ? "On your board" : cards.length > 1 ? `Add all ${cards.length} to board` : "Add to board"}
           </button>
-          {followUps.map((q) => (
-            <button key={q} type="button" className={s.example} onClick={() => onAsk(q)}>
+          {followUps.map((q, i) => (
+            // The first follow-up is the main next step: the one glossy button.
+            <button key={q} type="button" className={i === 0 ? `glossy ${s.nextStep}` : s.example} onClick={() => onAsk(q)}>
               {q}
             </button>
           ))}
@@ -365,7 +365,7 @@ function PastResearch({ onTry }: { onTry: (q: string) => void }) {
   if (!threads.length) {
     return (
       <div className={s.examples}>
-        {EXAMPLES.map((ex) => (
+        {EXAMPLES.slice(0, 4).map((ex) => (
           <button key={ex} type="button" className={s.example} onClick={() => onTry(ex)}>
             {ex}
           </button>

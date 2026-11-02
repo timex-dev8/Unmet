@@ -100,7 +100,7 @@ export default function MindView({ configured }: { configured: boolean }) {
     <div className={s.page}>
       <header className={s.head}>
         <h1 className={s.title}>Shape your idea</h1>
-        <p className={s.lead}>Describe it in your own words. Unmet turns it into a clear plan.</p>
+        <p className={s.lead}>Turn your idea into a clear plan before you build.</p>
       </header>
 
       <div className={s.grid}>

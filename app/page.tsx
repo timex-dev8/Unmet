@@ -1,6 +1,6 @@
 import Hero from "@/components/landing/Hero";
 import Nav from "@/components/landing/Nav";
-import { Closing, Faq, HowItWorks, Pricing, RecentProblems, SourceStrip, Trust } from "@/components/landing/Sections";
+import { Closing, Faq, HowItWorks, Pricing, RecentProblems, SourceStrip } from "@/components/landing/Sections";
 import JsonLd from "@/components/seo/JsonLd";
 import { getAllCards, getAllSlugs } from "@/lib/cards";
 import { readFeed } from "@/lib/feed";
@@ -53,9 +53,8 @@ export default async function Landing() {
       <main>
         <Hero example={example} fallbackSlug={fallbackSlug} />
         <SourceStrip />
-        <HowItWorks />
-        <Trust />
         <RecentProblems cards={recent} />
+        <HowItWorks />
         <Pricing />
         <Faq />
       </main>

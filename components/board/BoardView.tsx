@@ -38,14 +38,14 @@ export default function BoardView() {
       <main className={s.page}>
         <Header count={0} />
         <div className={s.empty}>
-          <p className={s.emptyTitle}>Your board is empty.</p>
+          <p className={s.emptyTitle}>Your board is empty. Every product you’ll build starts as a saved idea.</p>
           <p>Save ideas from the feed, research or Home. They land here as “Spotted”, then you move them forward as you learn.</p>
           <div className={s.emptyActions}>
-            <Link href="/app/feed" className="pill pill-dark">
-              Open the feed
-            </Link>
-            <Link href="/app/research" className="pill" style={{ background: "var(--white)" }}>
+            <Link href="/app/research" className="pill pill-dark">
               Start a research
+            </Link>
+            <Link href="/app/feed" className="pill" style={{ background: "var(--gray)" }}>
+              Open the feed
             </Link>
           </div>
         </div>

@@ -43,7 +43,7 @@ export default function Home({ cards, products = [] }: { cards: HomeIdea[]; prod
   return (
     <main className={s.home} data-wash>
       <section className={`${s.hero} rise`}>
-        <h1 className={s.title}>What do you want to explore?</h1>
+        <h1 className={s.title}>What problem do you want to own?</h1>
         <p className={s.lede}>Name a market or a product. Unmet finds what people complain about and turns it into ideas worth building.</p>
         <form className={s.composer} onSubmit={start}>
           <label htmlFor="home-q" className="sr-only">

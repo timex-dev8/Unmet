@@ -9,7 +9,6 @@ import s from "./landing.module.css";
 
 const sections = [
   { id: "how", label: "How it works" },
-  { id: "trust", label: "Why trust it" },
   { id: "pricing", label: "Pricing" },
 ];
 

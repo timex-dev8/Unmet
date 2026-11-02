@@ -25,7 +25,7 @@ export default function DepthPicker({
 }) {
   const [open, setOpen] = useState(false);
   const [blocked, setBlocked] = useState(false);
-  // Guests (no account) research on Low only; Medium and High need a free account.
+  // Guests (no account) research on Quick only; Deep and Deepest need a free account.
   const lowOnly = useLowOnly();
   const shown = lowOnly ? "low" : value;
   const pick = (d: Depth) => {
@@ -97,7 +97,7 @@ export default function DepthPicker({
               <p className={`${s.lock} ${blocked ? s.lockOn : ""}`}>
                 <Lock size={13} aria-hidden="true" />
                 <span>
-                  Medium and High need a free account.{" "}
+                  Deep and Deepest need a free account.{" "}
                   <Link href={`/welcome?next=${encodeURIComponent(typeof window === "undefined" ? "/app" : location.pathname)}`}>Sign in</Link>
                 </span>
               </p>
