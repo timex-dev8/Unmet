@@ -231,7 +231,7 @@ export function Closing() {
         <GlassTile icon={TrendingUp} size={56} line className={`${s.closingSide} ${s.c3}`} />
       </div>
       <h2 className={s.closingTitle}>Don’t spend months on the wrong idea.</h2>
-      <Link href="/welcome" className={`glossy ${s.btn}`}>
+      <Link href="/welcome/try" className={`glossy ${s.btn}`}>
         Find my idea, free
       </Link>
       <nav aria-label="Footer" className={s.footer}>

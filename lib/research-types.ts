@@ -19,9 +19,17 @@ export type Depth = "low" | "medium" | "high";
 
 /** Depth levels in slider order, with what each one does and how long it takes. */
 export const DEPTHS: { id: Depth; label: string; what: string; time: string }[] = [
-  { id: "low", label: "Quick", what: "Quick look", time: "about 20 seconds" },
+  { id: "low", label: "Quick", what: "Quick look", time: "about 30 seconds" },
   { id: "medium", label: "Deep", what: "Web, forums, reviews, Q&A, App Store", time: "about 45 seconds" },
   { id: "high", label: "Deepest", what: "Every source + competitor check", time: "1–2 minutes" },
+];
+
+/** The searches offered to a first-time visitor. A daily job runs them ahead of time (/api/cron/examples), so they open instantly. */
+export const EXAMPLE_SEARCHES = [
+  "I don't know what to build, give me ideas",
+  "What do people hate about Calendly?",
+  "I want to solve problems for barbershops",
+  "What do small shop owners struggle with?",
 ];
 
 export type ChatTurn = { role: "user" | "assistant"; text: string };
@@ -37,5 +45,5 @@ export type ResearchRequest = {
 /** Streamed back one JSON object per line. */
 export type ResearchEvent =
   | { type: "step"; label: string }
-  | { type: "result"; answer: string; cards: Card[]; sourceCount: number; mix?: string; cached?: boolean }
+  | { type: "result"; answer: string; cards: Card[]; sourceCount: number; mix?: string; suggestions?: string[]; cached?: boolean }
   | { type: "error"; message: string };

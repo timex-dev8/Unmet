@@ -8,6 +8,7 @@ import { CRITIQUE_SYSTEM, GROUP_SYSTEM } from "./prompts";
 
 const GroupSchema = z.object({
   answer: z.string(),
+  whyTop: z.string(),
   notFound: z.string(),
   problems: z
     .array(
@@ -21,19 +22,20 @@ const GroupSchema = z.object({
         competition: z.object({ value: z.number().min(0).max(100), reason: z.string() }),
         difficulty: z.object({ value: z.number().min(0).max(100), reason: z.string() }),
         today: z.string(),
+        isTop: z.boolean(),
       }),
     )
-    .max(6),
+    .max(8),
 });
 
 export type DraftProblem = z.infer<typeof GroupSchema>["problems"][number];
 
-export async function groupComplaints(complaints: Complaint[], sources: ResearchSource[], ctx: { topic: string; request: string }) {
+export async function groupComplaints(complaints: Complaint[], sources: ResearchSource[], ctx: { topic: string; request: string; segment: string }) {
   const byId = new Map(sources.map((s) => [s.id, s]));
   return generateJson(GroupSchema, {
     system: GROUP_SYSTEM,
     timeoutMs: 45_000,
-    prompt: `Topic: ${ctx.topic}\nThe person asked: ${ctx.request}\nCategories: ${CATEGORIES.join(", ")}\n\nVerified complaints:\n${complaints
+    prompt: `Topic: ${ctx.topic}\nThe person asked: ${ctx.request}\nSegment: ${ctx.segment}\nCategories: ${CATEGORIES.join(", ")}\n\nVerified complaints:\n${complaints
       .map((c) => {
         const s = byId.get(c.sourceId)!;
         return `${c.id} | source ${c.sourceId} (${s.site}) | ${c.who} | pain: ${c.pain} | “${c.quote}”`;

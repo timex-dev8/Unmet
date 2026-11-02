@@ -4,7 +4,7 @@ import { searchProducts } from "@/lib/exa";
 import { generateJson } from "@/lib/llm";
 import type { Card, Idea, IdeaLens } from "@/lib/types";
 import type { Complaint } from "./extract";
-import { IDEAS_SYSTEM } from "./prompts";
+import { IDEAS_BATCH_SYSTEM, IDEAS_SYSTEM } from "./prompts";
 import { productName } from "./competitors";
 import { kindOf } from "./quality";
 
@@ -107,8 +107,34 @@ export async function generateIdeas(card: Card, complaints: Complaint[], check: 
   const focus = product
     ? `\n\nThese complaints are from users of ${product}. Prefer ideas that win them over: a wedge, an unbundled part done better, or a version made for a group ${product} serves badly. Name ${product} in the wedge.`
     : "";
-  const out = await generateJson(IdeasSchema, { system: IDEAS_SYSTEM, timeoutMs: 40_000, prompt: ideasPrompt(card, complaints) + focus });
-  const drafted = finishIdeas(out.ideas, complaints, card).slice(0, 3);
+  const out = await generateJson(IdeasSchema, {
+    system: IDEAS_SYSTEM,
+    light: true,
+    timeoutMs: 40_000,
+    prompt: ideasPrompt(card, complaints) + focus,
+  });
+  // Prefer ideas backed by two complaints; a thin card still gets its best one-complaint idea.
+  const backed = finishIdeas(out.ideas, complaints, card);
+  const drafted = (backed.length ? backed : finishIdeas(out.ideas, complaints, card, 1)).slice(0, 3);
   if (check) await Promise.all(drafted.map(checkBuilt));
   return drafted.map((d) => d.idea).sort((a, b) => b.score - a.score);
+}
+
+const BatchSchema = z.object({ ideas: z.array(IdeaDraft.extend({ problem: z.string() })).max(8) });
+
+/** One idea each for the remaining cards, in a single AI call so a search doesn't use up the free model's rate limit. Sets `card.ideas`. */
+export async function generateOneIdeaEach(cards: Card[], complaintsOf: (card: Card) => Complaint[]) {
+  if (!cards.length) return;
+  const out = await generateJson(BatchSchema, {
+    system: IDEAS_BATCH_SYSTEM,
+    light: true,
+    timeoutMs: 40_000,
+    prompt: cards.map((card, i) => `## Problem P${i + 1}\n${ideasPrompt(card, complaintsOf(card))}`).join("\n\n"),
+  });
+  cards.forEach((card, i) => {
+    // Checked against this card's own complaints, so an idea can't land on the wrong problem.
+    const drafts = out.ideas.filter((d) => d.problem === `P${i + 1}`);
+    const best = finishIdeas(drafts, complaintsOf(card), card, 1)[0];
+    if (best) card.ideas = [best.idea];
+  });
 }

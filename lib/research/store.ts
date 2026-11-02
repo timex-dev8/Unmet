@@ -19,16 +19,16 @@ const memHits: { visitor: string; isUser: boolean; cost: number; at: number }[] 
 
 const warn = (what: string, err: unknown) => console.warn(`[store] ${what}:`, err instanceof Error ? err.message : err);
 
-export async function getCached(key: string): Promise<Result | null> {
+export async function getCached(key: string, maxAgeMs = CACHE_MS): Promise<Result | null> {
   if (!supabaseConfigured()) {
     const hit = memCache.get(key);
-    return hit && Date.now() - hit.at < CACHE_MS ? hit.value : null;
+    return hit && Date.now() - hit.at < maxAgeMs ? hit.value : null;
   }
   const { data, error } = await db()
     .from("research_cache")
     .select("result")
     .eq("key", key)
-    .gte("created_at", new Date(Date.now() - CACHE_MS).toISOString())
+    .gte("created_at", new Date(Date.now() - maxAgeMs).toISOString())
     .maybeSingle();
   if (error) warn("cache read", error);
   return (data?.result as Result | undefined) ?? null;

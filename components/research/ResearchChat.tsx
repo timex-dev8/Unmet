@@ -9,20 +9,13 @@ import ShareButton from "@/components/card/ShareButton";
 import { IdeaSections } from "@/components/idea/IdeaDetail";
 import { digDeeperHref, ideaHref } from "@/lib/links";
 import { createThread, newId, updateThread, useStoreReady, useThread, useThreads, type ChatMessage } from "@/lib/research-store";
-import type { Depth, ResearchEvent } from "@/lib/research-types";
+import { EXAMPLE_SEARCHES, type Depth, type ResearchEvent } from "@/lib/research-types";
 import { authHeaders, useGuest, useLowOnly, useUser } from "@/lib/auth";
 import { useSaved } from "@/lib/saved";
 import type { Card } from "@/lib/types";
 import DepthPicker from "./DepthPicker";
 import ResearchCard from "./ResearchCard";
 import s from "./research.module.css";
-
-const EXAMPLES = [
-  "I want to solve problems for barbershops",
-  "What do people hate about Calendly?",
-  "What frustrates freelance designers?",
-  "Problems dog owners have with daycare",
-];
 
 type Context = Pick<Card, "slug" | "headline" | "summary">;
 
@@ -133,7 +126,14 @@ export default function ResearchChat({
           const event = JSON.parse(line) as ResearchEvent;
           if (event.type === "step") patch(reply.id, (m) => ({ steps: [...(m.steps ?? []), event.label] }));
           else if (event.type === "result")
-            patch(reply.id, () => ({ text: event.answer, cards: event.cards, sourceCount: event.sourceCount, mix: event.mix, pending: false }));
+            patch(reply.id, () => ({
+              text: event.answer,
+              cards: event.cards,
+              sourceCount: event.sourceCount,
+              mix: event.mix,
+              suggestions: event.suggestions,
+              pending: false,
+            }));
           else patch(reply.id, () => ({ text: event.message, error: true, pending: false }));
         }
       }
@@ -186,12 +186,10 @@ export default function ResearchChat({
       <main className={`${s.chat} ${empty ? s.chatEmpty : ""}`}>
         {empty ? (
           <div className={s.intro} data-wash>
-            <span className={s.badge}>
-              <Sparkles size={14} aria-hidden="true" />
-              AI research
-            </span>
-            <h1 className={s.title}>{about ? `Dig into “${about.headline}”` : "Research"}</h1>
-            <p className={s.lead}>Name a market or a product. Unmet reads recent posts and turns real complaints into ideas, with sources.</p>
+            <h1 className={s.title}>{about ? `Dig into “${about.headline}”` : "What do you want to find out?"}</h1>
+            <p className={s.lead}>
+              Ask about anything, or say you have no idea yet. You’ll get real problems people complain about, and ideas to solve them.
+            </p>
           </div>
         ) : (
           <div className={s.thread} aria-live="polite">
@@ -200,7 +198,15 @@ export default function ResearchChat({
               m.role === "user" ? (
                 <UserBubble key={m.id} text={m.text} />
               ) : (
-                <Reply key={m.id} m={m} isLast={m.id === lastAnswerId} onAsk={(q) => send(q)} onOpen={setOpenCard} openSlug={openCard?.slug} />
+                <Reply
+                  key={m.id}
+                  m={m}
+                  isLast={m.id === lastAnswerId}
+                  firstQuery={messages.find((x) => x.role === "user")?.text ?? ""}
+                  onAsk={(q) => send(q)}
+                  onOpen={setOpenCard}
+                  openSlug={openCard?.slug}
+                />
               ),
             )}
             <div ref={endRef} />
@@ -221,10 +227,10 @@ export default function ResearchChat({
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onKeyDown}
-              placeholder={empty ? "I want to solve problems for barbershops" : "Ask a follow-up or explore something new"}
+              placeholder={empty ? "I don’t know what to build, give me ideas" : "Ask a follow-up or explore something new"}
               disabled={!configured}
             />
-            <DepthPicker value={depth} onChange={setDepth} disabled={busy} placement={empty ? "down" : "up"} />
+            {!lowOnly && <DepthPicker value={depth} onChange={setDepth} disabled={busy} placement={empty ? "down" : "up"} />}
             <button type="submit" className={`glossy ${s.send}`} disabled={!input.trim() || busy || !configured} aria-label="Send">
               {busy ? <LoaderCircle size={20} className="spin" aria-hidden="true" /> : <ArrowUp size={20} aria-hidden="true" />}
             </button>
@@ -290,12 +296,14 @@ function StepList({ steps, pending }: { steps: string[]; pending?: boolean }) {
 function Reply({
   m,
   isLast,
+  firstQuery,
   onAsk,
   onOpen,
   openSlug,
 }: {
   m: ChatMessage;
   isLast: boolean;
+  firstQuery: string;
   onAsk: (q: string) => void;
   onOpen: (card: Card) => void;
   openSlug?: string;
@@ -305,12 +313,26 @@ function Reply({
   const { save, isSaved } = useSaved();
   const allSaved = cards.length > 0 && cards.every((c) => isSaved(c.slug));
 
-  const followUps =
-    cards.length >= 2
-      ? ["Who already solves #1?", "Compare #1 and #2", "Which is easiest to start?"]
-      : cards.length === 1
-        ? ["Who already solves this?", "Find more evidence for #1"]
-        : [];
+  const niche = cards.filter((c) => c.signal === "niche");
+  const popular = cards.filter((c) => c.signal !== "niche");
+  const both = niche.length > 0 && popular.length > 0;
+  const suggestions = m.suggestions ?? [];
+  const followUps = [
+    ...(firstQuery ? [`Find more niche problems: ${firstQuery}`] : []),
+    ...(cards.length > 1 ? ["Which is easiest to build?"] : []),
+    ...suggestions,
+  ];
+  const showFootnote = !m.pending && !m.error && m.sourceCount && cards.length > 0;
+  const group = (list: Card[], heading: string | null, offset: number) => (
+    <>
+      {heading && <h2 className={s.groupTitle}>{heading}</h2>}
+      <div className={s.cards}>
+        {list.map((card, i) => (
+          <ResearchCard key={card.slug} card={card} index={offset + i} onOpen={onOpen} selected={card.slug === openSlug} />
+        ))}
+      </div>
+    </>
+  );
 
   return (
     <div className={s.reply}>
@@ -331,16 +353,18 @@ function Reply({
         </p>
       )}
       {m.text && <p className={m.error ? s.error : s.answer}>{m.text}</p>}
-      {cards.length > 0 && (
-        <div className={s.cards}>
-          {cards.map((card, i) => (
-            <ResearchCard key={card.slug} card={card} index={i} onOpen={onOpen} selected={card.slug === openSlug} />
+      {popular.length > 0 && group(popular, both ? "Main problems" : null, 0)}
+      {niche.length > 0 && group(niche, "Niche problems: smaller and less proven", popular.length)}
+      {showFootnote ? <p className={s.footnote}>Sources from the last 12 months; every quote is checked against its source.</p> : null}
+      {!m.pending && !m.error && cards.length === 0 && suggestions.length > 0 && (
+        <div className={s.followUps}>
+          {suggestions.map((q) => (
+            <button key={q} type="button" className={s.example} onClick={() => onAsk(q)}>
+              {q}
+            </button>
           ))}
         </div>
       )}
-      {!m.pending && !m.error && m.sourceCount ? (
-        <p className={s.footnote}>Sources from the last 12 months; every quote is checked against its source.</p>
-      ) : null}
       {isLast && cards.length > 0 && (
         <div className={s.followUps}>
           <button type="button" className={s.addAll} onClick={() => cards.forEach(save)} disabled={allSaved}>
@@ -365,7 +389,7 @@ function PastResearch({ onTry }: { onTry: (q: string) => void }) {
   if (!threads.length) {
     return (
       <div className={s.examples}>
-        {EXAMPLES.slice(0, 4).map((ex) => (
+        {EXAMPLE_SEARCHES.map((ex) => (
           <button key={ex} type="button" className={s.example} onClick={() => onTry(ex)}>
             {ex}
           </button>

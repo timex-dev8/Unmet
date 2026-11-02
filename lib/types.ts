@@ -83,7 +83,7 @@ export type Card = {
   report?: Report;
   ideas?: Idea[];
   sample?: boolean; // placeholder content, shown with a "Sample" tag
-  signal?: "early"; // backed by only 2 sources: shown as an early signal, not a proven problem
+  signal?: "early" | "niche"; // early: only 2 sources, or one site. niche: a single source, worth a conversation but unproven
   fresh?: boolean; // built on demand from a search
 };
 

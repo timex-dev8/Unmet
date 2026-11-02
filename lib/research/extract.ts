@@ -65,6 +65,7 @@ export async function extractComplaints(
     opts.signal?.throwIfAborted(); // the visitor left: don't start more batches
     const out = await generateJson(ExtractSchema, {
       system: EXTRACT_SYSTEM,
+      light: true,
       timeoutMs: 40_000,
       signal: opts.signal,
       prompt: `Topic: ${opts.topic}\nAudience: ${opts.audience}\n\nSources:\n${batch

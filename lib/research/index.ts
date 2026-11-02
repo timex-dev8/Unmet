@@ -1,14 +1,14 @@
 import "server-only";
 import { searchWeb } from "@/lib/exa";
 import { searchHN } from "@/lib/hn";
-import type { Depth, ResearchEvent, ResearchRequest, ResearchSource } from "@/lib/research-types";
+import { EXAMPLE_SEARCHES, type Depth, type ResearchEvent, type ResearchRequest, type ResearchSource } from "@/lib/research-types";
 import { formatMrr } from "@/lib/text";
 import type { Card } from "@/lib/types";
-import { buildCard, kindMix, medianAgeMonths, WINDOW_DAYS } from "./build";
+import { buildCard, kindMix, WINDOW_DAYS } from "./build";
 import { competitionFrom, findCompetitors, startupsFor } from "./competitors";
 import { extractComplaints, type Complaint } from "./extract";
 import { critique, groupComplaints } from "./group";
-import { generateIdeas } from "./ideas";
+import { generateIdeas, generateOneIdeaEach } from "./ideas";
 import { makePlan } from "./plan";
 import { filterSources, pickDiverse } from "./quality";
 import { getCached, saveIdeas, setCached } from "./store";
@@ -21,14 +21,14 @@ import { searchStackExchange } from "./sources/stackexchange";
 
 // Research pipeline: plan → gather from several services → quality filter → read sources for
 // first-hand complaints (quotes checked) → group into problems → score from real signals
-// → (High) competitor check + strict review.
+// → (High) competitor check + strict review. Every search ends with problems and ideas, or with searches to try next.
 
 const DAY = 86400;
 /** In gap mode the search for the product itself looks back this far (24 months). */
 const PRODUCT_WINDOW_DAYS = 730;
+const EXAMPLE_CACHE_MS = 30 * 3600 * 1000;
 
 type Config = {
-  exaType: "lite" | "auto";
   openAngles: number;
   communityAngles: number;
   /** Exa searches restricted to reddit.com. Off (0) for now: Exa returns no Reddit text, so these came back empty. */
@@ -46,22 +46,20 @@ type Config = {
 
 const DEPTH: Record<Depth, Config> = {
   low: {
-    exaType: "lite",
     openAngles: 2,
-    communityAngles: 0,
+    communityAngles: 1,
     reddit: 0,
-    fullText: false,
+    fullText: true,
     stack: false,
     apps: false,
     github: false,
     maxSources: 24,
     batchSize: 12,
-    minSources: 2,
-    minSites: 1,
+    minSources: 3,
+    minSites: 2,
     high: false,
   },
   medium: {
-    exaType: "auto",
     openAngles: 2,
     communityAngles: 2,
     reddit: 0,
@@ -76,7 +74,6 @@ const DEPTH: Record<Depth, Config> = {
     high: false,
   },
   high: {
-    exaType: "auto",
     openAngles: 4,
     communityAngles: 2,
     reddit: 0,
@@ -104,13 +101,15 @@ const NAMES: Record<ResearchSource["origin"], string> = {
 };
 
 /** `signal` aborts when the visitor leaves: the pipeline stops between steps (and inside AI calls). */
-export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent) => void, signal?: AbortSignal) {
+export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent) => void, signal?: AbortSignal, fresh = false) {
   const base = DEPTH[req.depth];
   const check = () => signal?.throwIfAborted();
   const isFirst = req.history.length === 0;
-  const key = `${req.depth}:${req.message.toLowerCase().replace(/\s+/g, " ").trim()}`;
+  const key = `v2:${req.depth}:${req.message.toLowerCase().replace(/\s+/g, " ").trim()}`;
   // Same first question at the same depth in the last 6 hours: answer from the cache (lib/research/store.ts).
-  const hit = isFirst ? await getCached(key) : null;
+  // The example searches are refreshed by a daily job, so they keep longer. `fresh` is that job, skipping the cache.
+  const isExample = req.depth === "low" && EXAMPLE_SEARCHES.some((e) => e.toLowerCase() === req.message.trim().toLowerCase());
+  const hit = isFirst && !fresh ? await getCached(key, isExample ? EXAMPLE_CACHE_MS : undefined) : null;
   if (hit) {
     emit({ ...hit, cached: true });
     return;
@@ -125,8 +124,8 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     return;
   }
 
-  // Gap mode lets Exa rank by meaning at every depth: new products have few reviews, so keywords alone miss them.
-  const cfg: Config = plan.product ? { ...base, exaType: "auto" } : base;
+  // Discover mode casts a wide net, one search per group of people.
+  const cfg: Config = plan.mode === "discover" ? { ...base, openAngles: Math.max(base.openAngles, 4) } : base;
 
   const now = Math.floor(Date.now() / 1000);
   const since = now - WINDOW_DAYS * DAY;
@@ -150,7 +149,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   const useGithub = cfg.github && plan.segment !== "consumer" && plan.githubPhrase.length > 0;
 
   const jobs: { name: string; run: Promise<Omit<ResearchSource, "id">[]> }[] = [
-    ...open.map((a) => ({ name: NAMES.web, run: searchWeb(a.query, a.objective, { since: sinceIso, type: cfg.exaType, fullText: cfg.fullText }) })),
+    ...open.map((a) => ({ name: NAMES.web, run: searchWeb(a.query, a.objective, { since: sinceIso, type: "auto", fullText: cfg.fullText }) })),
     ...(plan.product
       ? [
           {
@@ -182,8 +181,8 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
         origin: "reddit",
       }),
     })),
-    // Hacker News rarely discusses consumer topics (pets, salons…), so it only joins those in High.
-    ...(plan.segment !== "consumer" || cfg.high ? [{ name: NAMES.hn, run: searchHN(plan.hnQuery, since, cfg.high ? 15 : 10) }] : []),
+    // Hacker News leans technical, so outside developer topics it only joins in High.
+    ...(plan.segment === "developer" || cfg.high ? [{ name: NAMES.hn, run: searchHN(plan.hnQuery, since, cfg.high ? 15 : 10) }] : []),
     // Bluesky on every level: free, fast, real people. It matches keywords, so use short queries.
     { name: NAMES.bluesky, run: searchBluesky([plan.hnQuery, plan.communityQuery.split(" ").slice(0, 4).join(" ")], sinceIso) },
     ...(useDiscourse ? [{ name: NAMES.discourse, run: searchDiscourse(plan.hnQuery, sinceIso) }] : []),
@@ -224,9 +223,10 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   if (sources.length === 0) {
     emit({
       type: "result",
-      answer: `I couldn't find recent first-hand posts about “${plan.topic}”. Try different wording or a narrower audience.`,
+      answer: "I couldn't find recent posts from people describing this. These searches may work better:",
       cards: [],
       sourceCount: 0,
+      suggestions: plan.suggestions,
     });
     return;
   }
@@ -246,13 +246,14 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     type: "step",
     label: `${extracted.complaints.length} verified complaints from ${withComplaints.size} sources (${extracted.offTopic} off-topic, ${extracted.secondHand} not first-hand, ${extracted.unverified} quotes failed the check)`,
   });
-  if (extracted.complaints.length < 2) {
+  if (extracted.complaints.length < 1) {
     emit({
       type: "result",
-      answer: `I read ${sources.length} recent sources about “${plan.topic}” but found too few first-hand complaints to form a problem. Try a more specific audience or problem.`,
+      answer: `I read ${sources.length} recent sources but found no first-hand complaints about this. These searches may work better:`,
       cards: [],
       sourceCount: sources.length,
-      mix: mixLine(sources, now),
+      mix: mixLine(sources),
+      suggestions: plan.suggestions,
     });
     return;
   }
@@ -260,7 +261,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   // 5. Group into problems (+ strict review in High)
   check();
   emit({ type: "step", label: `Grouping ${extracted.complaints.length} complaints into problems` });
-  const grouped = await groupComplaints(extracted.complaints, sources, { topic: plan.topic, request: req.message });
+  const grouped = await groupComplaints(extracted.complaints, sources, { topic: plan.topic, request: req.message, segment: plan.segment });
   let problems = grouped.problems;
   if (cfg.high && problems.length > 1) {
     emit({ type: "step", label: "Reviewing the problems: dropping generic ones, merging duplicates" });
@@ -268,20 +269,23 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   }
   check();
 
-  // 6. Build cards with scores from real signals. Problems that meet the bar come first;
-  // ones backed by exactly 2 sources follow as clearly tagged "early signals".
+  // 6. Build cards with scores from real signals, in three tiers: strong (meets the depth's bar), early (2 sources or one
+  // site) and niche (a single source). Each problem gets the strongest tier it qualifies for, and weaker ones are tagged.
   const opts = { topic: plan.topic, now, minSources: cfg.minSources, minSites: cfg.minSites };
   const strong: Card[] = [];
   const early: Card[] = [];
+  const niche: Card[] = [];
   const complaintsOf = new Map<string, Complaint[]>(); // card slug → its verified complaints (for ideas)
   const byId = new Map(extracted.complaints.map((c) => [c.id, c]));
+  let topSlug = "";
   for (const p of problems) {
     let card = buildCard(p, extracted.complaints, sources, opts);
     if (card) strong.push(card);
-    else if (cfg.minSources > 2) {
-      card = buildCard(p, extracted.complaints, sources, { ...opts, minSources: 2, minSites: 1 });
-      if (card) early.push((card = { ...card, signal: "early" }));
-    }
+    else if ((card = buildCard(p, extracted.complaints, sources, { ...opts, minSources: 2, minSites: 1 })))
+      early.push((card = { ...card, signal: "early" }));
+    else if ((card = buildCard(p, extracted.complaints, sources, { ...opts, minSources: 1, minSites: 1 })))
+      niche.push((card = { ...card, signal: "niche" }));
+    if (card && p.isTop && card.signal !== "niche") topSlug = card.slug;
     if (card)
       complaintsOf.set(
         card.slug,
@@ -289,7 +293,10 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
       );
   }
   const byDemand = (a: Card, b: Card) => b.scores.demand.value - a.scores.demand.value;
-  const cards = [...strong.sort(byDemand), ...early.sort(byDemand)].slice(0, 6);
+  const cards = [...strong.sort(byDemand), ...early.sort(byDemand)]
+    .sort((a, b) => Number(b.slug === topSlug) - Number(a.slug === topSlug)) // the AI's top pick leads, so the answer and first card agree
+    .slice(0, 5)
+    .concat(niche.sort(byDemand).slice(0, 3));
 
   // 7. High: who already solves the top problems (web + TrustMRR verified revenue)
   if (cfg.high && cards.length) {
@@ -315,54 +322,51 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   }
 
   // 8. Ideas: turn the strongest problems into product ideas (each cites its complaints).
-  // Medium and High also check whether each idea already exists (one Exa search per idea).
-  const ideaCards = cards.filter((c) => (complaintsOf.get(c.slug)?.length ?? 0) >= 2).slice(0, cfg.high ? 4 : base.exaType === "lite" ? 2 : 3);
-  if (ideaCards.length) {
+  // Deep and Deepest give the strongest problems several ideas and check whether each already exists (one Exa search per idea).
+  // Every other card (all of them on Quick) gets one idea, from a single AI call.
+  const ideaCards = cards.filter((c) => (complaintsOf.get(c.slug)?.length ?? 0) >= 2).slice(0, cfg.high ? 4 : req.depth === "low" ? 0 : 3);
+  const singleCards = cards.filter((c) => !ideaCards.includes(c));
+  if (cards.length) {
     check();
-    emit({ type: "step", label: `Turning ${ideaCards.length === 1 ? "the problem" : `the top ${ideaCards.length} problems`} into product ideas` });
-    await Promise.all(
-      ideaCards.map(async (card) => {
-        card.ideas = await generateIdeas(card, complaintsOf.get(card.slug)!, base.exaType !== "lite", plan.product).catch((err) => {
-          console.warn("[research] ideas failed:", err instanceof Error ? err.message : err);
-          return undefined;
-        });
+    emit({ type: "step", label: `Turning ${cards.length === 1 ? "the problem" : `${cards.length} problems`} into product ideas` });
+    const onError = (err: unknown) => {
+      console.warn("[research] ideas failed:", err instanceof Error ? err.message : err);
+      return undefined;
+    };
+    await Promise.all([
+      ...ideaCards.map(async (card) => {
+        card.ideas = await generateIdeas(card, complaintsOf.get(card.slug)!, true, plan.product).catch(onError);
       }),
-    );
+      generateOneIdeaEach(singleCards, (card) => complaintsOf.get(card.slug)!).catch(onError),
+    ]);
   }
 
   if (cards.length === 0) {
     emit({
       type: "result",
-      answer: `I read ${sources.length} recent sources and found ${extracted.complaints.length} first-hand complaints about “${plan.topic}”, but none came up in two different sources yet, so there’s no card.${req.depth === "high" ? " Try a more specific audience." : " Try Medium or High to search more places."}`,
+      answer: `I read ${sources.length} recent sources but found no first-hand complaints about this that I could turn into a problem. These searches may work better:`,
       cards: [],
       sourceCount: sources.length,
-      mix: mixLine(sources, now),
+      mix: mixLine(sources),
+      suggestions: plan.suggestions,
     });
     return;
   }
 
-  const dropped = problems.length - cards.length;
-  const earlyCount = cards.filter((c) => c.signal === "early").length;
-  const notes = [
-    grouped.answer,
-    earlyCount
-      ? `${earlyCount === cards.length ? "All" : earlyCount} of these ${earlyCount === 1 ? "is an early signal" : "are early signals"}: backed by only two sources, or by posts from a single site.`
-      : "",
-    dropped > 0 ? `${dropped} more ${dropped === 1 ? "problem was" : "problems were"} left out for having too little independent evidence.` : "",
-    grouped.notFound,
-  ].filter(Boolean);
+  const answer = [grouped.answer, topSlug ? grouped.whyTop : "", grouped.notFound].filter(Boolean).join(" ");
 
   check();
-  const result = { type: "result" as const, answer: notes.join(" "), cards, sourceCount: sources.length, mix: mixLine(sources, now) };
+  const result = { type: "result" as const, answer, cards, sourceCount: sources.length, mix: mixLine(sources), suggestions: plan.suggestions };
   // Save before answering so a share link works the moment the cards appear.
-  await Promise.all([isFirst && cards.length ? setCached(key, result) : null, saveIdeas(cards)]);
+  // A result missing ideas (the AI was busy) isn't cached, so the next person asking gets a complete one.
+  const complete = cards.every((c) => c.ideas?.length);
+  await Promise.all([isFirst && complete ? setCached(key, result) : null, saveIdeas(cards)]);
   console.log(
-    `[research] ${req.depth} "${plan.topic}": ${raw.length} found, ${sources.length} kept, ${extracted.complaints.length} complaints, ${cards.length} cards`,
+    `[research] ${req.depth} "${plan.topic}": ${raw.length} found, ${sources.length} kept, ${extracted.complaints.length} complaints, ${cards.length} cards, ${jobs.length} searches`,
   );
   emit(result);
 }
 
-function mixLine(sources: ResearchSource[], now: number) {
-  const age = medianAgeMonths(sources, now);
-  return `Read ${sources.length} sources: ${kindMix(sources)}${age !== null ? ` · median age ${age === 0 ? "under a month" : `${age} ${age === 1 ? "month" : "months"}`}` : ""}`;
+function mixLine(sources: ResearchSource[]) {
+  return `Read ${sources.length} sources: ${kindMix(sources)}`;
 }

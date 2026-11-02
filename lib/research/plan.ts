@@ -6,7 +6,7 @@ import { PLAN_SYSTEM } from "./prompts";
 import { STACK_SITES, TRUSTMRR_CATEGORIES } from "./sources/sites";
 
 const PlanSchema = z.object({
-  mode: z.enum(["search", "gap", "answer"]),
+  mode: z.enum(["search", "gap", "answer", "discover"]),
   product: z.string().describe("Only for mode 'gap': the product or product category named; otherwise empty"),
   answer: z.string().describe("Only for mode 'answer'; otherwise empty"),
   topic: z.string(),
@@ -28,6 +28,7 @@ const PlanSchema = z.object({
   appTerms: z.array(z.string()).max(2),
   githubPhrase: z.string(),
   trustmrrCategory: z.string(),
+  suggestions: z.array(z.string()).max(3).describe("Searches to try next; empty only for mode 'answer'"),
 });
 
 export type Plan = z.infer<typeof PlanSchema>;
@@ -52,7 +53,7 @@ export async function makePlan(req: ResearchRequest, signal?: AbortSignal): Prom
     .filter(Boolean)
     .join("\n\n");
 
-  const plan = await generateJson(PlanSchema, { system: PLAN_SYSTEM, prompt, timeoutMs: 20_000, signal });
+  const plan = await generateJson(PlanSchema, { system: PLAN_SYSTEM, prompt, timeoutMs: 20_000, signal, light: true });
 
   // Keep only allowed values and clean every query.
   return {

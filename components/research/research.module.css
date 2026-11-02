@@ -23,18 +23,6 @@
   padding: 24px 20px 28px;
   text-align: center;
 }
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--navy);
-  background: var(--tint);
-  border-radius: var(--radius-pill);
-  padding: 6px 12px;
-  margin-bottom: 18px;
-}
 .title {
   margin: 0 auto 12px;
   max-width: 14em;
@@ -129,6 +117,12 @@
   color: var(--early-ink);
   font-size: 15px;
 }
+.groupTitle {
+  margin: 4px 0 -4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+}
 .footnote {
   margin: 0;
   font-size: 13px;
@@ -160,11 +154,6 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-.cardTag {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--muted);
 }
 .cardFoot {
   display: flex;
@@ -200,6 +189,34 @@
 .cardTitle a:hover {
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+.cardSummary {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.cardIdea {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--tint);
+}
+.cardIdeaLabel {
+  margin: 0 0 2px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.cardIdeaTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--navy);
+}
+.cardIdeaPitch {
+  margin: 4px 0 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ink-2);
 }
 .cardQuote {
   margin: 0;
@@ -450,15 +467,6 @@
     }
   }
 }
-.early {
-  margin-left: auto;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--early-ink);
-  background: var(--early-tint);
-  border-radius: var(--radius-pill);
-  padding: 3px 8px;
-}
 
 /* v2: depth pill, folded steps */
 .stepsFold summary {
@@ -506,7 +514,6 @@
 
 /* Verdict on compact research cards ("Is this worth building?") */
 .verdictTag {
-  margin-left: auto;
   font-size: 12px;
   font-weight: 500;
   padding: 3px 10px;
@@ -517,9 +524,6 @@
 .verdictStrong {
   background: var(--primary);
   color: var(--white);
-}
-.early + .verdictTag {
-  margin-left: 0;
 }
 
 /* ---------- New research: your past research under the composer ---------- */

@@ -32,14 +32,6 @@ function monthly(dates: number[], now: number) {
   return buckets;
 }
 
-export function medianAgeMonths(sources: ResearchSource[], now: number) {
-  const ages = sources
-    .map((s) => (s.postedAt ? (now - Date.parse(s.postedAt) / 1000) / (30.5 * DAY) : NaN))
-    .filter((a) => !Number.isNaN(a))
-    .sort((a, b) => a - b);
-  return ages.length ? Math.max(0, Math.round(ages[Math.floor(ages.length / 2)])) : null;
-}
-
 export const KIND_LABEL: Record<SourceKind, [string, string]> = {
   forum: ["forum post", "forum posts"],
   qa: ["Q&A question", "Q&A questions"],
@@ -148,7 +140,7 @@ export function buildCard(
         value: demand,
         label: label(demand),
         basis: "data",
-        reason: `${used.length} sources on ${sites.size} ${sites.size === 1 ? "site" : "sites"}${engagementNote}, last 12 months`,
+        reason: `${used.length} ${used.length === 1 ? "source" : "sources"} on ${sites.size} ${sites.size === 1 ? "site" : "sites"}${engagementNote}, last 12 months`,
       },
       competition: { value: p.competition.value, label: label(p.competition.value), basis: "ai", reason: p.competition.reason },
       difficulty: { value: p.difficulty.value, label: label(p.difficulty.value), basis: "ai", reason: p.difficulty.reason },

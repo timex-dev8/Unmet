@@ -15,6 +15,7 @@ export type ChatMessage = {
   cards?: Card[];
   sourceCount?: number;
   mix?: string;
+  suggestions?: string[];
   error?: boolean;
   pending?: boolean;
 };

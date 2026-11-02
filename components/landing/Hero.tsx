@@ -36,7 +36,7 @@ export default function Hero({ example }: { example: HeroExample }) {
           idea does.
         </h1>
         <p className={s.lede}>See what people complain about, and whether it’s worth building.</p>
-        <Link href="/welcome" className={`glossy ${s.btn} ${s.cta}`}>
+        <Link href="/welcome/try" className={`glossy ${s.btn} ${s.cta}`}>
           Find your first idea
           <ArrowRight size={18} aria-hidden="true" />
         </Link>

@@ -14,7 +14,7 @@ import s from "./welcome.module.css";
 
 // The way into Unmet: sign in (password or email link), or continue as a guest. Guests can use
 // everything except deeper research. Once someone is in, they go to onboarding the first time and
-// straight to where they were heading after that.
+// straight to where they were heading after that. Guests skip onboarding.
 export default function Welcome({ next, failed }: { next: string; failed: boolean }) {
   const router = useRouter();
   const user = useUser();
@@ -30,8 +30,8 @@ export default function Welcome({ next, failed }: { next: string; failed: boolea
     // proxy.ts would send them straight back here.
     if (guest === true) continueAsGuest();
     const to = safeNext(next); // checked again here: router.replace("/\\evil.com") would leave the site
-    router.replace(interests.onboarded ? to : `/welcome/start?next=${encodeURIComponent(to)}`);
-  }, [ready, guest, interests.onboarded, next, router]);
+    router.replace(interests.onboarded || !user ? to : `/welcome/start?next=${encodeURIComponent(to)}`);
+  }, [ready, guest, user, interests.onboarded, next, router]);
 
   return (
     <div className={s.page}>
