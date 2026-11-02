@@ -131,22 +131,3 @@ export function AiSuggestions({ card, limit }: { card: Card; limit?: number }) {
     </div>
   );
 }
-
-/** Demand / competition / difficulty as three quiet chips: the name and its level. */
-export function ScoreChips({ card }: { card: Card }) {
-  const rows = [
-    ["Demand", card.scores.demand],
-    ["Competition", card.scores.competition],
-    ["Difficulty", card.scores.difficulty],
-  ] as const;
-  return (
-    <div className={s.scoreChips}>
-      {rows.map(([name, sc]) => (
-        <div key={name} className={s.scoreChip}>
-          <span className={s.scoreChipLabel}>{name}</span>
-          <span className={s.scoreChipValue}>{sc.label}</span>
-        </div>
-      ))}
-    </div>
-  );
-}

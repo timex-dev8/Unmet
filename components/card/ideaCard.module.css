@@ -38,94 +38,125 @@
 .headline {
   margin: 0;
   font-family: var(--font-serif);
-  font-size: 32px;
+  font-size: 30px;
   font-weight: 500;
   letter-spacing: -0.015em;
   line-height: 1.08;
+  text-wrap: balance;
 }
+/* Shared with ProductCard */
 .summary {
   margin: 0;
   font-size: 16px;
   line-height: 1.5;
   color: var(--muted);
 }
-.evidence {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-.evidenceText {
+
+.verdict {
   margin: 0;
-  font-size: 14px;
-  line-height: 1.4;
+  font-size: 15px;
+  line-height: 1.45;
   color: var(--muted);
 }
-.evidenceText strong {
-  color: var(--ink);
+.verdict strong {
+  display: block;
+  font-size: 17px;
   font-weight: 600;
+}
+.strong {
+  color: var(--primary);
+}
+.maybe {
+  color: var(--ink);
+}
+.weak {
+  color: var(--muted);
+}
+.quote {
+  margin: 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--ink);
+}
+.proof {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.proof .sample {
+  margin-left: auto;
+}
+.idea {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.idea strong {
+  font-weight: 600;
+  color: var(--ink);
 }
 .bottom {
   margin-top: auto;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
 }
-.dig {
+.primary {
   flex: 1;
-  min-height: 44px;
+  min-height: 48px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  border-radius: var(--radius-pill);
-  background: var(--gray);
-  color: var(--ink);
+  gap: 8px;
+  border-radius: 12px;
   font-size: 15px;
   font-weight: 500;
-  white-space: nowrap;
-  padding: 0 14px;
+  color: var(--white);
 }
-.details {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  align-self: center;
-  min-height: 44px;
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--muted);
-}
-.details:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+.primary:hover {
+  color: var(--white);
 }
 
-.extra {
-  display: contents;
-}
-/* Phones: Save and "Details" only; Dig deeper, sources and share live on the idea page */
-@media (max-width: 899px) {
-  .dig,
-  .extra {
-    display: none;
+/* Short phones: keep every action visible */
+@media (max-height: 760px) and (max-width: 899px) {
+  .body {
+    gap: 12px;
+    padding: 20px 24px 16px;
   }
-  .details {
-    align-self: stretch;
-    justify-content: center;
-    border-radius: 12px;
-    background: var(--gray);
-    color: var(--ink);
+  .verdict {
+    font-size: 14px;
   }
-}
-
-/* Shorter phones: keep the actions visible */
-@media (max-height: 760px) {
-  .summary {
-    display: none;
+  .verdict strong {
+    font-size: 16px;
+  }
+  .quote {
+    padding-top: 12px;
+    font-size: 15px;
   }
   .headline {
     font-size: 25px;
+  }
+  .summary,
+  .idea {
+    display: none;
+  }
+}
+/* The smallest phones: just the verdict, proof and actions */
+@media (max-height: 620px) and (max-width: 899px) {
+  .quote,
+  .reason {
+    display: none;
   }
 }
 
@@ -136,32 +167,22 @@
   }
   .body {
     padding: 40px 48px 32px;
-    gap: 24px;
+    gap: 20px;
+  }
+  .quote {
+    padding-top: 20px;
   }
   .headline {
-    font-size: 52px;
-    line-height: 0.98;
+    font-size: 42px;
   }
   .summary {
-    display: block;
     font-size: 19px;
   }
-  .evidenceText {
-    font-size: 16px;
+  .primary {
+    flex: none;
+    padding: 0 28px;
   }
   .bottom {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .bottom {
-    gap: 16px;
-  }
-  .bottom > :first-child {
-    flex: 1 1 auto;
-    max-width: 520px;
-  }
-  .details {
-    white-space: nowrap;
+    justify-content: flex-start;
   }
 }

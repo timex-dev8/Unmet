@@ -8,20 +8,15 @@ import s from "./card.module.css";
 import sheet from "./sheet.module.css";
 
 // Bottom sheet listing the original posts. Uses <dialog> for focus trapping and Esc to close.
-export default function SourcesSheet({ card, compact }: { card: Card; compact?: boolean }) {
+export default function SourcesSheet({ card, link }: { card: Card; link?: boolean }) {
   const ref = useRef<HTMLDialogElement>(null);
   const count = card.sources.length;
 
   return (
     <>
-      <button
-        type="button"
-        className={compact ? `${s.act} ${s.actQuiet} ${s.iconBtn}` : `${s.act} ${s.actQuiet}`}
-        onClick={() => ref.current?.showModal()}
-        aria-label={compact ? `Sources (${count})` : undefined}
-      >
-        {compact ? (
-          <span className={s.count}>{count}</span>
+      <button type="button" className={link ? s.sourcesLink : `${s.act} ${s.actQuiet}`} onClick={() => ref.current?.showModal()}>
+        {link ? (
+          `${count} ${count === 1 ? "source" : "sources"}`
         ) : (
           <>
             <Link2 size={17} aria-hidden="true" />

@@ -5,13 +5,13 @@ import { useSaved } from "@/lib/saved";
 import type { Card } from "@/lib/types";
 import s from "./card.module.css";
 
-type Props = { label?: string; small?: boolean } & (
+type Props = { label?: string; small?: boolean; quiet?: boolean } & (
   | { card: Card; load?: undefined }
   // A slim copy of the card: the full one is fetched when it's saved (Saved and Board need all of it)
   | { card: Pick<Card, "slug">; load: (slug: string) => Promise<Card | null> }
 );
 
-export default function SaveButton({ card, load, label = "Save", small = false }: Props) {
+export default function SaveButton({ card, load, label = "Save", small = false, quiet = false }: Props) {
   const { isSaved, save, remove } = useSaved();
   const saved = isSaved(card.slug);
   const toggle = async () => {
@@ -24,7 +24,7 @@ export default function SaveButton({ card, load, label = "Save", small = false }
       type="button"
       onClick={() => void toggle()}
       aria-pressed={saved}
-      className={`${s.act} ${saved ? s.actSaved : "glossy"} ${small ? s.actSmall : ""}`}
+      className={`${s.act} ${saved ? s.actSaved : quiet ? s.actQuiet : "glossy"} ${small ? s.actSmall : ""} ${quiet ? s.actCompact : ""}`}
     >
       {/* keyed so the icon and label re-enter (pop / fade) each time the state flips */}
       {saved ? (
@@ -32,7 +32,7 @@ export default function SaveButton({ card, load, label = "Save", small = false }
       ) : (
         <Bookmark key="off" size={small ? 15 : 17} aria-hidden="true" />
       )}
-      <span key={saved ? "saved" : "save"} className={s.labelFade}>
+      <span key={saved ? "saved" : "save"} className={`${s.labelFade} ${quiet ? s.labelHidden : ""}`}>
         {saved ? "Saved" : label}
       </span>
     </button>

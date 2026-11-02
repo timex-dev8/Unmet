@@ -1,62 +1,81 @@
 import Link from "next/link";
-import { ArrowRight, Sparkles } from "lucide-react";
-import { digDeeperHref, ideaHref } from "@/lib/links";
-import type { Card } from "@/lib/types";
-import { ScoreChips, Sparkline, windowLabel } from "./parts";
+import { ArrowDown, ArrowRight, ArrowUp } from "lucide-react";
+import { ideaHref } from "@/lib/links";
+import type { Card, Idea } from "@/lib/types";
+import { VERDICT, competitionLine } from "@/lib/verdict";
 import SaveButton from "./SaveButton";
-import ShareButton from "./ShareButton";
 import SourcesSheet from "./SourcesSheet";
-import s from "./card.module.css";
 import f from "./ideaCard.module.css";
 
-// The feed card: one meta line, the problem, one line of evidence, three score chips, actions. Quotes, score reasons and AI ideas live on the idea page.
+// The feed card: the problem, a plain verdict, one quote, quick proof, the best idea so far, and "See the idea".
 export default function IdeaCard({ card }: { card: Card }) {
-  const e = card.evidence;
-  const topic = card.query?.replaceAll('"', "");
+  const idea = bestIdea(card.ideas);
   return (
     <article className={f.card} aria-labelledby={`h-${card.slug}`}>
       <div className={f.body}>
-        <div className={f.meta}>
-          <span>
-            {card.category} · {card.trend === "rising" ? "↑ Rising" : card.trend === "falling" ? "↓ Falling" : "Steady"} · {e.threads}{" "}
-            {e.threads === 1 ? "source" : "sources"}
-          </span>
-          {card.sample ? <span className={f.sample}>Sample</span> : card.signal === "early" && <span className={f.sample}>Early signal</span>}
-        </div>
         <h2 id={`h-${card.slug}`} className={f.headline}>
           {card.headline}
         </h2>
-        <p className={f.summary}>{card.summary}</p>
 
-        <div className={f.evidence}>
-          <p className={f.evidenceText}>
-            <strong>{e.posts} mentions</strong>
-            {topic ? ` of “${topic}”` : ""} on {e.site} · {windowLabel(e.days)}
-          </p>
-          <Sparkline values={e.weekly} />
+        <p className={f.verdict}>
+          {card.report && <strong className={f[card.report.verdict]}>{VERDICT[card.report.verdict].label}</strong>}
+          <span className={f.reason}>{competitionLine(card.scores.competition)}</span>
+        </p>
+
+        {card.quote && <p className={f.quote}>“{card.quote}”</p>}
+
+        <div className={f.proof}>
+          <SourcesSheet card={card} link />
+          <span aria-hidden="true">·</span>
+          <span className={f.trend}>
+            {card.trend === "rising" ? (
+              <>
+                <ArrowUp size={14} aria-hidden="true" />
+                Rising
+              </>
+            ) : card.trend === "falling" ? (
+              <>
+                <ArrowDown size={14} aria-hidden="true" />
+                Falling
+              </>
+            ) : (
+              "Steady"
+            )}
+          </span>
+          <span aria-hidden="true">·</span>
+          <span>{card.category}</span>
+          {card.sample ? <span className={f.sample}>Sample</span> : card.signal === "early" && <span className={f.sample}>Early signal</span>}
         </div>
 
-        <ScoreChips card={card} />
+        <p className={f.idea}>{idea ? <IdeaLine idea={idea} /> : "No idea checked yet. Open it to get one."}</p>
 
         <div className={f.bottom}>
-          <div className={s.actions}>
-            <SaveButton card={card} />
-            <Link href={digDeeperHref(card)} className={f.dig} draggable={false}>
-              <Sparkles size={15} aria-hidden="true" />
-              Dig deeper
-            </Link>
-            {/* Phones keep just Save and Details; the rest is on the idea page */}
-            <span className={f.extra}>
-              <SourcesSheet card={card} compact />
-              <ShareButton card={card} />
-            </span>
-          </div>
-          <Link href={ideaHref(card.slug)} className={f.details} draggable={false}>
-            Details and AI ideas
+          <Link href={ideaHref(card.slug)} className={`glossy ${f.primary}`} draggable={false}>
+            {idea ? "See the idea" : "See the proof"}
             <ArrowRight size={16} aria-hidden="true" />
           </Link>
+          <SaveButton card={card} quiet />
         </div>
       </div>
     </article>
+  );
+}
+
+function bestIdea(ideas: Idea[] = []) {
+  return ideas.reduce<Idea | undefined>((best, i) => (!best || i.score > best.score ? i : best), undefined);
+}
+
+// "Name: pitch" title plus the first part of the price: "Idea to try: Name, pitch. $9/mo."
+function IdeaLine({ idea }: { idea: Idea }) {
+  const cut = idea.title.indexOf(": ");
+  const name = cut < 0 ? idea.title : idea.title.slice(0, cut);
+  const pitch = cut < 0 ? "" : idea.title.slice(cut + 2).trim();
+  const price = idea.price.split(",")[0].trim();
+  return (
+    <>
+      <strong>Idea to try: {name}</strong>
+      {pitch ? `, ${pitch}.` : "."}
+      {price && ` ${price}.`}
+    </>
   );
 }
