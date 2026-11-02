@@ -215,8 +215,8 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
               },
             ),
           })),
-          // Hacker News leans technical, so outside developer topics it only joins in High.
-          ...(plan.segment === "developer" || cfg.high ? [{ name: NAMES.hn, run: searchHN(plan.hnQuery, since, cfg.high ? 15 : 10) }] : []),
+          // Hacker News leans technical, so it only runs on developer topics.
+          ...(plan.segment === "developer" ? [{ name: NAMES.hn, run: searchHN(plan.hnQuery, since, cfg.high ? 15 : 10) }] : []),
           // Bluesky on every level: free, fast, real people. It matches keywords, so use short queries.
           { name: NAMES.bluesky, run: searchBluesky([plan.hnQuery, plan.communityQuery.split(" ").slice(0, 4).join(" ")], sinceIso) },
           ...(useDiscourse ? [{ name: NAMES.discourse, run: searchDiscourse(plan.hnQuery, sinceIso) }] : []),

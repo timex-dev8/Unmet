@@ -12,7 +12,6 @@ import { appStoreGrossing } from "./sources/appstore";
 import { githubRising } from "./sources/github";
 import { productHunt } from "./sources/producthunt";
 import { radarConfigured, trafficRank } from "./sources/radar";
-import { showHn } from "./sources/showhn";
 import { trustMrr } from "./sources/trustmrr";
 import type { RawProduct } from "./sources/types";
 
@@ -107,8 +106,8 @@ export function roundRobin(list: RawProduct[], n: number) {
 
 /** Collects from every source; a source that fails or has no key just adds nothing. */
 export async function collectProducts() {
-  const names = ["TrustMRR", "App Store", "Show HN", "GitHub", "Product Hunt"];
-  const results = await Promise.allSettled([trustMrr(), appStoreGrossing(), showHn(), githubRising(), productHunt()]);
+  const names = ["TrustMRR", "App Store", "GitHub", "Product Hunt"];
+  const results = await Promise.allSettled([trustMrr(), appStoreGrossing(), githubRising(), productHunt()]);
   const counts: Record<string, number> = {};
   const all = results.flatMap((r, i) => {
     if (r.status === "rejected") warn(names[i], r.reason);
@@ -273,9 +272,11 @@ export async function readProducts(opts: { category?: string; rising?: boolean }
     return [];
   }
   // Rows saved before `source` existed get it from their first piece of proof
-  const list = data.map((r) => {
-    const p = r.product as Product;
-    return { ...p, source: p.source ?? sourceFromSite(p.proof[0]?.site) };
-  });
+  const list = data
+    .map((r) => {
+      const p = r.product as Product;
+      return { ...p, source: p.source ?? sourceFromSite(p.proof[0]?.site) };
+    })
+    .filter((p) => p.source !== "Hacker News");
   return opts.rising ? list.filter((p) => p.rising) : list;
 }

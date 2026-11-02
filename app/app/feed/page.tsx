@@ -15,13 +15,13 @@ export const instant = false;
 export default async function FeedPage({ searchParams }: PageProps<"/app/feed">) {
   const { topic, source: sourceParam } = await searchParams;
   const filter: FeedFilter = topic === "Trending" ? "Trending" : isCategory(topic) ? topic : undefined;
-  const source = SOURCE_KINDS.find((k) => k === sourceParam);
+  const source = SOURCE_KINDS.find((k) => k !== "hn" && k === sourceParam);
   const [{ cards: page }, all, products] = await Promise.all([
     getCards({ filter }),
     getAllCards(),
     readProducts(filter === "Trending" ? { rising: true } : filter ? { category: filter } : {}),
   ]);
-  const kinds = SOURCE_KINDS.filter((k) => all.some((c) => c.sources.some((x) => x.kind === k)));
+  const kinds = SOURCE_KINDS.filter((k) => k !== "hn" && all.some((c) => c.sources.some((x) => x.kind === k)));
   const cards = source ? page.filter((c) => c.sources.some((x) => x.kind === source)) : page;
 
   return (
