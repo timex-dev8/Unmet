@@ -153,7 +153,7 @@ export function buildCard(
       competition: { value: p.competition.value, label: label(p.competition.value), basis: "ai", reason: p.competition.reason },
       difficulty: { value: p.difficulty.value, label: label(p.difficulty.value), basis: "ai", reason: p.difficulty.reason },
     },
-    aiSuggestions: p.ideas,
+    aiSuggestions: [], // Only older saved cards have these; ideas now come from generateIdeas, tied to the card's own complaints.
     sources: used.map((s) => ({ title: s.title, url: s.url, site: s.site, kind: s.kind, engagement: s.engagement?.label, postedAt: s.postedAt })),
     report: reportFor(own, used, sites.size, trend, p.today),
     fresh: true,

@@ -74,7 +74,6 @@ Rules:
 - quoteId: the one complaint whose quote shows this exact problem most clearly to a reader who sees nothing else.
 - competition and difficulty: your estimate 0–100 with a one-line reason. Competition = how well existing products already solve it. Difficulty = how hard a small team would find building a useful first version.
 - today: one sentence on what these people use now (tools, services, manual methods) and what they dislike about it, only from the complaints; empty if the complaints don't say.
-- ideas: up to 3 possible products, each a title and one sentence. These are your suggestions, not evidence.
 - answer: 2–4 sentences summarizing what this audience struggles with most. Refer to problems by a short name, never by number (some may be filtered out). Never invent numbers.
 - notFound: one sentence on what you looked for but found little evidence of, or empty.`;
 
