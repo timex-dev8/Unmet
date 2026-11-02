@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Check, SlidersHorizontal, TrendingUp } from "lucide-react";
 import Highlight from "@/components/motion/Highlight";
-import { CATEGORIES } from "@/lib/types";
+import { CATEGORIES, SOURCE_KINDS } from "@/lib/types";
 import type { FeedFilter } from "@/lib/cards";
 import { kindBadge } from "@/components/card/parts";
 import type { Source, SourceKind } from "@/lib/types";
@@ -18,7 +18,7 @@ const feedHref = (topic?: string, source?: string) => {
   return str ? `/app/feed?${str}` : "/app/feed";
 };
 
-export default function FilterChips({ active, source, kinds = [] }: { active: FeedFilter; source?: SourceKind; kinds?: SourceKind[] }) {
+export default function FilterChips({ active, source, kinds = [] }: { active: FeedFilter; source?: string; kinds?: string[] }) {
   const chips: { label: string; value: FeedFilter }[] = [
     { label: "All", value: undefined },
     { label: "Trending", value: "Trending" },
@@ -45,7 +45,7 @@ export default function FilterChips({ active, source, kinds = [] }: { active: Fe
 }
 
 /** Where the evidence comes from: one compact menu, so the feed keeps its height for the cards. */
-function SourceMenu({ active, source, kinds }: { active: FeedFilter; source?: SourceKind; kinds: SourceKind[] }) {
+function SourceMenu({ active, source, kinds }: { active: FeedFilter; source?: string; kinds: string[] }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -59,7 +59,8 @@ function SourceMenu({ active, source, kinds }: { active: FeedFilter; source?: So
       document.removeEventListener("keydown", onKey);
     };
   }, [open]);
-  const label = (k: SourceKind) => kindBadge({ kind: k } as Source);
+  // Evidence kinds need a friendly name; product sources like "TrustMRR" already are one.
+  const label = (k: string) => (SOURCE_KINDS.includes(k as SourceKind) ? kindBadge({ kind: k } as Source) : k);
   return (
     <div className={s.sourceMenu} ref={ref}>
       <button type="button" className={`${s.sourceBtn} ${source ? s.sourceBtnOn : ""}`} aria-expanded={open} onClick={() => setOpen((v) => !v)}>
@@ -69,7 +70,13 @@ function SourceMenu({ active, source, kinds }: { active: FeedFilter; source?: So
       {open && (
         <div className={s.sourceList}>
           {[undefined, ...kinds].map((k) => (
-            <Link key={k ?? "any"} href={feedHref(active, k)} className={s.sourceItem} aria-current={k === source ? "page" : undefined} onClick={() => setOpen(false)}>
+            <Link
+              key={k ?? "any"}
+              href={feedHref(active, k)}
+              className={s.sourceItem}
+              aria-current={k === source ? "page" : undefined}
+              onClick={() => setOpen(false)}
+            >
               {k ? label(k) : "All sources"}
               {k === source && <Check size={16} aria-hidden="true" />}
             </Link>
