@@ -64,7 +64,7 @@ async function heroExample(live: Card[]): Promise<HeroExample> {
 export default async function Landing() {
   const live = await readFeed();
   const example = await heroExample(live);
-  const recent = live.filter((c) => !c.sample).slice(0, 3);
+  const recent = live.filter((c) => !c.sample && !/\bADHD\b/.test(c.headline)).slice(0, 3);
 
   return (
     <div data-landing>

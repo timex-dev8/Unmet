@@ -8,14 +8,11 @@ import {
   CircleDollarSign,
   CircleQuestionMark,
   Code,
-  Gift,
-  Globe,
   HeartPulse,
   House,
   Lightbulb,
   ListTodo,
   MessageSquare,
-  Plus,
   Search,
   Star,
   TrendingUp,
@@ -24,6 +21,7 @@ import {
 } from "lucide-react";
 import { ideaHref } from "@/lib/links";
 import type { Card } from "@/lib/types";
+import FaqList from "./FaqList";
 import GlassTile from "./GlassTile";
 import s from "./landing.module.css";
 
@@ -181,42 +179,11 @@ export function Pricing() {
   );
 }
 
-const FAQ = [
-  {
-    q: "Where does the data come from?",
-    a: "Public posts from the last 12 months, each linked back to its source. The complaints are real. The ideas are AI-generated and labeled.",
-    icon: Globe,
-  },
-  {
-    q: "Do you use Reddit?",
-    a: "Not directly. Unmet doesn’t scrape Reddit or buy its data from resellers. A Reddit thread is read only if it shows up in normal web results.",
-    icon: MessageSquare,
-  },
-  {
-    q: "Is it really free?",
-    a: "Yes. If paid plans come later, what’s free today stays free.",
-    icon: Gift,
-  },
-];
-
 export function Faq() {
   return (
     <section id="faq" className={`${s.section} ${s.faqSection}`}>
       <h2 className={s.h2}>Questions</h2>
-      <div className={s.faq}>
-        {FAQ.map(({ q, a, icon: Icon }) => (
-          <details key={q}>
-            <summary>
-              <Tile pearl className={s.faqTile}>
-                <Icon strokeWidth={2} />
-              </Tile>
-              <span className={s.faqQ}>{q}</span>
-              <Plus size={18} strokeWidth={2} aria-hidden="true" />
-            </summary>
-            <p>{a}</p>
-          </details>
-        ))}
-      </div>
+      <FaqList />
     </section>
   );
 }

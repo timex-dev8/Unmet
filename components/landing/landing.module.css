@@ -851,20 +851,26 @@
   margin-top: 14px;
   border-bottom: 1px solid var(--line);
 }
-.faq details {
+.faqItem {
   border-top: 1px solid var(--line);
 }
-.faq summary {
-  list-style: none;
+.faqHead {
+  margin: 0;
+  font: inherit;
+}
+.faqBtn {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 14px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
   font-weight: 500;
+  text-align: left;
   cursor: pointer;
-}
-.faq summary::-webkit-details-marker {
-  display: none;
 }
 .faqTile {
   width: 36px;
@@ -877,16 +883,19 @@
 .faqQ {
   flex: 1;
 }
-.faq summary > svg {
+.faqPlus {
   flex: none;
+  display: inline-flex;
   color: var(--muted);
-  transition: transform var(--t-med) var(--ease);
 }
-.faq details[open] summary > svg {
-  transform: rotate(45deg);
+.faqPanel {
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
 }
-.faq details p {
-  margin: -6px 0 14px;
+.faqPanel p {
+  margin: 0;
+  padding-bottom: 16px;
   color: var(--muted);
 }
 
@@ -1163,12 +1172,13 @@
   .faq {
     margin-top: 20px;
   }
-  .faq summary {
+  .faqBtn {
     gap: 14px;
     padding: 16px 0;
   }
-  .faq details p {
-    margin: -6px 0 16px 50px;
+  .faqPanel p {
+    margin-left: 50px;
+    max-width: 65ch;
   }
 
   .closing {
