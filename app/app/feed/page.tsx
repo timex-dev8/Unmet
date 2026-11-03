@@ -27,7 +27,11 @@ function mixSources(products: Product[]) {
     const size = sizes.get(p.source)!;
     return { p, n: (i - ((day * 3) % size) + size) % size };
   });
-  return ranked.sort((a, b) => a.n - b.n).map((x) => x.p);
+  const rotated = ranked.sort((a, b) => a.n - b.n).map((x) => x.p);
+  // Products from the last few days lead (at most 8), so each run visibly changes the feed.
+  const isNew = (p: Product) => p.addedAt && Date.now() - Date.parse(p.addedAt) < 3 * 86400_000;
+  const fresh = rotated.filter(isNew).slice(0, 8);
+  return [...fresh, ...rotated.filter((p) => !fresh.includes(p))];
 }
 
 export default async function FeedPage({ searchParams }: PageProps<"/app/feed">) {

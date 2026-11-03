@@ -122,6 +122,7 @@ export type Product = {
   image?: string; // the product's icon or thumbnail (Product Hunt, App Store), when the source has one
   source: ProductSource; // where we first found it, so Home can pick by source
   updatedAt: string; // ISO date the proof was pulled
+  addedAt?: string; // ISO date it first reached the feed; missing on older rows
 };
 
 export type ProductSource = "TrustMRR" | "Product Hunt" | "App Store" | "Hacker News" | "GitHub";

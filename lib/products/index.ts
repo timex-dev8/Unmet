@@ -161,6 +161,7 @@ export async function writeCards(raw: RawProduct[], deadline = Infinity): Promis
         image: p.image,
         source: p.source,
         updatedAt: now,
+        addedAt: now,
       });
     }
   }
