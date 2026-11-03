@@ -196,6 +196,12 @@
   line-height: 1.45;
   color: var(--ink-2);
 }
+.cardThoughts {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink);
+}
 .cardIdea {
   padding: 12px 14px;
   border-radius: 16px;

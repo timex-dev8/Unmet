@@ -41,7 +41,7 @@ export const IdeaDraft = z.object({
   complaintIds: z.array(z.string()),
   searchQuery: z.string(),
 });
-export const IdeasSchema = z.object({ ideas: z.array(IdeaDraft).max(4) });
+export const IdeasSchema = z.object({ thoughts: z.string().default(""), ideas: z.array(IdeaDraft).max(4) });
 type Draft = z.infer<typeof IdeaDraft>;
 
 export function ideasPrompt(
@@ -136,6 +136,7 @@ export async function generateIdeas(card: Card, complaints: Complaint[], check: 
     temperature: 0.8,
     prompt: ideasPrompt(card, complaints) + focus,
   });
+  if (out.thoughts) card.thoughts = out.thoughts;
   // Prefer ideas backed by two complaints; a thin card still gets its best one-complaint idea.
   const backed = finishIdeas(out.ideas, complaints, card);
   const drafted = (backed.length ? backed : finishIdeas(out.ideas, complaints, card, 1)).slice(0, 3);

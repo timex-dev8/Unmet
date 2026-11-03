@@ -21,8 +21,7 @@ export default function ResearchCard({
   onOpen?: (card: Card) => void;
   selected?: boolean;
 }) {
-  const idea = card.ideas?.[0];
-  const more = (card.ideas?.length ?? 0) - 1;
+  const ideas = card.ideas ?? [];
   const verdict = card.report?.verdict;
   // One plain label at most: how thin the evidence is, else a strong or maybe verdict.
   const label =
@@ -59,20 +58,27 @@ export default function ResearchCard({
           </Link>
         </h3>
         <p className={s.cardSummary}>{card.summary}</p>
-        {idea && (
-          <div className={s.cardIdea}>
+        {card.thoughts && <p className={s.cardThoughts}>{card.thoughts}</p>}
+        {ideas.map((idea) => (
+          <div key={idea.title} className={s.cardIdea}>
             <p className={s.cardIdeaLabel}>Idea to try</p>
             <p className={s.cardIdeaTitle}>{idea.title}</p>
             <p className={s.cardIdeaPitch}>{idea.pitch}</p>
+            {idea.shift && <p className={s.cardIdeaPitch}>{idea.shift}</p>}
+            {idea.twists?.map((t) => (
+              <p key={t.name} className={s.cardIdeaPitch}>
+                <strong>{t.name}:</strong> {t.how}
+              </p>
+            ))}
+            {idea.whyLove && <p className={s.cardIdeaPitch}>{idea.whyLove}</p>}
           </div>
-        )}
+        ))}
         {card.quote && <Quote text={card.quote} highlight={card.highlight} className={s.cardQuote} />}
         <div className={s.cardFoot}>
           <span>
             <strong>
               {n} {n === 1 ? "source" : "sources"}
             </strong>
-            {more > 0 ? ` · +${more} more ${more === 1 ? "idea" : "ideas"}` : ""}
           </span>
           <SaveButton card={card} />
         </div>

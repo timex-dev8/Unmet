@@ -112,7 +112,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   const base = DEPTH[req.depth];
   const check = () => signal?.throwIfAborted();
   const isFirst = req.history.length === 0;
-  const key = `v3:${req.depth}:${req.message.toLowerCase().replace(/\s+/g, " ").trim()}`;
+  const key = `v4:${req.depth}:${req.message.toLowerCase().replace(/\s+/g, " ").trim()}`;
   // Same first question at the same depth in the last 6 hours: answer from the cache (lib/research/store.ts).
   // The example searches are refreshed by a daily job, so they keep longer. `fresh` is that job, skipping the cache.
   const isExample = req.depth === "low" && EXAMPLE_SEARCHES.some((e) => e.toLowerCase() === req.message.trim().toLowerCase());

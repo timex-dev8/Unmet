@@ -92,6 +92,7 @@ export type Card = {
   competitors?: Competitor[];
   report?: Report;
   ideas?: Idea[];
+  thoughts?: string; // founder notes on the problem
   sample?: boolean; // placeholder content, shown with a "Sample" tag
   signal?: "early" | "niche"; // early: only 2 sources, or one site. niche: a single source, worth a conversation but unproven
   fresh?: boolean; // built on demand from a search

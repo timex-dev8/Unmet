@@ -58,6 +58,8 @@ export default function IdeasSection({ card }: { card: Card }) {
       </h2>
       <p className={s.lede}>Each idea answers real complaints from this problem. Anything still unproven is labelled.</p>
 
+      {card.thoughts && <p className={s.pitch}>{card.thoughts}</p>}
+
       <div className={s.ideas}>
         {ideas.map((idea, i) => (
           <IdeaView key={`${idea.title}-${i}`} idea={idea} card={card} />

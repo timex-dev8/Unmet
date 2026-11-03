@@ -145,7 +145,7 @@ Rules:
 - Banned unless you describe a specific new mechanism: AI reminders, gamification, badges, social or community features, "better UI", dashboards, analytics, "AI-powered" anything.
 - Don't name an idea by its virtue (Better-, Smart-, Fair-, Easy-). Don't just remove the thing people hate; replace it with something.
 - If a finding only justifies a feature inside an existing product, say so (form: "feature"). Don't force a startup.
-- 2 to 4 ideas, each through a different lens, unless the request gives a different number. Quality over count; skip lenses the evidence doesn't support.
+- 3 or 4 ideas, each through a different lens, unless the request gives a different number. Quality over count; skip lenses the evidence doesn't support.
 - Every idea must solve this exact problem for these exact people. An idea that would fit another audience just as well is wrong.
 - complaintIds: the ids of the complaints this idea answers. At least 2, or at least 1 when the request says it is a niche signal. Never invent ids.
 - title: a product name idea plus what it is, under 8 words ("NoShow Shield: deposits for barbers").
@@ -154,9 +154,10 @@ Rules:
 - norm: what most existing products do, in one sentence. Base it on what the complaints and the existing products list show.
 - flaw: why that fails these people, in one sentence, tied to the complaints.
 - obvious: the first fix anyone would suggest, which this idea must go beyond.
-- shift: the different approach, in one sentence, and the field it borrows from if any. Not "the same thing, but better", and not the obvious fix.
-- twists: 2 to 4 mechanics. name: 2–4 memorable words. how: one sentence in the form "When X happens, Y happens", describing a moment no ordinary product in this category has. A twist must not restate the shift or be a settings option.
-- whyLove: the concrete benefit and why they'd pick it over what they use now, in one sentence.
+- thoughts: your own founder notes on this problem, 4 to 6 sentences, written to one person who wants to build something. What is really going on underneath these complaints, what everyone in this category seems to have missed, and what you would try first and why. Be opinionated and specific, and make them want to go build. Base claims on the complaints, and say "I suspect" for anything they don't prove.
+- shift: the different approach, in 2 or 3 sentences, and the field it borrows from if any. Not "the same thing, but better", and not the obvious fix.
+- twists: 3 or 4 mechanics. name: 2–4 memorable words. how: 1 or 2 sentences starting "When X happens, Y happens", describing a moment no ordinary product in this category has. A twist must not restate the shift or be a settings option.
+- whyLove: 2 sentences: the moment they'd feel the difference, and why they'd pick it over what they use now.
 - competitorCheck: using ONLY the "Existing products" list, say which of them already do part of this and what's left. If no list is given, or it doesn't show either way, write "Not checked yet". Never claim something is unique, and never name products from memory.
 - unproven: the assumption about this idea the complaints don't prove, in one sentence.
 - whoPays: the specific buyer (not "businesses").
@@ -170,7 +171,7 @@ Plain words a stranger understands, no hype, no invented numbers or statistics.`
 
 export const IDEAS_BATCH_SYSTEM = `${IDEAS_SYSTEM}
 
-This time you get several separate problems, each with its own complaints. Instead of 2 to 4 ideas, return exactly 1 idea per problem, using the single lens that fits its complaints best.
+This time you get several separate problems, each with its own complaints. Instead of 3 or 4 ideas, return exactly 1 idea per problem, using the single lens that fits its complaints best.
 - problem: the id of the problem the idea solves ("P1").
 - complaintIds: only ids listed under that same problem. At least 1.
 Treat each problem on its own: never reuse an idea or borrow details across problems.`;
