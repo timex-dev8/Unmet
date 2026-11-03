@@ -38,6 +38,18 @@ function write(next: Interests) {
 
 const getSnapshot = () => (cache ??= read());
 
+// Cards passed on earlier visits, frozen at page load so the order doesn't shift while someone swipes.
+let seenAtLoad: string[] | null = null;
+const NOTHING_SEEN: string[] = [];
+
+export function useSeenAtLoad() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => (seenAtLoad ??= getSnapshot().skipped),
+    () => NOTHING_SEEN,
+  );
+}
+
 export function useInterests() {
   const interests = useSyncExternalStore(
     (l) => {

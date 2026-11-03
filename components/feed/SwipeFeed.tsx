@@ -6,7 +6,7 @@ import { AnimatePresence, m, useMotionValue, useReducedMotion, useTransform, typ
 import { Bookmark, ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
 import IdeaCard from "@/components/card/IdeaCard";
 import ProductCard from "@/components/card/ProductCard";
-import { markSkipped, useInterests } from "@/lib/interests";
+import { markSkipped, useInterests, useSeenAtLoad } from "@/lib/interests";
 import { profileKeywords, textMatch } from "@/lib/rank";
 import { useSaved } from "@/lib/saved";
 import type { Card, Product } from "@/lib/types";
@@ -28,9 +28,12 @@ const keyOf = (x: Item) => (isProduct(x) ? `product-${x.slug}` : x.slug);
 export default function SwipeFeed({ cards: input, products = [] }: { cards: Card[]; products?: Product[] }) {
   // Problems matching what this person told Unmet (and the niches they watch) come first.
   const { interests } = useInterests();
+  const seen = useSeenAtLoad();
   const cards = useMemo(() => {
     const keywords = profileKeywords(interests);
-    const problems = keywords.length ? [...input].sort((a, b) => textMatch(b, keywords) - textMatch(a, keywords)) : input;
+    const matched = keywords.length ? [...input].sort((a, b) => textMatch(b, keywords) - textMatch(a, keywords)) : input;
+    // Cards this person hasn't passed yet come first, so a return visit opens on something new.
+    const problems = [...matched].sort((a, b) => Number(seen.includes(a.slug)) - Number(seen.includes(b.slug)));
     const out: Item[] = [];
     let p = 0;
     let c = 0;
@@ -39,7 +42,7 @@ export default function SwipeFeed({ cards: input, products = [] }: { cards: Card
       else out.push(problems[c++]);
     }
     return out;
-  }, [input, products, interests]);
+  }, [input, products, interests, seen]);
   const [index, setIndex] = useState(0);
   const [dir, setDir] = useState<Dir>(1);
   const [toast, setToast] = useState("");

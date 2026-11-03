@@ -280,5 +280,9 @@ export async function readProducts(opts: { category?: string; rising?: boolean }
       return { ...p, source: p.source ?? sourceFromSite(p.proof[0]?.site) };
     })
     .filter((p) => p.source !== "Hacker News" && !/^anonymous/i.test(p.name));
-  return opts.rising ? list.filter((p) => p.rising) : list;
+  // Proof like "upvotes this week" goes out of date; show only what the last runs confirmed, unless that's nothing.
+  const cutoff = Date.now() - 3 * 86400_000;
+  const current = list.filter((p) => Date.parse(p.updatedAt) >= cutoff);
+  const shown = current.length ? current : list;
+  return opts.rising ? shown.filter((p) => p.rising) : shown;
 }

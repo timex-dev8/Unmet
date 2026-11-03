@@ -16,11 +16,16 @@ const PRODUCT_SOURCES: readonly ProductSource[] = ["TrustMRR", "Product Hunt", "
 
 /** Takes turns between sources, each strongest first, so one source's high scores don't fill the feed. */
 function mixSources(products: Product[]) {
+  // Each source starts further down its list each day, so the feed doesn't show the same top products.
+  const day = Math.floor(Date.now() / 86400_000);
+  const sizes = new Map<string, number>();
+  for (const p of products) sizes.set(p.source, (sizes.get(p.source) ?? 0) + 1);
   const turn = new Map<string, number>();
   const ranked = products.map((p) => {
-    const n = turn.get(p.source) ?? 0;
-    turn.set(p.source, n + 1);
-    return { p, n };
+    const i = turn.get(p.source) ?? 0;
+    turn.set(p.source, i + 1);
+    const size = sizes.get(p.source)!;
+    return { p, n: (i - ((day * 3) % size) + size) % size };
   });
   return ranked.sort((a, b) => a.n - b.n).map((x) => x.p);
 }
