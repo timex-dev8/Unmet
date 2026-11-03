@@ -2,7 +2,7 @@ import Hero, { type HeroExample } from "@/components/landing/Hero";
 import Nav from "@/components/landing/Nav";
 import { Closing, Faq, HowItWorks, Pricing, RecentProblems, SourceStrip } from "@/components/landing/Sections";
 import JsonLd from "@/components/seo/JsonLd";
-import { getAllCards, getCard } from "@/lib/cards";
+import { getCard } from "@/lib/cards";
 import { readFeed } from "@/lib/feed";
 import { slugify } from "@/lib/text";
 import type { Card } from "@/lib/types";
@@ -64,7 +64,7 @@ async function heroExample(live: Card[]): Promise<HeroExample> {
 export default async function Landing() {
   const live = await readFeed();
   const example = await heroExample(live);
-  const recent = (await getAllCards()).slice(0, 3);
+  const recent = live.filter((c) => !c.sample).slice(0, 3);
 
   return (
     <div data-landing>

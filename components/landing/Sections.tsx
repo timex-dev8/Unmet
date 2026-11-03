@@ -113,7 +113,7 @@ export function RecentProblems({ cards }: { cards: Card[] }) {
   if (cards.length === 0) return null;
   return (
     <section id="problems" className={`${s.section} ${s.problemsSection}`}>
-      <h2 className={s.h2}>What people are complaining about</h2>
+      <h2 className={s.h2}>Latest problems we found</h2>
       <ul className={s.problems}>
         {cards.map((c) => {
           const Icon = CATEGORY_ICON[c.category] ?? MessageSquare;
