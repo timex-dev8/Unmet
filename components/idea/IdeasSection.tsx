@@ -56,7 +56,7 @@ export default function IdeasSection({ card }: { card: Card }) {
       <h2 id="ideas" className={s.h2}>
         Ideas you could build
       </h2>
-      <p className={s.lede}>Each idea answers real complaints from this problem, and is checked against products that already exist.</p>
+      <p className={s.lede}>Each idea answers real complaints from this problem. Anything still unproven is labelled.</p>
 
       <div className={s.ideas}>
         {ideas.map((idea, i) => (
@@ -118,13 +118,59 @@ function IdeaView({ idea, card }: { idea: Idea; card: Card }) {
   return (
     <article className={`${s.idea} rise`}>
       <div className={s.ideaTop}>
-        <span className={s.lens}>{LENS_LABEL[idea.lens]}</span>
+        <span className={s.badges}>
+          <span className={s.lens}>{LENS_LABEL[idea.lens]}</span>
+          {idea.form === "feature" && <span className={s.lens}>Feature, not a startup</span>}
+        </span>
         <span className={s.score} title="From the evidence it answers, money signals and existing products">
           {idea.score}
         </span>
       </div>
       <h3 className={s.ideaTitle}>{idea.title}</h3>
       <p className={s.pitch}>{idea.pitch}</p>
+
+      {(idea.norm || idea.flaw || idea.shift) && (
+        <div className={s.take}>
+          {idea.norm && (
+            <p>
+              <span className={s.answersLabel}>What most apps do</span>
+              {idea.norm}
+            </p>
+          )}
+          {idea.flaw && (
+            <p>
+              <span className={s.answersLabel}>What&apos;s wrong with that</span>
+              {idea.flaw}
+            </p>
+          )}
+          {idea.shift && (
+            <p className={s.shift}>
+              <span className={s.answersLabel}>A different approach</span>
+              {idea.shift}
+            </p>
+          )}
+        </div>
+      )}
+
+      {idea.twists && idea.twists.length > 0 && (
+        <div className={s.block}>
+          <span className={s.answersLabel}>Interesting twists</span>
+          <ul className={s.twists}>
+            {idea.twists.map((t) => (
+              <li key={t.name}>
+                <strong>{t.name}</strong> {t.how}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {idea.whyLove && (
+        <div className={s.block}>
+          <span className={s.answersLabel}>Why people might love it</span>
+          <p>{idea.whyLove}</p>
+        </div>
+      )}
 
       <dl className={s.facts}>
         {rows.map(([k, v]) => (
@@ -151,6 +197,20 @@ function IdeaView({ idea, card }: { idea: Idea; card: Card }) {
           </span>
           <ArrowUpRight size={16} aria-hidden="true" />
         </a>
+      )}
+
+      {idea.competitorCheck && (
+        <div className={s.block}>
+          <span className={s.answersLabel}>Competitive reality</span>
+          <p>{idea.competitorCheck}</p>
+        </div>
+      )}
+
+      {idea.unproven && (
+        <div className={s.block}>
+          <span className={s.answersLabel}>Still unproven</span>
+          <p>{idea.unproven}</p>
+        </div>
       )}
 
       {plan ? (

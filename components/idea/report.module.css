@@ -160,6 +160,45 @@
   border-radius: var(--radius-pill);
   padding: 4px 10px;
 }
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+.take,
+.block {
+  margin-top: 14px;
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+.take p,
+.block p {
+  margin: 0;
+}
+.take .answersLabel,
+.block .answersLabel {
+  display: block;
+  margin-bottom: 1px;
+}
+.shift {
+  color: var(--ink);
+  font-weight: 500;
+}
+.twists {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+}
+.twists strong {
+  color: var(--ink);
+  font-weight: 600;
+}
 .score {
   min-width: 36px;
   height: 28px;

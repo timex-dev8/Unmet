@@ -74,7 +74,7 @@ const sleep = (ms: number, signal?: AbortSignal) =>
 /** Asks the model for JSON matching `schema`; the reply is validated before it is returned. */
 export async function generateJson<T>(
   schema: z.ZodType<T>,
-  opts: { system: string; prompt: string; timeoutMs?: number; signal?: AbortSignal; light?: boolean },
+  opts: { system: string; prompt: string; timeoutMs?: number; signal?: AbortSignal; light?: boolean; temperature?: number },
 ): Promise<T> {
   const provider = process.env.LLM_PROVIDER ?? "gemini";
   if (provider !== "gemini") throw new LlmError(`LLM_PROVIDER "${provider}" is not supported yet`, "not_configured");
@@ -105,7 +105,7 @@ export async function generateJson<T>(
             systemInstruction: opts.system,
             responseMimeType: "application/json",
             responseJsonSchema: jsonSchemaFor(schema),
-            temperature: 0.3,
+            temperature: opts.temperature ?? 0.3,
             // Thinking makes answers slow; these are extraction tasks, so keep it light.
             thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
             abortSignal: opts.signal ? AbortSignal.any([timeout, opts.signal]) : timeout,

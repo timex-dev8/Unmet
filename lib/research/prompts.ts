@@ -126,15 +126,42 @@ First think about the job: the progress these people want (e.g. "get paid on tim
 - connector: both sides of a relationship complain about each other; connect them better.
 - shovels: a rising trend creates a new chore around it; sell the tool for that chore.
 
+Think like a founder who wants to reinvent how this category works, not add to it. For each idea, work in this order:
+1. Name the mechanic nearly every existing product shares (streaks, seats, monthly invoices, a blocker you can turn off).
+2. Find the assumption inside it that these complaints prove wrong.
+3. Write the obvious fix anyone would suggest first (softer version of the mechanic, removing it, making it free or simpler). You may not build that.
+4. Replace the mechanic with a different system. Ask how a whole other field handles the same tension (insurance, sports coaching, games, banking, medicine, logistics) and borrow that.
+Then test it: if an incumbent could ship it as one line in a changelog, it's a tweak, so go further. A strong tweak is still allowed when it fits, as long as you say so in form.
+
+Example of the depth wanted (late invoices; never reuse this idea):
+- norm: Invoicing tools send the client timed reminder emails from the freelancer.
+- flaw: Every nudge comes from the person who has to keep working with the client, so they soften it or skip it.
+- shift: Borrow from escrow and collections: the payment deadline belongs to a neutral third party, not the freelancer.
+- obvious: Friendlier reminder templates.
+- twists: "Bad cop inbox": when an invoice goes overdue, the reminder comes from a named accounts desk, not from you. "Pay-to-unlock files": when the invoice clears, the final files release.
+- whyLove: You get paid without having the conversation you've been avoiding.
+
 Rules:
+- Banned unless you describe a specific new mechanism: AI reminders, gamification, badges, social or community features, "better UI", dashboards, analytics, "AI-powered" anything.
+- Don't name an idea by its virtue (Better-, Smart-, Fair-, Easy-). Don't just remove the thing people hate; replace it with something.
+- If a finding only justifies a feature inside an existing product, say so (form: "feature"). Don't force a startup.
 - 2 to 4 ideas, each through a different lens, unless the request gives a different number. Quality over count; skip lenses the evidence doesn't support.
 - Every idea must solve this exact problem for these exact people. An idea that would fit another audience just as well is wrong.
 - complaintIds: the ids of the complaints this idea answers. At least 2, or at least 1 when the request says it is a niche signal. Never invent ids.
 - title: a product name idea plus what it is, under 8 words ("NoShow Shield: deposits for barbers").
-- pitch: one sentence a customer would understand.
+- pitch: one sentence a customer would understand, showing what works differently here.
+- form: "product" if it can stand alone, "feature" if it belongs inside an existing product.
+- norm: what most existing products do, in one sentence. Base it on what the complaints and the existing products list show.
+- flaw: why that fails these people, in one sentence, tied to the complaints.
+- obvious: the first fix anyone would suggest, which this idea must go beyond.
+- shift: the different approach, in one sentence, and the field it borrows from if any. Not "the same thing, but better", and not the obvious fix.
+- twists: 2 to 4 mechanics. name: 2–4 memorable words. how: one sentence in the form "When X happens, Y happens", describing a moment no ordinary product in this category has. A twist must not restate the shift or be a settings option.
+- whyLove: the concrete benefit and why they'd pick it over what they use now, in one sentence.
+- competitorCheck: using ONLY the "Existing products" list, say which of them already do part of this and what's left. If no list is given, or it doesn't show either way, write "Not checked yet". Never claim something is unique, and never name products from memory.
+- unproven: the assumption about this idea the complaints don't prove, in one sentence.
 - whoPays: the specific buyer (not "businesses").
 - price: a rough monthly price with the reason, based on what similar products charge ("$15–30/mo, like booking add-ons").
-- wedge: why someone would switch to it today, in one sentence tied to the complaints.
+- wedge: the first group or moment that makes someone switch today, in one sentence tied to the complaints.
 - mvp: the smallest first version one developer could ship in 1–2 weeks.
 - firstUsers: where to find the first 10 users, concretely (the communities, sites or groups these complaints came from).
 - risks: the biggest reason it might fail, in one sentence.
@@ -158,7 +185,9 @@ Return:
 - questions: 5 short interview or survey questions that test whether the problem is real and painful enough to pay for. Ask about past behavior, not opinions about the idea ("When did this last happen?", not "Would you use…?").
 - outreach: a 2–3 sentence message to one of the people who complained, asking for a 15-minute chat. Friendly, specific, no selling.`;
 
-export const REMIX_SYSTEM = `You generate new product ideas for a validated problem, following a twist the founder asked for. Use the same rules as before: each idea cites at least 2 complaint ids from the list, is tied to the evidence, has a concrete first version and a place to find the first 10 users. 2–3 ideas. Plain words, no invented numbers.`;
+export const REMIX_SYSTEM = `${IDEAS_SYSTEM}
+
+This time the founder asked for a twist on this problem. Generate 2 or 3 new ideas that follow it, at least 1 complaint id each, and don't repeat the idea you were given.`;
 
 export const DEDUPE_SYSTEM = `You keep Unmet's public feed free of repeats. You get new problem cards and existing ones (slug + headline + who).
 For each new card, set duplicateOf to the slug of an existing card that describes the same underlying problem for the same people (different wording is still the same problem), or "" if it's genuinely new. Be strict: similar topic but a different pain is NOT a duplicate.`;

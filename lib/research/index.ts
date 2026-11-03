@@ -108,7 +108,7 @@ const CLARIFY_OPTIONS = [
 ];
 
 /** `signal` aborts when the visitor leaves: the pipeline stops between steps (and inside AI calls). */
-export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent) => void, signal?: AbortSignal, fresh = false) {
+export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent) => void, signal?: AbortSignal, fresh = false, background = fresh) {
   const base = DEPTH[req.depth];
   const check = () => signal?.throwIfAborted();
   const isFirst = req.history.length === 0;
@@ -374,8 +374,9 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
       return undefined;
     };
     await Promise.all([
-      ...ideaCards.map(async (card) => {
-        card.ideas = await generateIdeas(card, complaintsOf.get(card.slug)!, true, plan.product).catch(onError);
+      ...ideaCards.map(async (card, i) => {
+        // Someone's own search gets the better model on its top problem; the scheduled jobs stay on the light one.
+        card.ideas = await generateIdeas(card, complaintsOf.get(card.slug)!, true, plan.product, i === 0 && !background).catch(onError);
       }),
       generateOneIdeaEach(singleCards, (card) => complaintsOf.get(card.slug)!).catch(onError),
     ]);

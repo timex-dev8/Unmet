@@ -77,7 +77,8 @@ export async function POST(request: Request) {
     }
     const out = await generateJson(IdeasSchema, {
       system: REMIX_SYSTEM,
-      timeoutMs: 30_000,
+      timeoutMs: 60_000,
+      temperature: 0.8,
       prompt: `${base}\n\nTwist the founder asked for: ${twist}${idea ? `\nStarting from this idea: ${idea.title}. ${idea.pitch}` : ""}`,
     });
     // Remixed ideas need only one cited quote: the card carries a few quotes, not every complaint.

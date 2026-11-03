@@ -48,6 +48,15 @@ export type Idea = {
   lens: IdeaLens;
   title: string;
   pitch: string; // one line
+  // The founder's reasoning; missing on ideas saved before it existed.
+  form?: "product" | "feature";
+  norm?: string; // what most existing products do
+  flaw?: string; // why that fails these people
+  shift?: string; // the different approach
+  twists?: { name: string; how: string }[];
+  whyLove?: string;
+  competitorCheck?: string; // only from the products we found
+  unproven?: string; // what the complaints don't prove yet
   whoPays: string;
   price: string; // rough, from comparable products
   wedge: string; // why someone would switch to it

@@ -16,9 +16,22 @@ import { kindOf } from "./quality";
 const LENSES = ["automate", "vertical", "unbundle", "service", "wedge", "connector", "shovels"] as const;
 
 export const IdeaDraft = z.object({
+  // Reasoning comes first, so the model works past the obvious fix before it names anything.
+  norm: z.string().default(""),
+  flaw: z.string().default(""),
+  obvious: z.string().default(""),
+  shift: z.string().default(""),
   lens: z.enum(LENSES),
+  form: z.enum(["product", "feature"]).catch("product"),
   title: z.string(),
   pitch: z.string(),
+  twists: z
+    .array(z.object({ name: z.string(), how: z.string() }))
+    .max(4)
+    .default([]),
+  whyLove: z.string().default(""),
+  competitorCheck: z.string().default(""),
+  unproven: z.string().default(""),
   whoPays: z.string(),
   price: z.string(),
   wedge: z.string(),
@@ -32,7 +45,7 @@ export const IdeasSchema = z.object({ ideas: z.array(IdeaDraft).max(4) });
 type Draft = z.infer<typeof IdeaDraft>;
 
 export function ideasPrompt(
-  card: Pick<Card, "headline" | "summary" | "who" | "report">,
+  card: Pick<Card, "headline" | "summary" | "who" | "report" | "competitors">,
   complaints: { id: string; quote: string; pain: string; signal?: string }[],
 ) {
   return [
@@ -41,6 +54,7 @@ export function ideasPrompt(
     `Who: ${card.who}`,
     card.report?.today ? `What they use today: ${card.report.today}` : "",
     card.report?.workarounds.length ? `Workarounds people describe: ${card.report.workarounds.join("; ")}` : "",
+    card.competitors?.length ? `Existing products:\n${card.competitors.map((c) => `- ${c.name}${c.note ? `: ${c.note}` : ""}`).join("\n")}` : "",
     `\nVerified complaints:\n${complaints.map((c) => `${c.id} | ${c.signal ? `[${c.signal}] ` : ""}${c.pain} | “${c.quote}”`).join("\n")}`,
   ]
     .filter(Boolean)
@@ -68,6 +82,14 @@ export function finishIdeas(
         lens: d.lens as IdeaLens,
         title: d.title,
         pitch: d.pitch,
+        form: d.form,
+        norm: d.norm,
+        flaw: d.flaw,
+        shift: d.shift,
+        twists: d.twists,
+        whyLove: d.whyLove,
+        competitorCheck: d.competitorCheck,
+        unproven: d.unproven,
         whoPays: d.whoPays,
         price: d.price,
         wedge: d.wedge,
@@ -102,15 +124,16 @@ export async function checkBuilt({ idea, query }: Drafted) {
 }
 
 /** Ideas for one card. `check` runs the existing-product search (one Exa search per idea). */
-export async function generateIdeas(card: Card, complaints: Complaint[], check: boolean, product = ""): Promise<Idea[]> {
+export async function generateIdeas(card: Card, complaints: Complaint[], check: boolean, product = "", best = false): Promise<Idea[]> {
   // Gap mode: the complaints are about one product, so aim the ideas at winning its unhappy users.
   const focus = product
     ? `\n\nThese complaints are from users of ${product}. Prefer ideas that win them over: a wedge, an unbundled part done better, or a version made for a group ${product} serves badly. Name ${product} in the wedge.`
     : "";
   const out = await generateJson(IdeasSchema, {
     system: IDEAS_SYSTEM,
-    light: true,
-    timeoutMs: 40_000,
+    light: !best, // creative work is where the better model pays off, but its free quota is small
+    timeoutMs: 60_000,
+    temperature: 0.8,
     prompt: ideasPrompt(card, complaints) + focus,
   });
   // Prefer ideas backed by two complaints; a thin card still gets its best one-complaint idea.
@@ -128,7 +151,8 @@ export async function generateOneIdeaEach(cards: Card[], complaintsOf: (card: Ca
   const out = await generateJson(BatchSchema, {
     system: IDEAS_BATCH_SYSTEM,
     light: true,
-    timeoutMs: 40_000,
+    timeoutMs: 60_000,
+    temperature: 0.8,
     prompt: cards.map((card, i) => `## Problem P${i + 1}\n${ideasPrompt(card, complaintsOf(card))}`).join("\n\n"),
   });
   cards.forEach((card, i) => {

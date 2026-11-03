@@ -105,9 +105,15 @@ async function pickTopics(n: number) {
 
 async function researchTopic(topic: string) {
   const cards: Card[] = [];
-  await runResearch({ message: `What problems do ${topic} complain about?`, history: [], cards: [], depth: "high" }, (e: ResearchEvent) => {
-    if (e.type === "result") cards.push(...e.cards);
-  });
+  await runResearch(
+    { message: `What problems do ${topic} complain about?`, history: [], cards: [], depth: "high" },
+    (e: ResearchEvent) => {
+      if (e.type === "result") cards.push(...e.cards);
+    },
+    undefined,
+    false,
+    true,
+  );
   return addToFeed(cards, topic, { keepQuery: true }); // Unmet's own niche, not anyone's question
 }
 
