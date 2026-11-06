@@ -33,11 +33,12 @@ const Body = z.object({
 const COST = { low: 1, medium: 1, high: 3 } as const;
 
 // Limits that protect the free tiers, counted in Supabase (take_research_slot in supabase/schema.sql).
-// Guests: 6 per hour each, and RESEARCH_DAILY_CAP for all guests together per day.
+// Guests: 6 per hour each (accounts 12), and RESEARCH_DAILY_CAP for all guests together per day.
 // Accounts: their own bucket, so guests can't use up the day for them.
 const PER_HOUR = 6;
+const USER_HOUR = 12;
 const GUEST_DAY = 15;
-const USER_DAY = Number(process.env.RESEARCH_USER_DAILY_CAP ?? 30);
+const USER_DAY = Number(process.env.RESEARCH_USER_DAILY_CAP ?? 60);
 
 async function limited(visitor: string, isUser: boolean, depth: Depth) {
   const cost = COST[depth];
@@ -45,9 +46,9 @@ async function limited(visitor: string, isUser: boolean, depth: Depth) {
     visitor,
     isUser,
     cost,
-    hourLimit: PER_HOUR,
+    hourLimit: isUser ? USER_HOUR : PER_HOUR,
     dayLimit: isUser ? USER_DAY : GUEST_DAY,
-    globalDayLimit: isUser ? Number(process.env.RESEARCH_USERS_DAILY_CAP ?? 300) : Number(process.env.RESEARCH_DAILY_CAP ?? 50),
+    globalDayLimit: isUser ? Number(process.env.RESEARCH_USERS_DAILY_CAP ?? 600) : Number(process.env.RESEARCH_DAILY_CAP ?? 50),
   };
   let ok = await takeResearchSlot(slot);
   if (ok === null) {

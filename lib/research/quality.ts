@@ -21,7 +21,10 @@ export function kindOf(site: string, url: string): SourceKind {
   if (/(^|\.)(stackexchange\.com|stackoverflow\.com|superuser\.com|serverfault\.com|askubuntu\.com|quora\.com)$/.test(site)) return "qa";
   if (/(^|\.)(g2\.com|capterra\.com|getapp\.com|trustpilot\.com|softwareadvice\.com)$/.test(site)) return "review";
   if (site === "github.com") return /\/(issues|discussions)\//.test(url) ? "issue" : "blog";
-  if (/(^|\.)(reddit\.com|indiehackers\.com|producthunt\.com|lobste\.rs|dev\.to)$/.test(site) || /^(community|forum|forums|discuss|discourse)\./.test(site))
+  if (
+    /(^|\.)(reddit\.com|indiehackers\.com|producthunt\.com|lobste\.rs|dev\.to)$/.test(site) ||
+    /^(community|forum|forums|discuss|discourse)\./.test(site)
+  )
     return "forum";
   if (
     /(^|\.)(techcrunch\.com|theverge\.com|nytimes\.com|wsj\.com|bbc\.co\.uk|bbc\.com|cnbc\.com|reuters\.com|bloomberg\.com|theguardian\.com|forbes\.com|businessinsider\.com|axios\.com|wired\.com|arstechnica\.com)$/.test(
@@ -56,7 +59,10 @@ export function filterSources(sources: Omit<ResearchSource, "id">[], windowDays:
 
   for (const s of sources) {
     const kind = s.kind ?? kindOf(s.site, s.url);
-    const fingerprint = s.text.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 160);
+    const fingerprint = s.text
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "")
+      .slice(0, 160);
     if (seenUrl.has(s.url) || seenText.has(fingerprint)) {
       rejected.duplicate++;
       continue;
@@ -85,7 +91,15 @@ export function filterSources(sources: Omit<ResearchSource, "id">[], windowDays:
 }
 
 // No single service may crowd out the rest (App Store reviews can flood a business topic).
-const ORIGIN_CAP: Partial<Record<ResearchSource["origin"], number>> = { reddit: 14, appstore: 8, hn: 10, stackexchange: 8, github: 8, bluesky: 10, discourse: 8 };
+const ORIGIN_CAP: Partial<Record<ResearchSource["origin"], number>> = {
+  reddit: 14,
+  appstore: 8,
+  hn: 10,
+  stackexchange: 8,
+  github: 8,
+  bluesky: 10,
+  discourse: 8,
+};
 
 /** Picks the best sources while keeping every service represented (round-robin by origin). */
 export function pickDiverse(sources: ResearchSource[], max: number): ResearchSource[] {

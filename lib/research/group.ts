@@ -4,6 +4,7 @@ import { generateJson } from "@/lib/llm";
 import type { ResearchSource } from "@/lib/research-types";
 import { CATEGORIES } from "@/lib/types";
 import type { Complaint } from "./extract";
+import { fence } from "./extract";
 import { CRITIQUE_SYSTEM, GROUP_SYSTEM } from "./prompts";
 
 const GroupSchema = z.object({
@@ -30,7 +31,11 @@ const GroupSchema = z.object({
 
 export type DraftProblem = z.infer<typeof GroupSchema>["problems"][number];
 
-export async function groupComplaints(complaints: Complaint[], sources: ResearchSource[], ctx: { topic: string; request: string; segment: string; light?: boolean }) {
+export async function groupComplaints(
+  complaints: Complaint[],
+  sources: ResearchSource[],
+  ctx: { topic: string; request: string; segment: string; light?: boolean },
+) {
   const byId = new Map(sources.map((s) => [s.id, s]));
   return generateJson(GroupSchema, {
     system: GROUP_SYSTEM,
@@ -39,7 +44,7 @@ export async function groupComplaints(complaints: Complaint[], sources: Research
     prompt: `Topic: ${ctx.topic}\nThe person asked: ${ctx.request}\nSegment: ${ctx.segment}\nCategories: ${CATEGORIES.join(", ")}\n\nVerified complaints:\n${complaints
       .map((c) => {
         const s = byId.get(c.sourceId)!;
-        return `${c.id} | source ${c.sourceId} (${s.site}) | ${c.who} | pain: ${c.pain} | “${c.quote}”`;
+        return `<complaint id="${c.id}" source="${c.sourceId}" site="${s.site}">${fence(c.who)} | pain: ${fence(c.pain)} | ${fence(c.quote)}</complaint>`;
       })
       .join("\n")}`,
   });

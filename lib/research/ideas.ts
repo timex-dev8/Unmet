@@ -4,6 +4,7 @@ import { searchProducts } from "@/lib/exa";
 import { generateJson } from "@/lib/llm";
 import type { Card, Idea, IdeaLens } from "@/lib/types";
 import type { Complaint } from "./extract";
+import { fence } from "./extract";
 import { IDEAS_BATCH_SYSTEM, IDEAS_SYSTEM } from "./prompts";
 import { productName } from "./competitors";
 import { kindOf } from "./quality";
@@ -17,31 +18,48 @@ const LENSES = ["automate", "vertical", "unbundle", "service", "wedge", "connect
 
 export const IdeaDraft = z.object({
   // Reasoning comes first, so the model works past the obvious fix before it names anything.
-  norm: z.string().default(""),
-  flaw: z.string().default(""),
-  obvious: z.string().default(""),
-  shift: z.string().default(""),
+  norm: z.string().describe("One sentence: what most products here do.").default(""),
+  flaw: z.string().describe("One sentence: why that fails these people, tied to the complaints.").default(""),
+  obvious: z.string().describe("The first fix anyone would suggest. The idea must go beyond it.").default(""),
+  shift: z.string().describe("2-3 sentences: the different system and the field it borrows from.").default(""),
   lens: z.enum(LENSES),
-  form: z.enum(["product", "feature"]).catch("product"),
-  title: z.string(),
-  pitch: z.string(),
+  form: z.enum(["product", "feature"]).describe("feature if it only belongs inside an existing product").catch("product"),
+  title: z.string().describe('"Name: what it is", under 8 words, e.g. "NoShow Shield: deposits for barbers".'),
+  pitch: z.string().describe("One sentence a customer gets, showing what works differently."),
   twists: z
-    .array(z.object({ name: z.string(), how: z.string() }))
+    .array(
+      z.object({
+        name: z.string().describe("2-4 memorable words"),
+        how: z.string().describe('"When X happens, Y happens": a moment no ordinary product has'),
+      }),
+    )
     .max(4)
+    .describe("3 or 4 mechanics, not settings, not the shift restated")
     .default([]),
-  whyLove: z.string().default(""),
-  competitorCheck: z.string().default(""),
-  unproven: z.string().default(""),
-  whoPays: z.string(),
-  price: z.string(),
-  wedge: z.string(),
-  mvp: z.string(),
-  firstUsers: z.string(),
-  risks: z.string(),
-  complaintIds: z.array(z.string()),
-  searchQuery: z.string(),
+  whyLove: z.string().describe("2 sentences: the moment they feel the difference, why they switch.").default(""),
+  competitorCheck: z
+    .string()
+    .describe('From the Existing products list only: who does part of this, what is left. Else "Not checked yet".')
+    .default(""),
+  unproven: z.string().describe("One sentence: the assumption the complaints do not prove.").default(""),
+  whoPays: z.string().describe("The specific buyer."),
+  price: z.string().describe('Rough monthly price with a reason, e.g. "$15-30/mo, like booking add-ons".'),
+  wedge: z.string().describe("One sentence: the first group or moment that makes someone switch."),
+  mvp: z.string().describe("Smallest version one developer ships in 1-2 weeks."),
+  firstUsers: z.string().describe("Where to find the first 10 users, concretely."),
+  risks: z.string().describe("One sentence: the biggest reason it fails."),
+  complaintIds: z.array(z.string()).describe("Ids of complaints this answers, at least 2 (1 for a niche signal)"),
+  searchQuery: z.string().describe("4-8 words to search for an existing product doing this."),
 });
-export const IdeasSchema = z.object({ thoughts: z.string().default(""), ideas: z.array(IdeaDraft).max(4) });
+export const IdeasSchema = z.object({
+  thoughts: z
+    .string()
+    .describe(
+      '4-6 sentences of founder notes to the reader: what is really going on, what the category missed, what you would try first. Say "I suspect" for guesses.',
+    )
+    .default(""),
+  ideas: z.array(IdeaDraft).max(4),
+});
 type Draft = z.infer<typeof IdeaDraft>;
 
 export function ideasPrompt(
@@ -55,7 +73,10 @@ export function ideasPrompt(
     card.report?.today ? `What they use today: ${card.report.today}` : "",
     card.report?.workarounds.length ? `Workarounds people describe: ${card.report.workarounds.join("; ")}` : "",
     card.competitors?.length ? `Existing products:\n${card.competitors.map((c) => `- ${c.name}${c.note ? `: ${c.note}` : ""}`).join("\n")}` : "",
-    `\nVerified complaints:\n${complaints.map((c) => `${c.id} | ${c.signal ? `[${c.signal}] ` : ""}${c.pain} | “${c.quote}”`).join("\n")}`,
+    `\nVerified complaints:\n${complaints
+      .slice(0, 12)
+      .map((c) => `<complaint id="${c.id}"${c.signal ? ` signal="${c.signal}"` : ""}>${fence(c.pain)} | ${fence(c.quote.slice(0, 220))}</complaint>`)
+      .join("\n")}`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -150,6 +171,7 @@ const BatchSchema = z.object({ ideas: z.array(IdeaDraft.extend({ problem: z.stri
 export async function generateOneIdeaEach(cards: Card[], complaintsOf: (card: Card) => Complaint[]) {
   if (!cards.length) return;
   const out = await generateJson(BatchSchema, {
+    schemaNotes: false,
     system: IDEAS_BATCH_SYSTEM,
     light: true,
     timeoutMs: 60_000,

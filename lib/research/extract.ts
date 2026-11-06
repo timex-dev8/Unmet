@@ -69,7 +69,10 @@ export async function extractComplaints(
       timeoutMs: 40_000,
       signal: opts.signal,
       prompt: `Topic: ${opts.topic}\nAudience: ${opts.audience}\n\nSources:\n${batch
-        .map((s) => `[${s.id}] ${s.title} (${s.site}${s.postedAt ? `, ${s.postedAt.slice(0, 10)}` : ""})\n${s.text.slice(0, 1800)}`)
+        .map(
+          (s) =>
+            `<source id="${s.id}" site="${s.site}"${s.postedAt ? ` date="${s.postedAt.slice(0, 10)}"` : ""}>\n${fence(s.title)}\n${fence(s.text.slice(0, 1800))}\n</source>`,
+        )
         .join("\n\n")}`,
     });
     opts.onBatch?.(++done, batches.length);
@@ -114,3 +117,6 @@ export async function extractComplaints(
   }
   return report;
 }
+
+/** Stops web text from closing or opening our tags. */
+export const fence = (t: string) => t.replace(/<\/?\s*(source|complaint|quote)\b/gi, "‹");

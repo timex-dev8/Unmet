@@ -108,6 +108,8 @@
   margin: 0;
   font-size: 17px;
   line-height: 1.55;
+  white-space: pre-line; /* the answer comes in paragraphs */
+  max-width: 68ch;
 }
 .error {
   margin: 0;

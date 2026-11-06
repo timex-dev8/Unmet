@@ -24,10 +24,21 @@ function gemini() {
   return (client ??= new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }));
 }
 
-function jsonSchemaFor(schema: z.ZodType) {
+function jsonSchemaFor(schema: z.ZodType, notes = true) {
   const { $schema, ...rest } = z.toJSONSchema(schema) as Record<string, unknown>;
   void $schema;
-  return rest;
+  return notes ? rest : stripNotes(rest);
+}
+
+// Big schemas with field notes can be refused by the light model ("invalid argument"), so large batches send them bare.
+function stripNotes(v: unknown): unknown {
+  if (Array.isArray(v)) return v.map(stripNotes);
+  if (!v || typeof v !== "object") return v;
+  return Object.fromEntries(
+    Object.entries(v)
+      .filter(([k]) => k !== "description")
+      .map(([k, x]) => [k, stripNotes(x)]),
+  );
 }
 
 // Free-tier models get busy ("high demand", 503) or rate-limited (429). When that happens,
@@ -74,7 +85,7 @@ const sleep = (ms: number, signal?: AbortSignal) =>
 /** Asks the model for JSON matching `schema`; the reply is validated before it is returned. */
 export async function generateJson<T>(
   schema: z.ZodType<T>,
-  opts: { system: string; prompt: string; timeoutMs?: number; signal?: AbortSignal; light?: boolean; temperature?: number },
+  opts: { system: string; prompt: string; timeoutMs?: number; signal?: AbortSignal; light?: boolean; temperature?: number; schemaNotes?: boolean },
 ): Promise<T> {
   const provider = process.env.LLM_PROVIDER ?? "gemini";
   if (provider !== "gemini") throw new LlmError(`LLM_PROVIDER "${provider}" is not supported yet`, "not_configured");
@@ -104,7 +115,7 @@ export async function generateJson<T>(
           config: {
             systemInstruction: opts.system,
             responseMimeType: "application/json",
-            responseJsonSchema: jsonSchemaFor(schema),
+            responseJsonSchema: jsonSchemaFor(schema, opts.schemaNotes !== false),
             temperature: opts.temperature ?? 0.3,
             // Thinking makes answers slow; these are extraction tasks, so keep it light.
             thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },

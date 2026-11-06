@@ -6,7 +6,10 @@ import { formatMrr } from "@/lib/text";
 import type { Card } from "@/lib/types";
 import { buildCard, kindMix, WINDOW_DAYS } from "./build";
 import { competitionFrom, findCompetitors, startupsFor } from "./competitors";
-import { extractComplaints, type Complaint } from "./extract";
+import { z } from "zod/v4";
+import { generateJson } from "@/lib/llm";
+import { extractComplaints, fence, type Complaint } from "./extract";
+import { HUNCH_SYSTEM } from "./prompts";
 import { critique, groupComplaints } from "./group";
 import { generateIdeas, generateOneIdeaEach } from "./ideas";
 import { makePlan } from "./plan";
@@ -112,7 +115,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   const base = DEPTH[req.depth];
   const check = () => signal?.throwIfAborted();
   const isFirst = req.history.length === 0;
-  const key = `v4:${req.depth}:${req.message.toLowerCase().replace(/\s+/g, " ").trim()}`;
+  const key = `v7:${req.depth}:${req.message.toLowerCase().replace(/\s+/g, " ").trim()}`;
   // Same first question at the same depth in the last 6 hours: answer from the cache (lib/research/store.ts).
   // The example searches are refreshed by a daily job, so they keep longer. `fresh` is that job, skipping the cache.
   const isExample = req.depth === "low" && EXAMPLE_SEARCHES.some((e) => e.toLowerCase() === req.message.trim().toLowerCase());
@@ -258,7 +261,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   if (sources.length === 0) {
     emit({
       type: "result",
-      answer: "I couldn't find recent posts from people describing this. These searches may work better:",
+      answer: await hunch(plan.topic, req.message, signal),
       cards: [],
       sourceCount: 0,
       suggestions: plan.suggestions,
@@ -284,7 +287,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   if (extracted.complaints.length < 1) {
     emit({
       type: "result",
-      answer: `I read ${sources.length} recent sources but found no first-hand complaints about this. These searches may work better:`,
+      answer: await hunch(plan.topic, req.message, signal),
       cards: [],
       sourceCount: sources.length,
       mix: mixLine(sources),
@@ -385,7 +388,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   if (cards.length === 0) {
     emit({
       type: "result",
-      answer: `I read ${sources.length} recent sources but found no first-hand complaints about this that I could turn into a problem. These searches may work better:`,
+      answer: await hunch(plan.topic, req.message, signal),
       cards: [],
       sourceCount: sources.length,
       mix: mixLine(sources),
@@ -394,7 +397,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     return;
   }
 
-  const answer = [grouped.answer, topSlug ? grouped.whyTop : "", grouped.notFound].filter(Boolean).join(" ");
+  const answer = [grouped.answer, [topSlug ? grouped.whyTop : "", grouped.notFound].filter(Boolean).join(" ")].filter(Boolean).join("\n\n");
 
   check();
   const result = { type: "result" as const, answer, cards, sourceCount: sources.length, mix: mixLine(sources), suggestions: plan.suggestions };
@@ -410,4 +413,29 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
 
 function mixLine(sources: ResearchSource[]) {
   return `Read ${sources.length} sources: ${kindMix(sources)}`;
+}
+
+const HunchSchema = z.object({
+  answer: z.array(z.string()).describe("Two paragraphs"),
+  hunches: z.array(z.object({ title: z.string(), why: z.string(), test: z.string() })).max(3),
+});
+
+/** No usable complaints: instead of a dead end, think with the person, clearly labelled as unproven hunches. */
+async function hunch(topic: string, asked: string, signal?: AbortSignal) {
+  const fallback = "People aren't complaining about this much online yet. These searches may find more:";
+  try {
+    const out = await generateJson(HunchSchema, {
+      system: HUNCH_SYSTEM,
+      prompt: `Topic: ${topic}\nThe person asked: <quote>${fence(asked.slice(0, 300))}</quote>`,
+      light: true,
+      temperature: 0.9,
+      signal,
+    });
+    const ideas = out.hunches.map((h) => `• ${h.title}. ${h.why} Test it: ${h.test}`).join("\n");
+    return [out.answer.join("\n\n"), ideas && `Hunches, not proof yet:\n${ideas}`, "These searches may find real complaints:"]
+      .filter(Boolean)
+      .join("\n\n");
+  } catch {
+    return fallback;
+  }
 }
