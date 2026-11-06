@@ -6,7 +6,7 @@
   padding: 24px 16px 48px;
 }
 .head {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 .title {
   margin: 0 0 8px;
@@ -21,6 +21,10 @@
 .grid {
   display: grid;
   gap: 32px;
+  max-width: 640px;
+}
+.grid.split {
+  max-width: none;
 }
 .write {
   min-width: 0;
@@ -33,7 +37,7 @@
 .composer {
   background: var(--white);
   border-radius: 18px;
-  padding: 16px 16px 12px 18px;
+  padding: 16px;
   box-shadow:
     inset 0 0 0 1px var(--line),
     var(--shadow-float);
@@ -47,7 +51,7 @@
 .textarea {
   display: block;
   width: 100%;
-  min-height: 112px;
+  min-height: 120px;
   max-height: 320px;
   border: 0;
   outline: 0;
@@ -64,27 +68,33 @@
 }
 .bar {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 8px;
+  margin-top: 12px;
 }
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 }
 .chip {
-  min-height: 34px;
+  position: relative;
+  min-height: 32px;
   padding: 0 12px;
   border: 0;
   border-radius: var(--radius-pill);
   background: var(--gray);
   color: var(--ink-2);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: transform var(--t-fast) var(--ease);
+}
+.chip::after {
+  content: "";
+  position: absolute;
+  inset: -6px 0;
 }
 .chip:hover {
   background: var(--tint);
@@ -97,6 +107,7 @@
   flex: none;
   width: 40px;
   height: 40px;
+  margin-top: -4px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -118,8 +129,15 @@
   transform: none;
 }
 .hint {
-  margin: 10px 4px 0;
+  margin: 8px 16px 0;
   font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-3);
+}
+.helper {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
   color: var(--muted);
 }
 
@@ -133,7 +151,7 @@
   color: var(--slate);
 }
 .write > .label {
-  margin: 28px 4px 4px;
+  margin: 28px 0 4px;
 }
 
 /* Notes */
@@ -146,7 +164,7 @@
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  padding: 10px 0 10px 4px;
+  padding: 12px 0;
   border-top: 1px solid var(--line);
 }
 .note:first-child {
@@ -164,7 +182,7 @@
   flex: none;
   width: 32px;
   height: 32px;
-  margin-top: -5px;
+  margin-top: -4px;
   border: 0;
   border-radius: 10px;
   background: none;
@@ -190,17 +208,23 @@
 
 /* Main action */
 .action {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
   margin-top: 20px;
 }
 .shape {
-  width: 100%;
+  min-width: 180px;
 }
-.action .hint {
-  text-align: center;
+.action .shape:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: none;
 }
 .error {
   margin: 12px 0 0;
-  padding: 10px 14px;
+  padding: 12px 16px;
   border-radius: 12px;
   background: var(--early-tint);
   color: var(--early-ink);
@@ -208,26 +232,29 @@
 }
 
 /* "See an example brief": a quiet button with an arrow that unfolds the example */
+.exampleToggle {
+  margin-top: 24px;
+}
 .exampleToggle summary {
   list-style: none;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: 44px;
-  padding: 0 16px;
+  gap: 4px;
+  min-height: 40px;
+  padding: 0 4px;
   border-radius: 12px;
-  background: var(--gray);
-  font-size: 15px;
+  background: none;
+  font-size: 14px;
   font-weight: 500;
-  color: var(--ink);
+  color: var(--muted);
   cursor: pointer;
-  transition: background var(--t-fast) var(--ease);
+  transition: color var(--t-fast) var(--ease);
 }
 .exampleToggle summary::-webkit-details-marker {
   display: none;
 }
 .exampleToggle summary:hover {
-  background: #ebeef5;
+  color: var(--ink);
 }
 .exampleToggle summary svg {
   transition: transform var(--t-med) var(--ease);
@@ -236,7 +263,7 @@
   transform: rotate(180deg);
 }
 .exampleToggle[open] > article {
-  margin-top: 12px;
+  margin-top: 8px;
   animation: example-in var(--t-med) var(--ease);
 }
 @keyframes example-in {
@@ -286,7 +313,7 @@
   border-top-color: var(--line);
 }
 .section .label {
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 .text,
 .missing {
@@ -312,7 +339,7 @@
 .actions {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   margin-top: 24px;
 }
 .check {
@@ -339,7 +366,12 @@
   .head {
     margin-bottom: 32px;
   }
-  .grid {
+  .action {
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+  }
+  .grid.split {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
     gap: 40px;
     align-items: start;
@@ -353,5 +385,14 @@
   }
   .idea {
     font-size: 32px;
+  }
+}
+
+@media (max-width: 599px) {
+  .shape {
+    width: 100%;
+  }
+  .action {
+    gap: 12px;
   }
 }

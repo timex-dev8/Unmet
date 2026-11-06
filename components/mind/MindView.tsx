@@ -103,7 +103,7 @@ export default function MindView({ configured }: { configured: boolean }) {
         <p className={s.lead}>Turn your idea into a clear plan before you build.</p>
       </header>
 
-      <div className={s.grid}>
+      <div className={`${s.grid} ${brief ? s.split : ""}`}>
         <section className={s.write} aria-label="Your notes">
           <form className={s.composer} onSubmit={onSubmit}>
             <label htmlFor="note" className="sr-only">
@@ -160,13 +160,23 @@ export default function MindView({ configured }: { configured: boolean }) {
                 {loading ? "Making it clear…" : brief ? "Update" : "Make it clear"}
               </button>
               {!configured ? (
-                <p className={s.hint}>The AI is being switched on.</p>
+                <p className={s.helper}>The AI is being switched on.</p>
               ) : notes.length === 0 ? (
-                <p className={s.hint}>Add a note first. One long description is enough.</p>
+                <p className={s.helper}>Add a note first. One long description is enough.</p>
               ) : (
-                stale && !loading && <p className={s.hint}>Your notes changed since this brief.</p>
+                stale && !loading && <p className={s.helper}>Your notes changed since this brief.</p>
               )}
             </div>
+          )}
+          {!brief && (
+            // The example stays folded away until asked for
+            <details className={s.exampleToggle}>
+              <summary>
+                See an example brief
+                <ChevronDown size={16} aria-hidden="true" />
+              </summary>
+              <Brief brief={EXAMPLE} example />
+            </details>
           )}
           {error && (
             <p className={s.error} role="alert">
@@ -175,20 +185,11 @@ export default function MindView({ configured }: { configured: boolean }) {
           )}
         </section>
 
-        <section className={s.side} aria-live="polite" aria-label={brief ? "Your brief" : "Example brief"}>
-          {brief ? (
+        {brief && (
+          <section className={s.side} aria-live="polite" aria-label="Your brief">
             <Brief brief={brief} count={brief.count} quiet={stale} />
-          ) : (
-            // The example stays folded away until asked for
-            <details className={s.exampleToggle}>
-              <summary>
-                See an example brief
-                <ChevronDown size={18} aria-hidden="true" />
-              </summary>
-              <Brief brief={EXAMPLE} example />
-            </details>
-          )}
-        </section>
+          </section>
+        )}
       </div>
     </div>
   );
