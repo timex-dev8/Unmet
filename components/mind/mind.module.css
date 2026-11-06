@@ -366,11 +366,6 @@
   .head {
     margin-bottom: 32px;
   }
-  .action {
-    flex-direction: row;
-    align-items: center;
-    gap: 16px;
-  }
   .grid.split {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
     gap: 40px;
@@ -394,5 +389,170 @@
   }
   .action {
     gap: 12px;
+  }
+}
+
+/* Empty state: centred, calm, inspiring */
+.in {
+  animation: empty-in 0.35s var(--ease) backwards;
+  animation-delay: calc(var(--i, 0) * 80ms);
+}
+@keyframes empty-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.empty {
+  max-width: 720px;
+  padding-top: 24px;
+}
+.empty .head {
+  text-align: center;
+}
+.empty .grid {
+  max-width: none;
+}
+.empty .hint {
+  text-align: center;
+  margin: 12px 0 0;
+}
+.empty .action {
+  align-items: center;
+  margin-top: 20px;
+}
+.empty .shape {
+  min-width: 200px;
+  width: auto;
+}
+.empty .helper {
+  text-align: center;
+}
+.empty .exampleToggle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 32px;
+}
+.caption {
+  margin: 0 0 16px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+}
+.sparks {
+  margin-top: 40px;
+}
+.sparkGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+.spark {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 18px 20px;
+  border: 0;
+  border-radius: 20px;
+  background: var(--mist);
+  box-shadow: inset 0 0 0 1px var(--mist-line);
+  font: inherit;
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    transform var(--t-fast) var(--ease),
+    box-shadow var(--t-fast) var(--ease);
+}
+.spark:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 0 0 1px var(--mist-line),
+    var(--shadow-float);
+}
+.spark:active {
+  transform: translateY(0);
+}
+.spark:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.sparkIcon {
+  margin-bottom: 8px;
+  color: var(--primary);
+}
+.sparkTitle {
+  font-size: 15px;
+  font-weight: 700;
+}
+.sparkText {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.steps {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin: 40px 0 0;
+  padding: 0;
+}
+.step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.stepNum {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--tint);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+@media (min-width: 900px) {
+  .empty {
+    padding-top: 56px;
+  }
+  .sparkGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .steps {
+    flex-direction: row;
+    justify-content: center;
+    gap: 0;
+  }
+  .step + .step::before {
+    content: "";
+    width: 40px;
+    height: 1px;
+    margin: 0 16px;
+    background: var(--line);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .in {
+    animation: none;
+  }
+  .spark {
+    transition: none;
+  }
+  .spark:hover {
+    transform: none;
   }
 }

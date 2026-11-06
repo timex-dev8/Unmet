@@ -2,7 +2,7 @@
 
 import { useRef, useState, type CSSProperties, type FormEvent, type KeyboardEvent } from "react";
 import Link from "next/link";
-import { ArrowRight, ArrowUp, ChevronDown, LoaderCircle, X } from "lucide-react";
+import { ArrowRight, ArrowUp, Camera, ChevronDown, Dog, LoaderCircle, Scissors, Sprout, X, type LucideIcon } from "lucide-react";
 import { ideaHref, researchHref } from "@/lib/links";
 import { addThought, removeThought, saveConclusion, useMind } from "@/lib/mind";
 import type { MindBrief } from "@/lib/mind-types";
@@ -18,6 +18,15 @@ const STARTERS = [
   { label: "Who it’s for", text: "It’s for " },
   { label: "A worry", text: "I’m not sure about " },
 ];
+
+const SPARKS: { icon: LucideIcon; title: string; text: string }[] = [
+  { icon: Dog, title: "Dog walkers", text: "A booking app for dog walkers with payments and reviews, not sure about pricing." },
+  { icon: Scissors, title: "Barbershop no-shows", text: "Barbers lose slots to no-shows. I want deposits, but worry clients will hate it." },
+  { icon: Camera, title: "Wedding photo backlog", text: "Photographers take weeks to cull photos. A tool that sorts the best shots first." },
+  { icon: Sprout, title: "Plant care for renters", text: "Renters kill plants when they travel. Maybe a neighbour swap or reminders." },
+];
+
+const STEPS = ["Write rough notes", "Get a clear brief", "Know what to test first"];
 
 /** Shown before the first brief, so people know what they'll get. */
 const EXAMPLE: MindBrief = {
@@ -62,6 +71,10 @@ export default function MindView({ configured }: { configured: boolean }) {
       add();
     }
   }
+  function spark(text: string) {
+    addThought(text);
+    box.current?.focus();
+  }
   function start(text: string) {
     const next = input.trim() ? `${input.trimEnd()}\n${text}` : text;
     setInput(next);
@@ -94,18 +107,19 @@ export default function MindView({ configured }: { configured: boolean }) {
   }
 
   const canShape = configured && notes.length > 0 && !loading;
+  const empty = !brief && notes.length === 0;
   const showButton = !brief || stale || loading;
 
   return (
-    <div className={s.page}>
-      <header className={s.head}>
+    <div className={`${s.page} ${empty ? s.empty : ""}`} data-wash={empty ? "" : undefined}>
+      <header className={`${s.head} ${empty ? s.in : ""}`} style={stagger(0)}>
         <h1 className={s.title}>Shape your idea</h1>
         <p className={s.lead}>Turn your idea into a clear plan before you build.</p>
       </header>
 
       <div className={`${s.grid} ${brief ? s.split : ""}`}>
         <section className={s.write} aria-label="Your notes">
-          <form className={s.composer} onSubmit={onSubmit}>
+          <form className={`${s.composer} ${empty ? s.in : ""}`} style={stagger(1)} onSubmit={onSubmit}>
             <label htmlFor="note" className="sr-only">
               Describe your idea
             </label>
@@ -167,6 +181,34 @@ export default function MindView({ configured }: { configured: boolean }) {
                 stale && !loading && <p className={s.helper}>Your notes changed since this brief.</p>
               )}
             </div>
+          )}
+          {empty && (
+            <>
+              <section className={`${s.sparks} ${s.in}`} style={stagger(2)} aria-labelledby="sparks-label">
+                <h2 id="sparks-label" className={s.caption}>
+                  Start from a spark
+                </h2>
+                <div className={s.sparkGrid}>
+                  {SPARKS.map(({ icon: Icon, title, text }) => (
+                    <button key={title} type="button" className={s.spark} onClick={() => spark(text)}>
+                      <Icon size={20} className={s.sparkIcon} aria-hidden="true" />
+                      <span className={s.sparkTitle}>{title}</span>
+                      <span className={s.sparkText}>{text}</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+              <ol className={`${s.steps} ${s.in}`} style={stagger(3)} aria-label="How it works">
+                {STEPS.map((step, i) => (
+                  <li key={step} className={s.step}>
+                    <span className={s.stepNum} aria-hidden="true">
+                      {i + 1}
+                    </span>
+                    {step}
+                  </li>
+                ))}
+              </ol>
+            </>
           )}
           {!brief && (
             // The example stays folded away until asked for
