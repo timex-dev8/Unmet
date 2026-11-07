@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type CSSProperties, type FormEvent, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type KeyboardEvent } from "react";
 import Link from "next/link";
 import { ArrowRight, ArrowUp, Camera, ChevronDown, Dog, LoaderCircle, Scissors, Sprout, X, type LucideIcon } from "lucide-react";
 import { ideaHref, researchHref } from "@/lib/links";
@@ -52,6 +52,11 @@ export default function MindView({ configured }: { configured: boolean }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const box = useRef<HTMLTextAreaElement>(null);
+
+  // The box grows as you type; shrink it back once a note is added and the text clears.
+  useEffect(() => {
+    if (!input && box.current) box.current.style.height = "";
+  }, [input]);
 
   // Notes are stored newest first; show and send them in the order they were written.
   const notes = [...thoughts].reverse();
@@ -127,11 +132,16 @@ export default function MindView({ configured }: { configured: boolean }) {
               id="note"
               ref={box}
               className={s.textarea}
-              rows={4}
+              rows={2}
               maxLength={2000}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onKeyDown}
+              onInput={(e) => {
+                const t = e.currentTarget;
+                t.style.height = "auto";
+                t.style.height = `${t.scrollHeight}px`;
+              }}
               placeholder="I want to build… It should… I’m not sure about…"
             />
             <div className={s.bar}>

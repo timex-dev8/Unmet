@@ -51,7 +51,7 @@
 .textarea {
   display: block;
   width: 100%;
-  min-height: 120px;
+  min-height: 56px;
   max-height: 320px;
   border: 0;
   outline: 0;
