@@ -41,15 +41,24 @@ function write(next: MindState) {
 
 const getSnapshot = () => (cache ??= read());
 
+// Another tab changed the stored value: drop the in-memory copy and re-read.
+function subscribe(l: () => void) {
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === KEY) {
+      cache = null;
+      l();
+    }
+  };
+  listeners.add(l);
+  window.addEventListener("storage", onStorage);
+  return () => {
+    listeners.delete(l);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
 export function useMind() {
-  return useSyncExternalStore(
-    (l) => {
-      listeners.add(l);
-      return () => listeners.delete(l);
-    },
-    getSnapshot,
-    () => EMPTY,
-  );
+  return useSyncExternalStore(subscribe, getSnapshot, () => EMPTY);
 }
 
 /** Adds one note, newest first. A long description with line breaks stays one note. */
@@ -65,9 +74,13 @@ export function removeThought(id: string) {
   write({ ...cur, thoughts: cur.thoughts.filter((t) => t.id !== id) });
 }
 
-export function saveConclusion(conclusion: MindBrief) {
+/** Marks the moment a brief is requested (see saveConclusion). */
+export const mindMark = () => ({ at: Date.now(), count: getSnapshot().thoughts.length });
+
+/** `at` and `count` are captured when the brief was requested, so notes added while it loaded still show as changed. */
+export function saveConclusion(conclusion: MindBrief, at: number = Date.now(), count?: number) {
   const cur = getSnapshot();
-  write({ ...cur, conclusion: { ...conclusion, at: Date.now(), count: cur.thoughts.length } });
+  write({ ...cur, conclusion: { ...conclusion, at, count: count ?? cur.thoughts.length } });
 }
 
 export const mindSync: Syncable<MindState> = {
@@ -83,9 +96,6 @@ export const mindSync: Syncable<MindState> = {
       conclusion: (mine?.at ?? 0) > (theirs?.at ?? 0) ? mine : theirs,
     };
   },
-  subscribe: (l: () => void) => {
-    listeners.add(l);
-    return () => void listeners.delete(l);
-  },
+  subscribe,
   clear: () => write(EMPTY),
 };

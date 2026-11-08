@@ -2,6 +2,7 @@ import "server-only";
 import { z } from "zod/v4";
 import { generateJson } from "@/lib/llm";
 import type { ResearchRequest } from "@/lib/research-types";
+import { fence } from "./extract";
 import { PLAN_SYSTEM } from "./prompts";
 import { STACK_SITES, TRUSTMRR_CATEGORIES } from "./sources/sites";
 
@@ -77,12 +78,14 @@ function pickGroups(n: number) {
 
 export async function makePlan(req: ResearchRequest, signal?: AbortSignal): Promise<Plan> {
   const prompt = [
-    req.history.length ? `Conversation so far:\n${req.history.map((t) => `${t.role}: ${t.text}`).join("\n")}` : "",
-    req.cards.length ? `Ideas already found:\n${req.cards.map((c, i) => `#${i + 1} ${c.headline}: ${c.summary}`).join("\n")}` : "",
+    req.history.length ? `Conversation so far:\n${req.history.map((t) => `<message role="${t.role}">${fence(t.text)}</message>`).join("\n")}` : "",
+    req.cards.length
+      ? `Ideas already found:\n${req.cards.map((c, i) => `#${i + 1} <card>${fence(`${c.headline}: ${c.summary}`)}</card>`).join("\n")}`
+      : "",
     `Allowed Stack Exchange sites: ${STACK_SITES.join(", ")}`,
     `Allowed TrustMRR categories: ${TRUSTMRR_CATEGORIES.join(", ")}`,
     `Groups for a "discover" or "clarify" plan: ${pickGroups(4).join(", ")}`,
-    `New message: ${req.message}`,
+    `New message: <message>${fence(req.message)}</message>`,
   ]
     .filter(Boolean)
     .join("\n\n");

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, ClipboardCheck, Copy, LoaderCircle, Sparkles } from "lucide-react";
 import { LENS_LABEL } from "@/lib/lenses";
 import type { Card, Idea } from "@/lib/types";
@@ -234,6 +234,8 @@ function IdeaView({ idea, card }: { idea: Idea; card: Card }) {
 
 function ValidationPlan({ plan }: { plan: Validation }) {
   const [copied, setCopied] = useState(false);
+  const copyTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(copyTimer.current), []);
   return (
     <div className={`${s.plan} rise`}>
       <p className={s.planLabel}>1 · Landing page (in their words)</p>
@@ -262,9 +264,14 @@ function ValidationPlan({ plan }: { plan: Validation }) {
           type="button"
           className={s.copy}
           onClick={async () => {
-            await navigator.clipboard.writeText(plan.outreach).catch(() => {});
+            try {
+              await navigator.clipboard.writeText(plan.outreach);
+            } catch {
+              return; // no clipboard access (insecure page or denied): don't claim it copied
+            }
             setCopied(true);
-            setTimeout(() => setCopied(false), 1500);
+            clearTimeout(copyTimer.current);
+            copyTimer.current = setTimeout(() => setCopied(false), 1500);
           }}
         >
           <Copy size={14} aria-hidden="true" />

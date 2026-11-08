@@ -78,7 +78,7 @@ export default function ResearchChat({
 
   async function send(text: string) {
     const message = text.trim();
-    if (!message || busy || !configured) return;
+    if (!message || busy || !configured || !authKnown) return; // before auth is known, lowOnly would submit a Low-depth run
 
     // A new research gets its own thread and URL; the stream keeps writing to it by id.
     let tid = threadId;
@@ -115,27 +115,37 @@ export default function ResearchChat({
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
-      for (;;) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? "";
-        for (const line of lines) {
-          if (!line.trim()) continue;
-          const event = JSON.parse(line) as ResearchEvent;
-          if (event.type === "step") patch(reply.id, (m) => ({ steps: [...(m.steps ?? []), event.label] }));
-          else if (event.type === "result")
-            patch(reply.id, () => ({
-              text: event.answer,
-              cards: event.cards,
-              sourceCount: event.sourceCount,
-              mix: event.mix,
-              suggestions: event.suggestions,
-              pending: false,
-            }));
-          else patch(reply.id, () => ({ text: event.message, error: true, pending: false }));
+      try {
+        for (;;) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() ?? "";
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            let event: ResearchEvent;
+            try {
+              event = JSON.parse(line) as ResearchEvent;
+            } catch {
+              continue; // one bad line shouldn't discard the rest of the stream
+            }
+            if (event.type === "step") patch(reply.id, (m) => ({ steps: [...(m.steps ?? []), event.label] }));
+            else if (event.type === "result")
+              patch(reply.id, () => ({
+                text: event.answer,
+                cards: event.cards,
+                sourceCount: event.sourceCount,
+                mix: event.mix,
+                suggestions: event.suggestions,
+                pending: false,
+              }));
+            else patch(reply.id, () => ({ text: event.message, error: true, pending: false }));
+          }
         }
+      } catch (err) {
+        void reader.cancel().catch(() => {});
+        throw err;
       }
       // Stream ended without a result (for example a timeout).
       patch(reply.id, (m) => (m.pending ? { text: "The research took too long. Please try again.", error: true, pending: false } : {}));
@@ -145,6 +155,7 @@ export default function ResearchChat({
   }
 
   function submit() {
+    if (!authKnown) return;
     const text = input;
     setInput("");
     send(text);
@@ -231,7 +242,7 @@ export default function ResearchChat({
               disabled={!configured}
             />
             {!lowOnly && <DepthPicker value={depth} onChange={setDepth} disabled={busy} placement={empty ? "down" : "up"} />}
-            <button type="submit" className={`glossy ${s.send}`} disabled={!input.trim() || busy || !configured} aria-label="Send">
+            <button type="submit" className={`glossy ${s.send}`} disabled={!input.trim() || busy || !configured || !authKnown} aria-label="Send">
               {busy ? <LoaderCircle size={20} className="spin" aria-hidden="true" /> : <ArrowUp size={20} aria-hidden="true" />}
             </button>
           </form>

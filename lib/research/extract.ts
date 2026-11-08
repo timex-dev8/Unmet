@@ -12,7 +12,7 @@ import { findQuote } from "./verify";
 const ExtractSchema = z.object({
   sources: z.array(
     z.object({
-      id: z.number().int(),
+      id: z.number().int().min(0).max(9999),
       firstHand: z.boolean(),
       relevance: z.number().int().min(0).max(3),
       who: z.string(),
@@ -31,7 +31,7 @@ const ExtractSchema = z.object({
 });
 
 export type Complaint = { id: string; sourceId: number; quote: string; pain: string; who: string; signal?: Signal };
-export type ExtractReport = { complaints: Complaint[]; offTopic: number; secondHand: number; unverified: number };
+export type ExtractReport = { complaints: Complaint[]; offTopic: number; secondHand: number; unverified: number; failedBatches: number };
 
 /** Runs async jobs with at most `limit` in flight (keeps the free AI tier from rate-limiting us). */
 async function pool<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<PromiseSettledResult<R>[]> {
@@ -85,10 +85,13 @@ export async function extractComplaints(
     throw first?.reason ?? new Error("Couldn't read the sources.");
   }
 
-  const report: ExtractReport = { complaints: [], offTopic: 0, secondHand: 0, unverified: 0 };
+  const report: ExtractReport = { complaints: [], offTopic: 0, secondHand: 0, unverified: 0, failedBatches: 0 };
   let n = 0;
   for (const r of results) {
-    if (r.status !== "fulfilled") continue;
+    if (r.status !== "fulfilled") {
+      report.failedBatches++;
+      continue;
+    }
     for (const s of r.value) {
       const src = byId.get(s.id);
       if (!src) continue;
@@ -119,4 +122,4 @@ export async function extractComplaints(
 }
 
 /** Stops web text from closing or opening our tags. */
-export const fence = (t: string) => t.replace(/<\/?\s*(source|complaint|quote)\b/gi, "‹");
+export const fence = (t: string) => t.replace(/<\/?\s*(source|complaint|quote|product|competitor|card|message)\b/gi, "‹");

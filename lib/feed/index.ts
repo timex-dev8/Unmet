@@ -2,6 +2,7 @@ import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { z } from "zod/v4";
 import { generateJson, LlmError } from "@/lib/llm";
+import { fence } from "@/lib/research/extract";
 import { runResearch } from "@/lib/research";
 import { DEDUPE_SYSTEM } from "@/lib/research/prompts";
 import { publicCard } from "@/lib/research/store";
@@ -16,14 +17,16 @@ import { SEED_TOPICS } from "./topics";
 // sources, never who asked). Repeats are merged, so evidence grows instead of duplicating.
 
 const STALE_DAYS = 30;
-const DedupeSchema = z.object({ cards: z.array(z.object({ index: z.number().int(), duplicateOf: z.string() })) });
+const DedupeSchema = z.object({ cards: z.array(z.object({ index: z.number().int().min(0).max(999), duplicateOf: z.string() })) });
 
 const warn = (what: string, err: unknown) => console.warn(`[feed] ${what}:`, err instanceof Error ? err.message : err);
 
 /** Same problem: keep the old slug (shared links keep working) and pool the sources. */
 function pool(card: Card, old: Card, now: string): Card {
   const base = card.sources.length >= old.sources.length ? card : old;
-  const sources = [...new Map([...card.sources, ...old.sources].map((s) => [s.url, s])).values()].slice(0, 14);
+  // The base card's sources go first, so the cut can't drop the one behind the quote it shows.
+  const other = base === card ? old : card;
+  const sources = [...new Map([...base.sources, ...other.sources].map((s) => [s.url, s])).values()].slice(0, 14);
   return { ...base, slug: old.slug, sources, evidence: { ...base.evidence, threads: sources.length, updatedAt: now } };
 }
 
@@ -32,7 +35,11 @@ function pool(card: Card, old: Card, now: string): Card {
  * `topic` is stored publicly, so it must never be someone's own question. Cards lose `query` (what
  * was searched) unless `keepQuery` says it's one of Unmet's own niches.
  */
-export async function addToFeed(cards: Card[], topic: string, opts: { keepQuery?: boolean } = {}): Promise<number> {
+export async function addToFeed(
+  cards: Card[],
+  topic: string,
+  opts: { keepQuery?: boolean; light?: boolean; signal?: AbortSignal } = {},
+): Promise<number> {
   if (!supabaseConfigured()) return 0;
   const fresh = cards.filter((c) => passesFeedBar(c));
   if (!fresh.length) return 0;
@@ -55,10 +62,15 @@ export async function addToFeed(cards: Card[], topic: string, opts: { keepQuery?
     const out = await generateJson(DedupeSchema, {
       system: DEDUPE_SYSTEM,
       timeoutMs: 25_000,
-      prompt: `New cards:\n${fresh.map((c, i) => `${i} | ${c.headline} | ${c.who}`).join("\n")}\n\nExisting cards:\n${[...known.values()]
-        .map((c) => `${c.slug} | ${c.headline} | ${c.who}`)
+      light: opts.light,
+      signal: opts.signal,
+      prompt: `New cards:\n${fresh.map((c, i) => `${i} | <card>${fence(`${c.headline} | ${c.who}`)}</card>`).join("\n")}\n\nExisting cards:\n${[
+        ...known.values(),
+      ]
+        .map((c) => `${c.slug} | <card>${fence(`${c.headline} | ${c.who}`)}</card>`)
         .join("\n")}`,
     }).catch((err) => {
+      if (opts.signal?.aborted) throw err; // out of time: saving unchecked cards would add repeats
       warn("dedupe", err);
       return { cards: [] };
     });
@@ -98,43 +110,46 @@ async function pickTopics(n: number) {
       SEED_TOPICS.map((topic) => ({ topic, origin: "seed" })),
       { onConflict: "topic", ignoreDuplicates: true },
     );
-  const { data, error } = await db().from("feed_topics").select("topic").order("last_run", { ascending: true, nullsFirst: true }).limit(n);
+  const { data, error } = await db().from("feed_topics").select("topic, origin").order("last_run", { ascending: true, nullsFirst: true }).limit(n);
   if (error) throw error;
-  return data.map((r) => r.topic as string);
+  return data.map((r) => ({ topic: r.topic as string, seed: r.origin === "seed" }));
 }
 
-async function researchTopic(topic: string) {
+async function researchTopic(topic: string, seed: boolean, signal?: AbortSignal) {
   const cards: Card[] = [];
   await runResearch(
     { message: `What problems do ${topic} complain about?`, history: [], cards: [], depth: "high" },
     (e: ResearchEvent) => {
       if (e.type === "result") cards.push(...e.cards);
     },
-    undefined,
+    signal,
     false,
     true,
   );
-  return addToFeed(cards, topic, { keepQuery: true }); // Unmet's own niche, not anyone's question
+  // A niche someone watches is that person's own topic, so only Unmet's seed niches are stored by name.
+  const stored = seed ? topic : (cards[0]?.category || "research").slice(0, 80);
+  return addToFeed(cards, stored, { keepQuery: seed, light: true, signal });
 }
 
 /**
  * One feed run: researches up to `max` niches one at a time (two at once overloads the free AI
- * tier), and stops starting new ones near the time limit. Then drops cards with no new evidence in 30 days.
+ * tier), and stops starting new ones near the time limit. `signal` cuts off the niche in progress so the run ends in time.
+ * Then drops cards with no new evidence in 30 days.
  */
-export async function runFeed({ max, deadline }: { max: number; deadline: number }) {
+export async function runFeed({ max, deadline, signal }: { max: number; deadline: number; signal?: AbortSignal }) {
   if (!supabaseConfigured()) throw new Error("Supabase isn't connected.");
   const topics = await pickTopics(max);
   const report: { topic: string; added: number; error?: string }[] = [];
-  for (const topic of topics) {
-    if (Date.now() >= deadline) break;
+  for (const { topic, seed } of topics) {
+    if (Date.now() >= deadline || signal?.aborted) break;
     let added = 0;
     try {
-      added = await researchTopic(topic).catch(async (err) => {
+      added = await researchTopic(topic, seed, signal).catch(async (err) => {
         // The AI was busy: wait a little and try this niche once more, if there's time
         const busy = (err instanceof LlmError && err.code === "rate_limited") || /busy/i.test(String(err));
         if (!busy || Date.now() + 90_000 > deadline) throw err;
         await new Promise((r) => setTimeout(r, 20_000));
-        return researchTopic(topic);
+        return researchTopic(topic, seed, signal);
       });
       report.push({ topic, added });
     } catch (err) {
@@ -143,8 +158,11 @@ export async function runFeed({ max, deadline }: { max: number; deadline: number
     // Marked as run even when it failed, so a broken niche waits its turn instead of going first every run.
     await db().from("feed_topics").update({ last_run: new Date().toISOString(), cards_found: added }).eq("topic", topic);
   }
-  const cutoff = new Date(Date.now() - STALE_DAYS * 86400_000).toISOString();
-  await db().from("feed_cards").delete().lt("updated_at", cutoff);
+  // A run where everything failed proves nothing is stale.
+  if (report.some((r) => !r.error)) {
+    const cutoff = new Date(Date.now() - STALE_DAYS * 86400_000).toISOString();
+    await db().from("feed_cards").delete().lt("updated_at", cutoff);
+  }
   return report;
 }
 

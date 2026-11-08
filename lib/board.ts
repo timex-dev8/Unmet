@@ -43,15 +43,24 @@ function write(next: BoardState) {
 
 const getSnapshot = () => (cache ??= read());
 
+// Another tab changed the stored value: drop the in-memory copy and re-read.
+function subscribe(l: () => void) {
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === KEY) {
+      cache = null;
+      l();
+    }
+  };
+  listeners.add(l);
+  window.addEventListener("storage", onStorage);
+  return () => {
+    listeners.delete(l);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
 export function useBoard() {
-  return useSyncExternalStore(
-    (l) => {
-      listeners.add(l);
-      return () => listeners.delete(l);
-    },
-    getSnapshot,
-    () => EMPTY,
-  );
+  return useSyncExternalStore(subscribe, getSnapshot, () => EMPTY);
 }
 
 export function entryFor(board: BoardState, slug: string): BoardEntry {
@@ -66,6 +75,13 @@ export function moveTo(slug: string, stage: Stage) {
 export function setNote(slug: string, note: string) {
   const cur = getSnapshot();
   write({ ...cur, [slug]: { ...entryFor(cur, slug), note: note.slice(0, 1000) } });
+}
+
+/** Drops a card's board entry (stage and note) when it is removed from the board. */
+export function removeEntry(slug: string) {
+  const cur = getSnapshot();
+  if (!(slug in cur)) return;
+  write(Object.fromEntries(Object.entries(cur).filter(([k]) => k !== slug)));
 }
 
 export function nextStage(stage: Stage): Stage | null {
@@ -90,9 +106,6 @@ export const boardSync: Syncable<BoardState> = {
     for (const [slug, e] of Object.entries(local)) if (!out[slug] || e.movedAt > out[slug].movedAt) out[slug] = e;
     return out;
   },
-  subscribe: (l: () => void) => {
-    listeners.add(l);
-    return () => void listeners.delete(l);
-  },
+  subscribe,
   clear: () => write({}),
 };

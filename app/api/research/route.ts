@@ -4,7 +4,7 @@ import { addToFeed } from "@/lib/feed";
 import { exaConfigured } from "@/lib/exa";
 import { LlmError, llmConfigured } from "@/lib/llm";
 import { clientIp, visitorId } from "@/lib/rate-limit";
-import { runResearch } from "@/lib/research";
+import { peekCached, runResearch } from "@/lib/research";
 import { takeMemorySlot, takeResearchSlot, type SlotRequest } from "@/lib/research/store";
 import { accountsConfigured, requestUser } from "@/lib/supabase/server";
 import type { Depth, ResearchEvent } from "@/lib/research-types";
@@ -78,6 +78,13 @@ export async function POST(request: Request) {
     return Response.json({ error: "Deep and Deepest research need a free account. Sign in, or use Quick." }, { status: 403 });
   }
 
+  // Saved answers cost no search or AI call, so they don't use up a research slot.
+  const saved = await peekCached(parsed.data).catch(() => null);
+  if (saved)
+    return new Response(JSON.stringify({ ...saved, cached: true }) + "\n", {
+      headers: { "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-store" },
+    });
+
   const blocked = await limited(user ? `u:${user.id}` : visitorId(clientIp(request)), Boolean(user), depth);
   if (blocked) return Response.json({ error: blocked }, { status: 429 });
 
@@ -97,15 +104,16 @@ export async function POST(request: Request) {
       try {
         await runResearch(parsed.data, emit, abort.signal);
         // Problems strong enough for everyone's feed are added after the answer is sent. Cards hold
-        // only public sources; the feed gets the planner's short topic (or the category), never the message.
+        // only public sources; the feed gets the category as topic, never anything derived from the person's message.
         const cards = found.flatMap((e) => (e.type === "result" ? e.cards : []));
-        const topic = (cards[0]?.query || cards[0]?.category || "research").slice(0, 80);
+        const topic = (cards[0]?.category || "research").slice(0, 80);
         if (cards.length) after(() => addToFeed(cards, topic).catch(() => 0));
       } catch (err) {
         if (abort.signal.aborted) {
           console.log("[research] stopped: the visitor left");
         } else {
-          const message = err instanceof LlmError || err instanceof Error ? err.message : "Something went wrong. Please try again.";
+          const busy = err instanceof LlmError && err.code === "rate_limited";
+          const message = busy ? "The AI is busy right now. Please try again in a minute." : "Something went wrong. Please try again.";
           console.error("[research]", err);
           emit({ type: "error", message });
         }

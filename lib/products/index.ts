@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { cacheLife, cacheTag } from "next/cache";
 import { z } from "zod/v4";
 import { generateJson } from "@/lib/llm";
+import { fence } from "@/lib/research/extract";
 import { PRODUCT_SYSTEM } from "@/lib/research/prompts";
 import { db, supabaseConfigured } from "@/lib/supabase/server";
 import { slugify } from "@/lib/text";
@@ -21,10 +22,11 @@ import type { RawProduct } from "./sources/types";
 
 const STALE_DAYS = 21;
 const MAX_NEW = 60; // new cards written per run (one AI call per 20)
+const RADAR_AT_ONCE = 5;
 const CardsSchema = z.object({
   products: z.array(
     z.object({
-      index: z.number().int(),
+      index: z.number().int().min(0).max(99),
       keep: z.boolean(),
       name: z.string(),
       oneLine: z.string(),
@@ -119,11 +121,11 @@ export async function collectProducts() {
 }
 
 /** Writes cards for new products (in the AI's own words) and drops the ones it flags. No new batch starts after `deadline`. */
-export async function writeCards(raw: RawProduct[], deadline = Infinity): Promise<Product[]> {
+export async function writeCards(raw: RawProduct[], deadline = Infinity, signal?: AbortSignal): Promise<Product[]> {
   const now = new Date().toISOString();
   const out: Product[] = [];
   for (let start = 0; start < raw.length; start += 20) {
-    if (Date.now() > deadline) {
+    if (Date.now() > deadline || signal?.aborted) {
       warn("write cards", `stopped at ${start} of ${raw.length}: out of time`);
       break;
     }
@@ -131,10 +133,12 @@ export async function writeCards(raw: RawProduct[], deadline = Infinity): Promis
     const res = await generateJson(CardsSchema, {
       system: PRODUCT_SYSTEM,
       timeoutMs: 60_000,
+      light: true,
+      signal,
       prompt: batch
         .map(
           (p, i) =>
-            `${i} | ${p.name}${p.hint ? ` (${p.hint})` : ""}\nDescription: ${p.description.replace(/\s+/g, " ").slice(0, 500)}\nProof: ${p.proof.map((x) => x.label).join("; ")}`,
+            `<product index="${i}">${fence(`${p.name}${p.hint ? ` (${p.hint})` : ""}\nDescription: ${p.description.replace(/\s+/g, " ").slice(0, 500)}\nProof: ${p.proof.map((x) => x.label).join("; ")}`)}</product>`,
         )
         .join("\n\n"),
     }).catch((err) => {
@@ -172,7 +176,7 @@ export async function writeCards(raw: RawProduct[], deadline = Infinity): Promis
  * The daily product run: collect, merge, refresh proof on products we already have, write cards
  * for new ones, add traffic rank when a Radar token is set, then drop products not seen in 3 weeks.
  */
-export async function runProducts({ deadline = Infinity }: { deadline?: number } = {}) {
+export async function runProducts({ deadline = Infinity, signal }: { deadline?: number; signal?: AbortSignal } = {}) {
   if (!supabaseConfigured()) throw new Error("Supabase isn't connected.");
   const { products: raw, counts } = await collectProducts();
   const scoreOf = new Map(raw.map((p) => [keyOf(p), p.weight]));
@@ -211,7 +215,7 @@ export async function runProducts({ deadline = Infinity }: { deadline?: number }
       });
     } else fresh.push(p);
   }
-  const written = await writeCards(roundRobin(fresh, MAX_NEW), deadline);
+  const written = await writeCards(roundRobin(fresh, MAX_NEW), deadline, signal);
   for (const p of written) {
     const owner = slugOwner.get(p.slug);
     if (owner && owner !== p.key) p.slug = `${p.slug.slice(0, 50)}-${shortHash(p.key!)}`;
@@ -220,11 +224,14 @@ export async function runProducts({ deadline = Infinity }: { deadline?: number }
 
   const all = [...refreshed, ...written];
   if (radarConfigured()) {
-    await Promise.allSettled(
-      all.map(async (p) => {
-        if (p.proof.some((x) => x.kind === "traffic")) return;
-        const t = await trafficRank(p.url);
-        if (t) p.proof = [...p.proof.slice(0, 3), t];
+    const todo = all.filter((p) => !p.proof.some((x) => x.kind === "traffic"));
+    await Promise.all(
+      Array.from({ length: Math.min(RADAR_AT_ONCE, todo.length) }, async () => {
+        while (todo.length && !signal?.aborted) {
+          const p = todo.shift()!;
+          const t = await trafficRank(p.url).catch(() => null);
+          if (t) p.proof = [...p.proof.slice(0, 3), t];
+        }
       }),
     );
   }
@@ -239,9 +246,10 @@ export async function runProducts({ deadline = Infinity }: { deadline?: number }
   if (rows.length) {
     const { error: upsertError } = await db().from("feed_products").upsert(rows);
     if (upsertError) throw upsertError;
+    // Only after a run that saved something: when every source fails, nothing is stale.
+    const cutoff = new Date(Date.now() - STALE_DAYS * 86400_000).toISOString();
+    await db().from("feed_products").delete().lt("updated_at", cutoff);
   }
-  const cutoff = new Date(Date.now() - STALE_DAYS * 86400_000).toISOString();
-  await db().from("feed_products").delete().lt("updated_at", cutoff);
   // Show HN is no longer collected; clear the cards it left behind.
   await db().from("feed_products").delete().eq("product->>source", "Hacker News");
   return {

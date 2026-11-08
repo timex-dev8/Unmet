@@ -3,6 +3,7 @@ import type { Card, SourceKind, Trend } from "@/lib/types";
 import s from "./card.module.css";
 
 export function windowLabel(days: number) {
+  if (days >= 700) return "last 2 years";
   return days >= 365 ? "last 12 months" : `last ${days} days`;
 }
 

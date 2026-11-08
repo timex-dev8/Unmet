@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, m } from "motion/react";
 import Link from "next/link";
 import { ChevronDown, Gauge, Lock } from "lucide-react";
-import { useLowOnly } from "@/lib/auth";
+import { useGuest, useLowOnly, useUser } from "@/lib/auth";
 import { DEPTHS, type Depth } from "@/lib/research-types";
 import DepthSlider from "./DepthSlider";
 import s from "./depthSlider.module.css";
@@ -28,7 +28,11 @@ export default function DepthPicker({
   // Guests (no account) research on Quick only; Deep and Deepest need a free account.
   const lowOnly = useLowOnly();
   const shown = lowOnly ? "low" : value;
+  const user = useUser();
+  const guest = useGuest();
+  const authKnown = user !== undefined && guest !== undefined;
   const pick = (d: Depth) => {
+    if (!authKnown) return; // lowOnly isn't final yet; don't overwrite the chosen depth with Low
     if (lowOnly && d !== "low") {
       setBlocked(true);
       onChange("low");

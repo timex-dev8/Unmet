@@ -162,6 +162,14 @@ create table if not exists user_data (
 
 alter table user_data enable row level security;
 
+-- Size limit per row (5 MB). NOT VALID: existing rows aren't checked, new writes are. Safe to re-run.
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'user_data_size_check' and conrelid = 'public.user_data'::regclass) then
+    alter table user_data add constraint user_data_size_check check (pg_column_size(data) < 5242880) not valid;
+  end if;
+end $$;
+
 -- Only the owner can read or change their rows.
 drop policy if exists "own rows: read" on user_data;
 create policy "own rows: read" on user_data for select to authenticated using (user_id = auth.uid());
@@ -260,6 +268,9 @@ begin
   end if;
   insert into research_hits (visitor, cost, is_user)
   values (take_research_slot.visitor, take_research_slot.cost, take_research_slot.is_user);
+  if random() < 0.02 then
+    delete from research_hits where at < now() - interval '3 days'; -- keep the table small
+  end if;
   return true;
 end;
 $$;
@@ -285,8 +296,25 @@ begin
   end if;
   insert into rate_hits (bucket) values (take_rate_slot.bucket);
   if random() < 0.02 then
-    delete from rate_hits where at < now() - interval '2 hours'; -- keep the table small
+    delete from rate_hits where at < now() - interval '26 hours'; -- keep the table small (daily pools need a day)
   end if;
+  return true;
+end;
+$$;
+
+-- Daily pool for the AI-only routes: everyone together per UTC day (bucket 'pool:<route>').
+create or replace function take_daily_slot(bucket text, day_limit int) returns boolean
+language plpgsql
+set search_path = public
+as $$
+begin
+  perform pg_advisory_xact_lock(hashtext('rate:' || take_daily_slot.bucket));
+  if (select count(*) from rate_hits r
+       where r.bucket = take_daily_slot.bucket
+         and r.at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc') >= day_limit then
+    return false;
+  end if;
+  insert into rate_hits (bucket) values (take_daily_slot.bucket);
   return true;
 end;
 $$;
@@ -295,8 +323,10 @@ $$;
 -- someone else's limit.
 revoke all on function take_research_slot(text, boolean, int, int, int, int) from public, anon, authenticated;
 revoke all on function take_rate_slot(text, int) from public, anon, authenticated;
+revoke all on function take_daily_slot(text, int) from public, anon, authenticated;
 grant execute on function take_research_slot(text, boolean, int, int, int, int) to service_role;
 grant execute on function take_rate_slot(text, int) to service_role;
+grant execute on function take_daily_slot(text, int) to service_role;
 
 -- Watched niches belong to whoever added them (app/api/watch): 10 per account, removed when that
 -- person stops watching, and gone with their account.

@@ -72,7 +72,9 @@ export function ideasPrompt(
     `Who: ${card.who}`,
     card.report?.today ? `What they use today: ${card.report.today}` : "",
     card.report?.workarounds.length ? `Workarounds people describe: ${card.report.workarounds.join("; ")}` : "",
-    card.competitors?.length ? `Existing products:\n${card.competitors.map((c) => `- ${c.name}${c.note ? `: ${c.note}` : ""}`).join("\n")}` : "",
+    card.competitors?.length
+      ? `Existing products:\n${card.competitors.map((c) => `<competitor>${fence(`${c.name}${c.note ? `: ${c.note}` : ""}`)}</competitor>`).join("\n")}`
+      : "",
     `\nVerified complaints:\n${complaints
       .slice(0, 12)
       .map((c) => `<complaint id="${c.id}"${c.signal ? ` signal="${c.signal}"` : ""}>${fence(c.pain)} | ${fence(c.quote.slice(0, 220))}</complaint>`)
@@ -135,9 +137,9 @@ const isProductPage = (url: string) => {
 };
 
 /** "Is it already built?": the closest existing product page for an idea, if any. Lowers the score a little. */
-export async function checkBuilt({ idea, query }: Drafted) {
+export async function checkBuilt({ idea, query }: Drafted, signal?: AbortSignal) {
   const since = new Date(Date.now() - 3 * 365 * 86400_000).toISOString();
-  const pages = await searchProducts(query || idea.pitch, since).catch(() => []);
+  const pages = await searchProducts(query || idea.pitch, since, signal).catch(() => []);
   const hit = pages.find((p) => kindOf(p.site, p.url) === "blog" && isProductPage(p.url));
   if (!hit) return;
   idea.similar = { name: productName(hit.title, hit.site), url: hit.url, note: hit.text.slice(0, 120) || undefined };
@@ -145,7 +147,14 @@ export async function checkBuilt({ idea, query }: Drafted) {
 }
 
 /** Ideas for one card. `check` runs the existing-product search (one Exa search per idea). */
-export async function generateIdeas(card: Card, complaints: Complaint[], check: boolean, product = "", best = false): Promise<Idea[]> {
+export async function generateIdeas(
+  card: Card,
+  complaints: Complaint[],
+  check: boolean,
+  product = "",
+  best = false,
+  signal?: AbortSignal,
+): Promise<Idea[]> {
   // Gap mode: the complaints are about one product, so aim the ideas at winning its unhappy users.
   const focus = product
     ? `\n\nThese complaints are from users of ${product}. Prefer ideas that win them over: a wedge, an unbundled part done better, or a version made for a group ${product} serves badly. Name ${product} in the wedge.`
@@ -153,6 +162,7 @@ export async function generateIdeas(card: Card, complaints: Complaint[], check: 
   const out = await generateJson(IdeasSchema, {
     system: IDEAS_SYSTEM,
     light: !best, // creative work is where the better model pays off, but its free quota is small
+    signal,
     timeoutMs: 60_000,
     temperature: 0.8,
     prompt: ideasPrompt(card, complaints) + focus,
@@ -161,19 +171,20 @@ export async function generateIdeas(card: Card, complaints: Complaint[], check: 
   // Prefer ideas backed by two complaints; a thin card still gets its best one-complaint idea.
   const backed = finishIdeas(out.ideas, complaints, card);
   const drafted = (backed.length ? backed : finishIdeas(out.ideas, complaints, card, 1)).slice(0, 3);
-  if (check) await Promise.all(drafted.map(checkBuilt));
+  if (check) await Promise.all(drafted.map((d) => checkBuilt(d, signal)));
   return drafted.map((d) => d.idea).sort((a, b) => b.score - a.score);
 }
 
-const BatchSchema = z.object({ ideas: z.array(IdeaDraft.extend({ problem: z.string() })).max(8) });
+const BatchSchema = z.object({ ideas: z.array(IdeaDraft.extend({ problem: z.string() })) });
 
 /** One idea each for the remaining cards, in a single AI call so a search doesn't use up the free model's rate limit. Sets `card.ideas`. */
-export async function generateOneIdeaEach(cards: Card[], complaintsOf: (card: Card) => Complaint[]) {
+export async function generateOneIdeaEach(cards: Card[], complaintsOf: (card: Card) => Complaint[], signal?: AbortSignal) {
   if (!cards.length) return;
   const out = await generateJson(BatchSchema, {
     schemaNotes: false,
     system: IDEAS_BATCH_SYSTEM,
     light: true,
+    signal,
     timeoutMs: 60_000,
     temperature: 0.8,
     prompt: cards.map((card, i) => `## Problem P${i + 1}\n${ideasPrompt(card, complaintsOf(card))}`).join("\n\n"),

@@ -6,7 +6,7 @@ import { m } from "motion/react";
 import { ArrowLeft, ArrowRight, NotebookPen, Sparkles, X } from "lucide-react";
 import { TrendBadge, windowLabel } from "@/components/card/parts";
 import Highlight from "@/components/motion/Highlight";
-import { entryFor, moveTo, nextStage, prevStage, setNote, STAGES, stageLabel, useBoard, type Stage } from "@/lib/board";
+import { entryFor, moveTo, nextStage, prevStage, removeEntry, setNote, STAGES, stageLabel, useBoard, type Stage } from "@/lib/board";
 import { STAGE_COLORS } from "@/lib/colors";
 import { digDeeperHref, ideaHref } from "@/lib/links";
 import { useSaved } from "@/lib/saved";
@@ -89,7 +89,16 @@ export default function BoardView() {
             </div>
             <p className={s.colHint}>{st.hint}</p>
             {byStage.get(st.id)!.map((card) => (
-              <Item key={card.slug} card={card} stage={st.id} note={entryFor(board, card.slug).note} onRemove={() => remove(card.slug)} />
+              <Item
+                key={card.slug}
+                card={card}
+                stage={st.id}
+                note={entryFor(board, card.slug).note}
+                onRemove={() => {
+                  remove(card.slug);
+                  removeEntry(card.slug);
+                }}
+              />
             ))}
             {byStage.get(st.id)!.length === 0 && <div className={s.drop}>Drop ideas here</div>}
           </section>

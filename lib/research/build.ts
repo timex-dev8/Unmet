@@ -14,19 +14,19 @@ export const WINDOW_DAYS = 365;
 const label = (v: number): Score["label"] => (v >= 67 ? "High" : v >= 40 ? "Medium" : "Low");
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, Math.round(v)));
 
-function trendOf(dates: number[], now: number): Trend {
+function trendOf(dates: number[], now: number, windowDays: number): Trend {
   if (dates.length < 3) return "steady";
-  const half = now - (WINDOW_DAYS / 2) * DAY;
+  const half = now - (windowDays / 2) * DAY;
   const recent = dates.filter((d) => d >= half).length;
   const older = dates.length - recent;
   return recent > older * 1.5 ? "rising" : older > recent * 1.5 ? "falling" : "steady";
 }
 
-/** Mentions per month over the window, oldest first. */
-function monthly(dates: number[], now: number) {
+/** Mentions over the window in 12 equal buckets, oldest first. */
+function monthly(dates: number[], now: number, windowDays: number) {
   const buckets = Array(12).fill(0);
   for (const d of dates) {
-    const i = 11 - Math.floor((now - d) / (30.5 * DAY));
+    const i = 11 - Math.floor((now - d) / ((windowDays / 12) * DAY));
     if (i >= 0 && i < 12) buckets[i]++;
   }
   return buckets;
@@ -86,8 +86,9 @@ export function buildCard(
   p: DraftProblem,
   complaints: Complaint[],
   sources: ResearchSource[],
-  opts: { topic: string; now: number; minSources: number; minSites: number },
+  opts: { topic: string; now: number; minSources: number; minSites: number; windowDays?: number },
 ): Card | null {
+  const windowDays = opts.windowDays ?? WINDOW_DAYS;
   const cById = new Map(complaints.map((c) => [c.id, c]));
   const sById = new Map(sources.map((s) => [s.id, s]));
   const own = [...new Set(p.complaintIds)].map((id) => cById.get(id)).filter((c): c is Complaint => Boolean(c));
@@ -116,7 +117,7 @@ export function buildCard(
   const engaged = used.filter((s) => s.engagement && s.engagement.score > 2).length;
   const engagementNote = engaged > 0 ? `, ${engaged} with votes or replies` : "";
 
-  const trend = trendOf(dates, opts.now);
+  const trend = trendOf(dates, opts.now, windowDays);
   return {
     slug: `${slugify(p.headline, 48)}-${Math.random().toString(36).slice(2, 6)}`,
     headline: p.headline,
@@ -130,8 +131,8 @@ export function buildCard(
     evidence: {
       posts: own.length,
       threads: used.length,
-      days: WINDOW_DAYS,
-      weekly: monthly(dates, opts.now),
+      days: windowDays,
+      weekly: monthly(dates, opts.now, windowDays),
       site: sites.size === 1 ? [...sites][0] : `${sites.size} sites`,
       updatedAt: new Date(opts.now * 1000).toISOString(),
     },
@@ -140,7 +141,7 @@ export function buildCard(
         value: demand,
         label: label(demand),
         basis: "data",
-        reason: `${used.length} ${used.length === 1 ? "source" : "sources"} on ${sites.size} ${sites.size === 1 ? "site" : "sites"}${engagementNote}, last 12 months`,
+        reason: `${used.length} ${used.length === 1 ? "source" : "sources"} on ${sites.size} ${sites.size === 1 ? "site" : "sites"}${engagementNote}, last ${Math.round(windowDays / 30.4)} months`,
       },
       competition: { value: p.competition.value, label: label(p.competition.value), basis: "ai", reason: p.competition.reason },
       difficulty: { value: p.difficulty.value, label: label(p.difficulty.value), basis: "ai", reason: p.difficulty.reason },

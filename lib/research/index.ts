@@ -7,7 +7,7 @@ import type { Card } from "@/lib/types";
 import { buildCard, kindMix, WINDOW_DAYS } from "./build";
 import { competitionFrom, findCompetitors, startupsFor } from "./competitors";
 import { z } from "zod/v4";
-import { generateJson } from "@/lib/llm";
+import { generateJson, LlmError } from "@/lib/llm";
 import { extractComplaints, fence, type Complaint } from "./extract";
 import { HUNCH_SYSTEM } from "./prompts";
 import { critique, groupComplaints } from "./group";
@@ -103,6 +103,10 @@ const NAMES: Record<ResearchSource["origin"], string> = {
   discourse: "community forums",
 };
 
+// The searches that go through Exa; the other services are small extras that fail quietly.
+const FORUMS = "forums & review sites";
+const EXA_JOBS = new Set<string>([NAMES.web, NAMES.reddit, FORUMS]);
+
 const CLARIFY_OPTIONS = [
   "Surprise me with a mix of problems",
   "Problems in healthcare",
@@ -110,15 +114,25 @@ const CLARIFY_OPTIONS = [
   "Problems for parents and families",
 ];
 
+const cacheKey = (req: ResearchRequest) => `v8:${req.depth}:${req.message.toLowerCase().replace(/\s+/g, " ").trim()}`;
+const isExampleSearch = (req: ResearchRequest) =>
+  req.depth === "low" && EXAMPLE_SEARCHES.some((e) => e.toLowerCase() === req.message.trim().toLowerCase());
+
+/** A saved answer for this first question, so the route can serve it without using up a research slot. */
+export async function peekCached(req: ResearchRequest) {
+  if (req.history.length > 0) return null;
+  return getCached(cacheKey(req), isExampleSearch(req) ? EXAMPLE_CACHE_MS : undefined);
+}
+
 /** `signal` aborts when the visitor leaves: the pipeline stops between steps (and inside AI calls). */
 export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent) => void, signal?: AbortSignal, fresh = false, background = fresh) {
   const base = DEPTH[req.depth];
   const check = () => signal?.throwIfAborted();
   const isFirst = req.history.length === 0;
-  const key = `v7:${req.depth}:${req.message.toLowerCase().replace(/\s+/g, " ").trim()}`;
+  const key = cacheKey(req);
   // Same first question at the same depth in the last 6 hours: answer from the cache (lib/research/store.ts).
   // The example searches are refreshed by a daily job, so they keep longer. `fresh` is that job, skipping the cache.
-  const isExample = req.depth === "low" && EXAMPLE_SEARCHES.some((e) => e.toLowerCase() === req.message.trim().toLowerCase());
+  const isExample = isExampleSearch(req);
   const hit = isFirst && !fresh ? await getCached(key, isExample ? EXAMPLE_CACHE_MS : undefined) : null;
   if (hit) {
     emit({ ...hit, cached: true });
@@ -196,7 +210,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
               ]
             : []),
           ...community.map((q) => ({
-            name: "forums & review sites",
+            name: FORUMS,
             run: searchWeb(q, `First-hand posts, questions and reviews from ${plan.audience} about their problems.`, {
               since: sinceIso,
               type: "auto",
@@ -251,7 +265,8 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   const serviceLine = [...perService].map(([name, e]) => (e.failed && !e.n ? `${name} failed` : `${name} ${e.n}`)).join(", ");
 
   // 3. Quality filter
-  const quality = filterSources(raw, plan.product ? PRODUCT_WINDOW_DAYS : WINDOW_DAYS);
+  const windowDays = plan.product ? PRODUCT_WINDOW_DAYS : WINDOW_DAYS;
+  const quality = filterSources(raw, windowDays);
   const sources = pickDiverse(quality.kept, cfg.maxSources);
   const rejectedCount = Object.values(quality.rejected).reduce((a, b) => a + b, 0);
   emit({
@@ -259,6 +274,9 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     label: `Found ${raw.length} sources (${serviceLine}), kept ${sources.length} after quality checks${rejectedCount ? ` (${quality.rejected.old} too old, ${quality.rejected.untrusted} vendor pages or listicles, ${quality.rejected.duplicate + quality.rejected.thin} duplicates or too thin)` : ""}`,
   });
   if (sources.length === 0) {
+    // An outage isn't the same as nobody complaining. Bluesky and friends swallow their own errors, so look at Exa alone.
+    const exaResults = settled.filter((_, i) => EXA_JOBS.has(jobs[i].name));
+    if (exaResults.length && exaResults.every((r) => r.status === "rejected")) throw new Error("Search failed. Check the EXA_API_KEY and try again.");
     emit({
       type: "result",
       answer: await hunch(plan.topic, req.message, signal),
@@ -285,6 +303,8 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     label: `${extracted.complaints.length} verified complaints from ${withComplaints.size} sources (${extracted.offTopic} off-topic, ${extracted.secondHand} not first-hand, ${extracted.unverified} quotes failed the check)`,
   });
   if (extracted.complaints.length < 1) {
+    // Unread batches may have held the complaints, so this isn't evidence that nobody complains.
+    if (extracted.failedBatches) throw new LlmError("The AI was too busy to read the sources. Try again in a minute.", "rate_limited");
     emit({
       type: "result",
       answer: await hunch(plan.topic, req.message, signal),
@@ -303,18 +323,19 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     topic: plan.topic,
     request: req.message,
     segment: plan.segment,
-    light: fresh,
+    light: background,
+    signal,
   });
   let problems = grouped.problems;
   if (cfg.high && problems.length > 1) {
     emit({ type: "step", label: "Reviewing the problems: dropping generic ones, merging duplicates" });
-    problems = await critique(problems, extracted.complaints).catch(() => problems);
+    problems = await critique(problems, extracted.complaints, { light: background, signal }).catch(() => problems);
   }
   check();
 
   // 6. Build cards with scores from real signals, in three tiers: strong (meets the depth's bar), early (2 sources or one
   // site) and niche (a single source). Each problem gets the strongest tier it qualifies for, and weaker ones are tagged.
-  const opts = { topic: plan.topic, now, minSources: cfg.minSources, minSites: cfg.minSites };
+  const opts = { topic: plan.topic, now, minSources: cfg.minSources, minSites: cfg.minSites, windowDays };
   const strong: Card[] = [];
   const early: Card[] = [];
   const niche: Card[] = [];
@@ -348,7 +369,8 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     const startups = await startupsJob;
     await Promise.all(
       cards.slice(0, 3).map(async (card) => {
-        const found = await findCompetitors(card, startups).catch(() => []);
+        const found = await findCompetitors(card, startups, signal).catch(() => null);
+        if (!found) return; // the search failed: keep the AI estimate
         card.competitors = found;
         const c = competitionFrom(found);
         card.scores.competition = {
@@ -379,9 +401,9 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     await Promise.all([
       ...ideaCards.map(async (card, i) => {
         // Someone's own search gets the better model on its top problem; the scheduled jobs stay on the light one.
-        card.ideas = await generateIdeas(card, complaintsOf.get(card.slug)!, true, plan.product, i === 0 && !background).catch(onError);
+        card.ideas = await generateIdeas(card, complaintsOf.get(card.slug)!, true, plan.product, i === 0 && !background, signal).catch(onError);
       }),
-      generateOneIdeaEach(singleCards, (card) => complaintsOf.get(card.slug)!).catch(onError),
+      generateOneIdeaEach(singleCards, (card) => complaintsOf.get(card.slug)!, signal).catch(onError),
     ]);
   }
 
@@ -402,8 +424,8 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   check();
   const result = { type: "result" as const, answer, cards, sourceCount: sources.length, mix: mixLine(sources), suggestions: plan.suggestions };
   // Save before answering so a share link works the moment the cards appear.
-  // A result missing ideas (the AI was busy) isn't cached, so the next person asking gets a complete one.
-  const complete = cards.every((c) => c.ideas?.length);
+  // A result missing ideas or sources (the AI was busy) isn't cached, so the next person asking gets a complete one.
+  const complete = cards.every((c) => c.ideas?.length) && !extracted.failedBatches;
   await Promise.all([isFirst && complete ? setCached(key, result) : null, saveIdeas(cards)]);
   console.log(
     `[research] ${req.depth} "${plan.topic}": ${raw.length} found, ${sources.length} kept, ${extracted.complaints.length} complaints, ${cards.length} cards, ${jobs.length} searches`,

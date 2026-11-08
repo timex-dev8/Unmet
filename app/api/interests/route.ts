@@ -1,6 +1,6 @@
 import { z } from "zod/v4";
 import { generateJson, LlmError, llmConfigured } from "@/lib/llm";
-import { takeHourlySlot } from "@/lib/rate-limit";
+import { takeDailyPool, takeHourlySlot } from "@/lib/rate-limit";
 import { PROFILE_SYSTEM } from "@/lib/research/prompts";
 import { CATEGORIES } from "@/lib/types";
 
@@ -22,6 +22,9 @@ export async function POST(request: Request) {
   // Per-visitor limit to protect the free AI tier (lib/rate-limit.ts).
   if (!(await takeHourlySlot(request, "interests", 20)))
     return Response.json({ error: "Too many changes this hour. Try again later." }, { status: 429 });
+  // All visitors together per day, to protect the shared free Gemini quota.
+  if (!(await takeDailyPool("interests", Number(process.env.INTERESTS_DAILY_CAP ?? 300))))
+    return Response.json({ error: "Interest setup is very busy today. Please try again tomorrow." }, { status: 429 });
 
   try {
     const profile = await generateJson(ProfileSchema, {

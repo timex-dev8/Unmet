@@ -47,7 +47,9 @@ export default function AccountButton({ variant }: { variant: "side" | "icon" })
 
   // Coming back from a failed sign-in or a password-reset email: open the sheet, tidy the address bar.
   useEffect(() => {
-    if (variant !== "side" || !(failed || reset)) return; // one sheet is enough
+    if (!(failed || reset)) return;
+    // Both variants are mounted but one is hidden by CSS at 900px; only the visible one opens the sheet.
+    if (window.matchMedia("(min-width: 900px)").matches !== (variant === "side")) return;
     const url = new URL(window.location.href);
     url.searchParams.delete("signin");
     url.searchParams.delete("reset");

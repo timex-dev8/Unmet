@@ -1,6 +1,6 @@
 import { z } from "zod/v4";
 import { generateJson, LlmError, llmConfigured } from "@/lib/llm";
-import { takeHourlySlot } from "@/lib/rate-limit";
+import { takeDailyPool, takeHourlySlot } from "@/lib/rate-limit";
 import { finishIdeas, IdeasSchema, ideasPrompt } from "@/lib/research/ideas";
 import { REMIX_SYSTEM, VALIDATE_SYSTEM } from "@/lib/research/prompts";
 
@@ -44,6 +44,8 @@ const ValidateSchema = z.object({
 
 // Light per-visitor limit; these calls are free-tier Gemini only (lib/rate-limit.ts).
 const PER_HOUR = 30;
+// All visitors together per day, so one IP can't drain the shared free Gemini quota (IDEAS_DAILY_CAP).
+const DAILY_POOL = Number(process.env.IDEAS_DAILY_CAP ?? 300);
 
 export async function POST(request: Request) {
   if (!llmConfigured()) return Response.json({ error: "The AI isn't set up yet." }, { status: 503 });
@@ -52,6 +54,8 @@ export async function POST(request: Request) {
 
   if (!(await takeHourlySlot(request, "ideas", PER_HOUR)))
     return Response.json({ error: "That's a lot of ideas for one hour. Try again a bit later." }, { status: 429 });
+  if (!(await takeDailyPool("ideas", DAILY_POOL)))
+    return Response.json({ error: "Idea help is very busy today. Please try again tomorrow." }, { status: 429 });
 
   const { mode, twist, card, idea } = parsed.data;
   const complaints = [...new Set(card.quotes)].map((quote, i) => ({ id: `q${i + 1}`, quote, pain: quote }));

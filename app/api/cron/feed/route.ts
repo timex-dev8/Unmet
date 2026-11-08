@@ -16,12 +16,14 @@ export async function GET(request: Request) {
   const started = Date.now();
   const result: Record<string, unknown> = {};
   let changed = false;
+  // Stops AI calls in time for the run to save what it has and answer before Vercel's limit.
+  const feedSignal = AbortSignal.timeout(270_000);
 
   try {
     if (params.get("slot") === "evening" || params.get("products") === "1") {
       try {
         // No new AI batch after 2 minutes, so the niches below still get their turn.
-        const products = await runProducts({ deadline: started + 120_000 });
+        const products = await runProducts({ deadline: started + 120_000, signal: AbortSignal.timeout(140_000) });
         result.products = products;
         changed ||= products.added + products.refreshed > 0;
         console.log(`[products] ${products.added} added, ${products.refreshed} refreshed`, products.counts);
@@ -37,7 +39,7 @@ export async function GET(request: Request) {
       try {
         // No new niche after 150s: a Medium research can take a couple of minutes, and it must end
         // inside Vercel's 5-minute limit.
-        const report = await runFeed({ max, deadline: started + 150_000 });
+        const report = await runFeed({ max, deadline: started + 150_000, signal: feedSignal });
         const added = report.reduce((n, r) => n + r.added, 0);
         changed ||= added > 0;
         result.added = added;

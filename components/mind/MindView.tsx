@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type K
 import Link from "next/link";
 import { ArrowRight, ArrowUp, Camera, ChevronDown, Dog, LoaderCircle, Scissors, Sprout, X, type LucideIcon } from "lucide-react";
 import { ideaHref, researchHref } from "@/lib/links";
-import { addThought, removeThought, saveConclusion, useMind } from "@/lib/mind";
+import { addThought, mindMark, removeThought, saveConclusion, useMind } from "@/lib/mind";
 import type { MindBrief } from "@/lib/mind-types";
 import { useThreads } from "@/lib/research-store";
 import { useSaved } from "@/lib/saved";
@@ -91,6 +91,7 @@ export default function MindView({ configured }: { configured: boolean }) {
   async function shape() {
     setLoading(true);
     setError("");
+    const mark = mindMark();
     // The person's own problems: saved ideas and ideas from their research.
     const ideas = [...saved, ...threads.flatMap((t) => t.messages.flatMap((m) => m.cards ?? []))]
       .slice(0, 40)
@@ -103,7 +104,7 @@ export default function MindView({ configured }: { configured: boolean }) {
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? "Something went wrong.");
-      saveConclusion(body as MindBrief);
+      saveConclusion(body as MindBrief, mark.at, mark.count);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {

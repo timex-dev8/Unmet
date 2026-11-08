@@ -49,13 +49,20 @@ export default function Onboarding({ next }: { next: string }) {
 
   async function finish() {
     setBusy(true);
-    completeOnboarding(profile, picked);
-    // Watched niches join Unmet's daily research for accounts (best effort; the app works either way).
-    const auth = await authHeaders();
-    const headers = { "Content-Type": "application/json", ...auth };
-    if (auth.Authorization)
-      await Promise.all(picked.map((niche) => fetch("/api/watch", { method: "POST", headers, body: JSON.stringify({ niche }) }).catch(() => null)));
-    router.replace(afterOnboarding(next, picked[0])); // never off-site, whatever the page was given
+    setError("");
+    try {
+      completeOnboarding(profile, picked);
+      // Watched niches join Unmet's daily research for accounts (best effort; the app works either way).
+      const auth = await authHeaders();
+      const headers = { "Content-Type": "application/json", ...auth };
+      if (auth.Authorization)
+        await Promise.all(picked.map((niche) => fetch("/api/watch", { method: "POST", headers, body: JSON.stringify({ niche }) }).catch(() => null)));
+      router.replace(afterOnboarding(next, picked[0])); // never off-site, whatever the page was given
+    } catch {
+      setError("Couldn't finish setting up. Please try again.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   function skip() {

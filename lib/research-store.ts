@@ -64,9 +64,24 @@ function write(list: Thread[]) {
 }
 
 const getSnapshot = () => (cache ??= read());
+// Another tab changed the stored threads: re-read, keeping this tab's mid-answer chats (they aren't stored).
 const subscribe = (l: () => void) => {
+  const onStorage = (e: StorageEvent) => {
+    if (e.key !== KEY) return;
+    const pending = (cache ?? []).filter((t) => t.messages.some((m) => m.pending));
+    cache = null;
+    if (pending.length) {
+      const fresh = getSnapshot();
+      cache = [...pending, ...fresh.filter((t) => !pending.some((p) => p.id === t.id))];
+    }
+    l();
+  };
   listeners.add(l);
-  return () => listeners.delete(l);
+  window.addEventListener("storage", onStorage);
+  return () => {
+    listeners.delete(l);
+    window.removeEventListener("storage", onStorage);
+  };
 };
 
 /** All threads, most recently active first. */
@@ -131,9 +146,6 @@ export const threadsSync: Syncable<Thread[]> = {
       (t) => t.id,
       (a, b) => (b.updatedAt > a.updatedAt ? b : a),
     ).sort((a, b) => b.updatedAt - a.updatedAt),
-  subscribe: (l: () => void) => {
-    listeners.add(l);
-    return () => void listeners.delete(l);
-  },
+  subscribe,
   clear: () => write([]),
 };

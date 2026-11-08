@@ -1,5 +1,5 @@
 import "server-only";
-import { GoogleGenAI, ThinkingLevel } from "@google/genai";
+import { ApiError, GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { z } from "zod/v4";
 
 // One small wrapper for every AI call. Provider and model come from env, so switching is one line.
@@ -53,6 +53,8 @@ const isBusy = (msg: string) => /\b(429|503)\b|RESOURCE_EXHAUSTED|UNAVAILABLE|hi
 // Only real overload puts a model on cooldown; one slow or empty answer doesn't.
 const isOverloaded = (msg: string) => /\b(429|503)\b|RESOURCE_EXHAUSTED|UNAVAILABLE/i.test(msg);
 const isTimeout = (err: unknown) => err instanceof Error && /abort|timeout/i.test(`${err.name} ${err.message}`);
+// One model can refuse a request the other accepts (usually the schema), so a 400 moves on to the other model.
+const isBadRequest = (err: unknown, msg: string) => (err instanceof ApiError && err.status === 400) || /INVALID_ARGUMENT/.test(msg);
 
 // The free tier allows few requests a minute, so this server sends only a few at a time and the rest wait their turn.
 const MAX_RUNNING = 3;
@@ -82,6 +84,17 @@ const sleep = (ms: number, signal?: AbortSignal) =>
     signal?.addEventListener("abort", () => (clearTimeout(timer), done(undefined)), { once: true });
   });
 
+function parseReply<T>(schema: z.ZodType<T>, text: string): { data: T } | { problem: string } {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    return { problem: "The AI returned something that wasn't JSON." };
+  }
+  const parsed = schema.safeParse(raw);
+  return parsed.success ? { data: parsed.data } : { problem: "The AI's answer didn't match the expected shape." };
+}
+
 /** Asks the model for JSON matching `schema`; the reply is validated before it is returned. */
 export async function generateJson<T>(
   schema: z.ZodType<T>,
@@ -95,12 +108,13 @@ export async function generateJson<T>(
   // Skip a model that was busy in the last few minutes, unless it's the only one left.
   const models = all.filter((m) => (busyUntil.get(m) ?? 0) < Date.now());
   if (models.length === 0) models.push(all[all.length - 1]);
-  let text: string | undefined;
+  let reply: { data: T } | undefined;
+  let failure: LlmError | undefined; // why the last model gave nothing usable; none means it was busy or slow
   let lastError = "";
   const stopped = () => new LlmError("The research was stopped.", "failed");
 
   for (const model of models) {
-    for (let attempt = 0; attempt < 2 && text === undefined; attempt++) {
+    for (let attempt = 0; attempt < 2 && !reply; attempt++) {
       const done = await takeTurn();
       if (opts.signal?.aborted) {
         done();
@@ -126,41 +140,39 @@ export async function generateJson<T>(
         console.log(`[llm] ${model}: ${used?.promptTokenCount ?? "?"} in, ${used?.totalTokenCount ?? "?"} total`);
         if (!res.text?.trim()) {
           // Blocked by a safety filter or simply empty: the other model may still answer.
-          lastError = "empty reply";
+          failure = new LlmError("The AI returned an empty answer. Try rewording, or try again.", "bad_output");
           console.warn(`[llm] ${model} returned no text`);
           break;
         }
-        text = res.text;
+        const out = parseReply(schema, res.text);
+        if ("problem" in out) {
+          failure = new LlmError(out.problem, "bad_output");
+          console.warn(`[llm] ${model} bad output: ${out.problem}`);
+          break;
+        }
+        reply = out;
       } catch (err) {
         if (opts.signal?.aborted) throw stopped();
         lastError = err instanceof Error ? err.message : String(err);
         console.warn(`[llm] ${model} failed:`, lastError.replace(/\s+/g, " ").slice(0, 300));
-        if (!isBusy(lastError) && !isTimeout(err)) {
-          throw new LlmError(`AI request failed: ${lastError.slice(0, 200)}`, "failed");
+        if (isBadRequest(err, lastError)) {
+          console.error(`[llm] ${model} rejected the request (400):`, lastError.slice(0, 4000));
+          failure = new LlmError("The AI couldn't process this request. Try again.", "failed");
+          break;
         }
+        if (!isBusy(lastError) && !isTimeout(err)) throw new LlmError("The AI request failed. Try again.", "failed");
+        failure = undefined;
         wait = attempt === 0 ? retryWait(lastError) : null;
         if (wait === null && isOverloaded(lastError)) busyUntil.set(model, Date.now() + cooldownMs(lastError));
       } finally {
         done();
       }
-      if (text !== undefined) break;
+      if (reply) break;
       if (wait === null) break; // on to the other model
       await sleep(wait, opts.signal); // outside our turn, so other calls keep moving
     }
-    if (text !== undefined) break;
+    if (reply) break;
   }
-  if (text === undefined) {
-    if (lastError === "empty reply") throw new LlmError("The AI returned an empty answer. Try rewording, or try again.", "bad_output");
-    throw new LlmError("The free AI models are busy right now. Try again in a minute.", "rate_limited");
-  }
-
-  let raw: unknown;
-  try {
-    raw = JSON.parse(text ?? "");
-  } catch {
-    throw new LlmError("The AI returned something that wasn't JSON.", "bad_output");
-  }
-  const parsed = schema.safeParse(raw);
-  if (!parsed.success) throw new LlmError("The AI's answer didn't match the expected shape.", "bad_output");
-  return parsed.data;
+  if (reply) return reply.data;
+  throw failure ?? new LlmError("The free AI models are busy right now. Try again in a minute.", "rate_limited");
 }

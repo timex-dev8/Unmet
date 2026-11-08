@@ -1,7 +1,7 @@
 import { z } from "zod/v4";
 import { getAllCards } from "@/lib/cards";
 import { generateJson, LlmError, llmConfigured } from "@/lib/llm";
-import { takeHourlySlot } from "@/lib/rate-limit";
+import { takeDailyPool, takeHourlySlot } from "@/lib/rate-limit";
 import type { MindBrief } from "@/lib/mind-types";
 import { MIND_SYSTEM } from "@/lib/research/prompts";
 
@@ -41,6 +41,9 @@ export async function POST(request: Request) {
   // Per-visitor limit to protect the free AI tier (lib/rate-limit.ts).
   if (!(await takeHourlySlot(request, "mind", 10)))
     return Response.json({ error: "That's 10 updates this hour. Try again a bit later." }, { status: 429 });
+  // All visitors together per day, to protect the shared free Gemini quota.
+  if (!(await takeDailyPool("mind", Number(process.env.MIND_DAILY_CAP ?? 200))))
+    return Response.json({ error: "Shape is very busy today. Please try again tomorrow." }, { status: 429 });
 
   const { thoughts } = parsed.data;
   // The person's own saved/researched ideas plus the feed's ideas: the only problems the brief may link to.

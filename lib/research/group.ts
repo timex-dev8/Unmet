@@ -34,13 +34,14 @@ export type DraftProblem = z.infer<typeof GroupSchema>["problems"][number];
 export async function groupComplaints(
   complaints: Complaint[],
   sources: ResearchSource[],
-  ctx: { topic: string; request: string; segment: string; light?: boolean },
+  ctx: { topic: string; request: string; segment: string; light?: boolean; signal?: AbortSignal },
 ) {
   const byId = new Map(sources.map((s) => [s.id, s]));
   return generateJson(GroupSchema, {
     system: GROUP_SYSTEM,
     timeoutMs: 45_000,
     light: ctx.light,
+    signal: ctx.signal,
     prompt: `Topic: ${ctx.topic}\nThe person asked: ${ctx.request}\nSegment: ${ctx.segment}\nCategories: ${CATEGORIES.join(", ")}\n\nVerified complaints:\n${complaints
       .map((c) => {
         const s = byId.get(c.sourceId)!;
@@ -51,22 +52,36 @@ export async function groupComplaints(
 }
 
 const CritiqueSchema = z.object({
-  problems: z.array(z.object({ index: z.number().int(), keep: z.boolean(), mergeInto: z.number().int(), headline: z.string(), reason: z.string() })),
+  problems: z.array(
+    z.object({
+      index: z.number().int().min(0).max(99),
+      keep: z.boolean(),
+      mergeInto: z.number().int().min(-1).max(99),
+      headline: z.string(),
+      reason: z.string(),
+    }),
+  ),
 });
 
 /** High mode: a second, strict pass that drops generic problems, merges duplicates and sharpens headlines. */
-export async function critique(problems: DraftProblem[], complaints: Complaint[]): Promise<DraftProblem[]> {
+export async function critique(
+  problems: DraftProblem[],
+  complaints: Complaint[],
+  ctx: { light?: boolean; signal?: AbortSignal } = {},
+): Promise<DraftProblem[]> {
   if (problems.length < 2) return problems;
   const quotes = new Map(complaints.map((c) => [c.id, c.quote]));
   const review = await generateJson(CritiqueSchema, {
     system: CRITIQUE_SYSTEM,
     timeoutMs: 30_000,
+    light: ctx.light,
+    signal: ctx.signal,
     prompt: problems
       .map(
         (p, i) =>
           `#${i} ${p.headline}\n${p.summary}\nQuotes: ${p.complaintIds
             .slice(0, 5)
-            .map((id) => `“${quotes.get(id) ?? ""}”`)
+            .map((id) => `<quote>${fence(quotes.get(id) ?? "")}</quote>`)
             .join(" ")}`,
       )
       .join("\n\n"),

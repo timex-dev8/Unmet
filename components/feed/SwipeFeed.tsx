@@ -27,10 +27,18 @@ const keyOf = (x: Item) => (isProduct(x) ? `product-${x.slug}` : x.slug);
 // that's working (lib/products).
 export default function SwipeFeed({ cards: input, products = [] }: { cards: Card[]; products?: Product[] }) {
   // Problems matching what this person told Unmet (and the niches they watch) come first.
-  const { interests } = useInterests();
+  const { interests: liveInterests } = useInterests();
+  // Freeze the ranking inputs once they've loaded, so interests syncing in later don't reshuffle cards mid-swipe.
+  const hydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+  const [interests, setFrozen] = useState<typeof liveInterests | null>(null);
+  if (hydrated && !interests) setFrozen(liveInterests);
   const seen = useSeenAtLoad();
   const cards = useMemo(() => {
-    const keywords = profileKeywords(interests);
+    const keywords = interests ? profileKeywords(interests) : [];
     const matched = keywords.length ? [...input].sort((a, b) => textMatch(b, keywords) - textMatch(a, keywords)) : input;
     // Cards this person hasn't passed yet come first, so a return visit opens on something new.
     const problems = [...matched].sort((a, b) => Number(seen.includes(a.slug)) - Number(seen.includes(b.slug)));
@@ -85,8 +93,13 @@ export default function SwipeFeed({ cards: input, products = [] }: { cards: Card
   // Keyboard: ↓ / ↑ to move, S to save. Ignored while typing or when a sheet is open.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
       const t = e.target as HTMLElement;
-      if (t.closest("input, textarea, dialog[open]") || document.querySelector("dialog[open]")) return;
+      if (
+        t.closest("input, textarea, select, [contenteditable]:not([contenteditable=false]), dialog[open]") ||
+        document.querySelector("dialog[open]")
+      )
+        return;
       if (e.key === "ArrowDown" || e.key === "j") {
         e.preventDefault();
         go(1);

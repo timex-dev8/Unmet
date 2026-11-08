@@ -38,6 +38,22 @@ function write(next: Interests) {
 
 const getSnapshot = () => (cache ??= read());
 
+// Another tab changed the stored value: drop the in-memory copy and re-read.
+function subscribe(l: () => void) {
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === KEY) {
+      cache = null;
+      l();
+    }
+  };
+  listeners.add(l);
+  window.addEventListener("storage", onStorage);
+  return () => {
+    listeners.delete(l);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
 // Cards passed on earlier visits, frozen at page load so the order doesn't shift while someone swipes.
 let seenAtLoad: string[] | null = null;
 const NOTHING_SEEN: string[] = [];
@@ -51,14 +67,7 @@ export function useSeenAtLoad() {
 }
 
 export function useInterests() {
-  const interests = useSyncExternalStore(
-    (l) => {
-      listeners.add(l);
-      return () => listeners.delete(l);
-    },
-    getSnapshot,
-    () => EMPTY,
-  );
+  const interests = useSyncExternalStore(subscribe, getSnapshot, () => EMPTY);
 
   const toggle = useCallback((c: Category) => {
     const cur = getSnapshot();
@@ -110,9 +119,6 @@ export const interestsSync: Syncable<Interests> = {
     profile: remote.profile ?? local.profile,
     watched: [...new Set([...(remote.watched ?? []), ...(local.watched ?? [])])].slice(-10),
   }),
-  subscribe: (l: () => void) => {
-    listeners.add(l);
-    return () => void listeners.delete(l);
-  },
+  subscribe,
   clear: () => write(EMPTY),
 };

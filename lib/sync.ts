@@ -136,13 +136,18 @@ export async function flushSync(ms = 4000): Promise<boolean> {
 }
 
 async function pull(merge: boolean) {
-  if (!userId) return;
-  const { data, error } = await (await supabase()).from("user_data").select("kind, data").eq("user_id", userId);
+  const id = userId;
+  if (!id) return;
+  const startRevs = new Map(revs);
+  const { data, error } = await (await supabase()).from("user_data").select("kind, data").eq("user_id", id);
   if (error) throw error;
+  if (userId !== id) return; // signed out (or switched) while downloading: never restore that account's data
   const remote = new Map(data.map((r) => [r.kind as SyncKind, r.data]));
   for (const store of STORES) {
     // A local change is on its way up; don't overwrite it. (A merge keeps it anyway.)
     if (!merge && dirty.has(store.kind)) continue;
+    // Changed here while the download was on its way: this copy is stale, the change will upload and the next pull catches up.
+    if (!merge && revs.get(store.kind) !== startRevs.get(store.kind)) continue;
     const theirs = remote.get(store.kind);
     if (theirs === undefined) {
       if (merge) schedule(store, 0); // account has nothing yet: upload this browser's data
@@ -160,6 +165,7 @@ async function refresh() {
   try {
     setStatus("syncing");
     await pull(merge);
+    if (userId !== id || !id) return;
     if (merge) {
       // The first merge only counts once this browser's data is in the account too; until then
       // every pull merges, so a plain download can't replace the guest's data.
@@ -176,11 +182,12 @@ async function refresh() {
   }
 }
 
-const onVisible = () => {
-  if (document.visibilityState === "visible") {
-    for (const store of STORES) if (dirty.has(store.kind)) schedule(store, 0); // retry failed uploads
-    void refresh();
-  }
+const onVisible = async () => {
+  if (document.visibilityState !== "visible") return;
+  for (const store of STORES) if (dirty.has(store.kind)) schedule(store, 0); // retry failed uploads
+  // Upload first, then pull, so the download can't race the upload of the same change.
+  await flushSync(4000).catch(() => false);
+  await refresh();
 };
 
 /** Called when someone is signed in (on load or right after signing in). */

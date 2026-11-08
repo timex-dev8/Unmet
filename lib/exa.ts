@@ -30,16 +30,22 @@ export type WebSearchOptions = {
 
 type RawSource = Omit<ResearchSource, "id">;
 
+const TIMEOUT_MS = 15_000;
+
 export async function searchWeb(query: string, objective: string, opts: WebSearchOptions): Promise<RawSource[]> {
   const contents = opts.fullText ? { text: { maxCharacters: 2500 } } : { highlights: true as const };
   const request = (type: string) =>
-    exa().search(query, {
-      type,
-      contents,
-      objective,
-      startPublishedDate: opts.since,
-      ...(opts.includeDomains ? { includeDomains: opts.includeDomains } : {}),
-    });
+    exa().search(
+      query,
+      {
+        type,
+        contents,
+        objective,
+        startPublishedDate: opts.since,
+        ...(opts.includeDomains ? { includeDomains: opts.includeDomains } : {}),
+      },
+      { timeout: TIMEOUT_MS },
+    );
 
   let res;
   try {
@@ -61,14 +67,18 @@ export async function searchWeb(query: string, objective: string, opts: WebSearc
 }
 
 /** Pages about existing products for a problem (competitor check). */
-export async function searchProducts(query: string, since: string) {
-  const res = await exa().search(query, {
-    type: "auto",
-    contents: { highlights: true },
-    objective: "Find existing products, apps or services that solve this problem. Rank product homepages first; skip listicles, news and forums.",
-    startPublishedDate: since,
-    excludeDomains: ["reddit.com"], // forum threads aren't products
-  });
+export async function searchProducts(query: string, since: string, signal?: AbortSignal) {
+  const res = await exa().search(
+    query,
+    {
+      type: "auto",
+      contents: { highlights: true },
+      objective: "Find existing products, apps or services that solve this problem. Rank product homepages first; skip listicles, news and forums.",
+      startPublishedDate: since,
+      excludeDomains: ["reddit.com"], // forum threads aren't products
+    },
+    { timeout: TIMEOUT_MS, signal },
+  );
   return res.results.map((r) => ({
     title: r.title?.trim() || hostOf(r.url),
     url: r.url,

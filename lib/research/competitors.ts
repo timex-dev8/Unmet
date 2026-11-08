@@ -39,9 +39,10 @@ export function productName(title: string, site: string) {
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
-export async function findCompetitors(card: Card, startups: Startup[]): Promise<Competitor[]> {
+/** Rejects when the web search fails, so a failed search can't pass for "no competitors". */
+export async function findCompetitors(card: Card, startups: Startup[], signal?: AbortSignal): Promise<Competitor[]> {
   const since = new Date(Date.now() - 3 * 365 * 86400_000).toISOString();
-  const pages = await searchProducts(`${card.headline}. Software or app for ${card.who}`, since).catch(() => []);
+  const pages = await searchProducts(`${card.headline}. Software or app for ${card.who}`, since, signal);
   const seen = new Set<string>();
   const web: Competitor[] = [];
   for (const p of pages) {
