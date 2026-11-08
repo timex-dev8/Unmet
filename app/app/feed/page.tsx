@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import FilterChips from "@/components/app/FilterChips";
 import SwipeFeed from "@/components/feed/SwipeFeed";
-import { getAllCards, getCards, isCategory, type FeedFilter } from "@/lib/cards";
+import { getAllCards, getCards, isCategory, searchCards, type FeedFilter } from "@/lib/cards";
+import { researchHref } from "@/lib/links";
 import { readProducts } from "@/lib/products";
 import { SOURCE_KINDS, type Product, type ProductSource } from "@/lib/types";
 import s from "@/components/feed/feed.module.css";
@@ -34,14 +35,25 @@ function mixSources(products: Product[]) {
   return [...fresh, ...rotated.filter((p) => !fresh.includes(p))];
 }
 
+function matchesProduct(p: Product, words: string[]) {
+  const text = `${p.name} ${p.oneLine} ${p.forWho} ${p.category} ${p.why}`.toLowerCase();
+  return words.every((w) => text.includes(w));
+}
+
 export default async function FeedPage({ searchParams }: PageProps<"/app/feed">) {
-  const { topic, source: sourceParam } = await searchParams;
+  const { topic, source: sourceParam, q } = await searchParams;
+  const query = typeof q === "string" ? q.trim().slice(0, 120) : "";
   const filter: FeedFilter = topic === "Trending" ? "Trending" : isCategory(topic) ? topic : undefined;
-  const [{ cards: page }, all, products] = await Promise.all([
+  const [{ cards: listed }, all, listedProducts, found] = await Promise.all([
     getCards({ filter }),
     getAllCards(),
     readProducts(filter === "Trending" ? { rising: true } : filter ? { category: filter } : {}),
+    query ? searchCards(query) : Promise.resolve([]),
   ]);
+  // A search looks through everything in the feed: problems and products, by every word typed.
+  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const page = query ? found : listed;
+  const products = query ? listedProducts.filter((p) => matchesProduct(p, words)) : listedProducts;
   const kinds = SOURCE_KINDS.filter((k) => k !== "hn" && all.some((c) => c.sources.some((x) => x.kind === k)));
   const productSources = PRODUCT_SOURCES.filter((k) => products.some((p) => p.source === k));
   const source = [...kinds, ...productSources].find((k) => k === sourceParam);
@@ -54,7 +66,18 @@ export default async function FeedPage({ searchParams }: PageProps<"/app/feed">)
     <main className={s.screen}>
       <h1 className="sr-only">Idea feed{filter ? `: ${filter}` : ""}</h1>
       <FilterChips active={filter} source={source} kinds={[...kinds, ...productSources]} />
-      {source && !cards.length && !shownProducts.length ? (
+      {query && !cards.length && !shownProducts.length ? (
+        <div className={s.end} style={{ position: "static", flex: 1, margin: "0 12px 12px" }}>
+          <h2 className={s.endTitle}>Nothing in the feed for “{query}”.</h2>
+          <p className={s.endText}>Try another word, or research it to look for real complaints.</p>
+          <Link href="/app/feed" className="pill pill-dark">
+            Clear search
+          </Link>
+          <Link href={researchHref(query)} className={s.endLink}>
+            Research it
+          </Link>
+        </div>
+      ) : source && !cards.length && !shownProducts.length ? (
         <div className={s.end} style={{ position: "static", flex: 1, margin: "0 12px 12px" }}>
           <h2 className={s.endTitle}>Nothing from this source yet.</h2>
           <p className={s.endText}>No ideas here have evidence from it. Try another source.</p>
@@ -64,7 +87,7 @@ export default async function FeedPage({ searchParams }: PageProps<"/app/feed">)
         </div>
       ) : (
         /* key resets the feed position when a filter changes */
-        <SwipeFeed key={`${filter ?? "all"}|${source ?? ""}`} cards={cards} products={mixSources(shownProducts).slice(0, 15)} />
+        <SwipeFeed key={`${filter ?? "all"}|${source ?? ""}|${query}`} cards={cards} products={mixSources(shownProducts).slice(0, 15)} />
       )}
     </main>
   );

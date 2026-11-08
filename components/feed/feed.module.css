@@ -97,6 +97,10 @@
   font-weight: 600;
   letter-spacing: -0.035em;
 }
+.endLink {
+  font-size: 14px;
+  color: var(--primary);
+}
 .endText {
   margin: 0 0 8px;
   color: var(--muted);
