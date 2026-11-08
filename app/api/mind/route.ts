@@ -8,7 +8,7 @@ import { MIND_SYSTEM } from "@/lib/research/prompts";
 export const maxDuration = 60;
 
 // ideas are cut, notes are the persons own
-const cut = (n: number) => z.string().transform((s) => s.slice(0, n));
+const cut = (maxLength: number) => z.string().transform((text) => text.slice(0, maxLength));
 
 const Body = z.object({
   thoughts: z
@@ -46,27 +46,27 @@ export async function POST(request: Request) {
   const { thoughts } = parsed.data;
   // only these may be linked from the brief
   const feed = (await getAllCards()).map(({ slug, headline, summary }) => ({ slug, headline, summary }));
-  const ideas = [...parsed.data.ideas, ...feed].filter((c, i, all) => all.findIndex((x) => x.slug === c.slug) === i);
+  const ideas = [...parsed.data.ideas, ...feed].filter((idea, i, all) => all.findIndex((x) => x.slug === idea.slug) === i);
 
   try {
-    const out = await generateJson(Answer, {
+    const answer = await generateJson(Answer, {
       system: MIND_SYSTEM,
       timeoutMs: 30_000,
-      prompt: `Notes, in the order written:\n${thoughts.map((t) => `- ${t.text}`).join("\n")}\n\nSaved and researched ideas (slug: headline. summary):\n${ideas
-        .map((c) => `${c.slug}: ${c.headline}. ${c.summary}`)
+      prompt: `Notes, in the order written:\n${thoughts.map((thought) => `- ${thought.text}`).join("\n")}\n\nSaved and researched ideas (slug: headline. summary):\n${ideas
+        .map((idea) => `${idea.slug}: ${idea.headline}. ${idea.summary}`)
         .join("\n")}`,
     });
 
-    const match = ideas.find((c) => c.slug === out.matchSlug);
-    const clean = (list: string[]) => list.map((x) => x.trim()).filter(Boolean);
+    const match = ideas.find((idea) => idea.slug === answer.matchSlug);
+    const clean = (list: string[]) => list.map((item) => item.trim()).filter(Boolean);
     const result: MindBrief = {
-      idea: out.idea,
-      forWho: out.forWho,
-      problem: out.problem,
-      buildFirst: clean(out.buildFirst),
-      later: clean(out.later),
-      questions: clean(out.questions),
-      nextStep: out.nextStep,
+      idea: answer.idea,
+      forWho: answer.forWho,
+      problem: answer.problem,
+      buildFirst: clean(answer.buildFirst),
+      later: clean(answer.later),
+      questions: clean(answer.questions),
+      nextStep: answer.nextStep,
       matchSlug: match?.slug ?? "",
       matchHeadline: match?.headline ?? "",
     };

@@ -9,12 +9,12 @@ export type Syncable<T> = {
   clear: () => void;
 };
 
-export function unionBy<T>(a: T[], b: T[], key: (x: T) => string, pick: (x: T, y: T) => T = (x) => x): T[] {
+export function unionBy<T>(first: T[], second: T[], key: (item: T) => string, pick: (existing: T, incoming: T) => T = (existing) => existing): T[] {
   const map = new Map<string, T>();
-  for (const x of [...a, ...b]) {
-    const k = key(x);
-    const had = map.get(k);
-    map.set(k, had ? pick(had, x) : x);
+  for (const item of [...first, ...second]) {
+    const itemKey = key(item);
+    const existing = map.get(itemKey);
+    map.set(itemKey, existing ? pick(existing, item) : item);
   }
   return [...map.values()];
 }

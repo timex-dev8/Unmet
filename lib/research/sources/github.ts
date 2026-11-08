@@ -15,8 +15,8 @@ type Issue = {
 
 export async function searchGithubIssues(phrase: string, sinceSeconds: number): Promise<Omit<ResearchSource, "id">[]> {
   const since = new Date(sinceSeconds * 1000).toISOString().slice(0, 10);
-  const q = `"${phrase.replace(/"/g, "")}" is:issue created:>${since}`;
-  const res = await fetch(`https://api.github.com/search/issues?q=${encodeURIComponent(q)}&per_page=8`, {
+  const searchQuery = `"${phrase.replace(/"/g, "")}" is:issue created:>${since}`;
+  const response = await fetch(`https://api.github.com/search/issues?q=${encodeURIComponent(searchQuery)}&per_page=8`, {
     headers: {
       Accept: "application/vnd.github+json",
       "User-Agent": "unmet-research",
@@ -24,23 +24,23 @@ export async function searchGithubIssues(phrase: string, sinceSeconds: number): 
     },
     signal: AbortSignal.timeout(8000),
   }).catch(() => null);
-  if (!res?.ok) return [];
-  const { items = [] } = (await res.json()) as { items?: Issue[] };
+  if (!response?.ok) return [];
+  const { items = [] } = (await response.json()) as { items?: Issue[] };
 
   return items
-    .map((i) => {
-      const repo = i.repository_url.split("/repos/")[1] ?? "github";
-      const reactions = i.reactions?.total_count ?? 0;
+    .map((issue) => {
+      const repo = issue.repository_url.split("/repos/")[1] ?? "github";
+      const reactions = issue.reactions?.total_count ?? 0;
       return {
-        title: `${i.title} (${repo})`,
-        url: i.html_url,
+        title: `${issue.title} (${repo})`,
+        url: issue.html_url,
         site: "github.com",
-        postedAt: i.created_at,
-        text: `${i.title}. ${(i.body ?? "").replace(/```[\s\S]*?```/g, " ").replace(/[#>*_`]/g, " ")}`.replace(/\s+/g, " ").slice(0, 1800),
+        postedAt: issue.created_at,
+        text: `${issue.title}. ${(issue.body ?? "").replace(/```[\s\S]*?```/g, " ").replace(/[#>*_`]/g, " ")}`.replace(/\s+/g, " ").slice(0, 1800),
         origin: "github" as const,
         kind: "issue" as const,
-        engagement: { score: reactions * 2 + i.comments, label: `${reactions} reactions · ${i.comments} comments` },
+        engagement: { score: reactions * 2 + issue.comments, label: `${reactions} reactions · ${issue.comments} comments` },
       };
     })
-    .filter((s) => s.text.length > 80);
+    .filter((source) => source.text.length > 80);
 }

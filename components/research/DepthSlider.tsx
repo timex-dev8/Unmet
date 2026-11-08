@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import { AnimatePresence, animate, m, useMotionValue, useTransform } from "motion/react";
 import { DEPTHS, type Depth } from "@/lib/research-types";
-import s from "./depthSlider.module.css";
+import styles from "./depthSlider.module.css";
 
 const SPRING = { type: "spring", stiffness: 520, damping: 40 } as const;
 const LAST = DEPTHS.length - 1;
@@ -15,18 +15,18 @@ export default function DepthSlider({
   detail,
 }: {
   value: Depth;
-  onChange: (d: Depth) => void;
+  onChange: (depth: Depth) => void;
   disabled?: boolean;
   detail?: boolean;
 }) {
-  const index = DEPTHS.findIndex((d) => d.id === value);
+  const index = DEPTHS.findIndex((option) => option.id === value);
   const level = DEPTHS[index];
   const railRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
   const target = useRef(0); // pointer position 0..1, the knob may still be springing to it
   const [active, setActive] = useState(false);
   const pos = useMotionValue(index / LAST);
-  const left = useTransform(pos, (v) => `${v * 100}%`);
+  const left = useTransform(pos, (position) => `${position * 100}%`);
 
   // spring to the stop when value changes outside a drag
   useEffect(() => {
@@ -34,16 +34,16 @@ export default function DepthSlider({
   }, [index, pos]);
 
   function fractionAt(clientX: number) {
-    const r = railRef.current!.getBoundingClientRect();
-    return Math.min(1, Math.max(0, (clientX - r.left) / r.width));
+    const railRect = railRef.current!.getBoundingClientRect();
+    return Math.min(1, Math.max(0, (clientX - railRect.left) / railRect.width));
   }
-  function pick(f: number) {
-    const i = Math.round(f * LAST);
-    if (i !== index) onChange(DEPTHS[i].id);
-    return i;
+  function pick(fraction: number) {
+    const stopIndex = Math.round(fraction * LAST);
+    if (stopIndex !== index) onChange(DEPTHS[stopIndex].id);
+    return stopIndex;
   }
 
-  function down(e: PointerEvent<HTMLDivElement>) {
+  function onDown(e: PointerEvent<HTMLDivElement>) {
     if (disabled) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     dragging.current = true;
@@ -52,14 +52,14 @@ export default function DepthSlider({
     animate(pos, target.current, SPRING);
     pick(target.current);
   }
-  function move(e: PointerEvent<HTMLDivElement>) {
+  function onMove(e: PointerEvent<HTMLDivElement>) {
     if (!dragging.current) return;
     target.current = fractionAt(e.clientX);
     pos.stop();
     pos.set(target.current);
     pick(target.current);
   }
-  function up() {
+  function onUp() {
     if (!dragging.current) return;
     dragging.current = false;
     setActive(false);
@@ -67,13 +67,13 @@ export default function DepthSlider({
   }
 
   return (
-    <div className={`${s.root} ${disabled ? s.disabled : ""}`}>
-      <div className={s.head}>
-        <span className={s.title}>Depth</span>
+    <div className={`${styles.root} ${disabled ? styles.disabled : ""}`}>
+      <div className={styles.head}>
+        <span className={styles.title}>Depth</span>
         <AnimatePresence mode="popLayout" initial={false}>
           <m.span
             key={level.id}
-            className={s.value}
+            className={styles.value}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
@@ -86,7 +86,7 @@ export default function DepthSlider({
 
       <input
         type="range"
-        className={s.input}
+        className={styles.input}
         min={0}
         max={LAST}
         step={1}
@@ -97,27 +97,27 @@ export default function DepthSlider({
         onChange={(e) => onChange(DEPTHS[Number(e.target.value)].id)}
       />
 
-      <div className={s.track} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} aria-hidden="true">
-        <div className={s.rail} ref={railRef}>
-          <m.div className={s.fill} style={{ width: left }} />
-          {DEPTHS.map((d, i) => (
-            <span key={d.id} className={`${s.stop} ${i <= index ? s.stopOn : ""}`} style={{ left: `${(i / LAST) * 100}%` }} />
+      <div className={styles.track} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} aria-hidden="true">
+        <div className={styles.rail} ref={railRef}>
+          <m.div className={styles.fill} style={{ width: left }} />
+          {DEPTHS.map((option, i) => (
+            <span key={option.id} className={`${styles.stop} ${i <= index ? styles.stopOn : ""}`} style={{ left: `${(i / LAST) * 100}%` }} />
           ))}
-          <m.div className={s.knob} style={{ left }} animate={{ scale: active ? 1.12 : 1 }} transition={{ duration: 0.15 }} />
+          <m.div className={styles.knob} style={{ left }} animate={{ scale: active ? 1.12 : 1 }} transition={{ duration: 0.15 }} />
         </div>
       </div>
 
-      <div className={s.labels}>
-        {DEPTHS.map((d) => (
+      <div className={styles.labels}>
+        {DEPTHS.map((option) => (
           <button
-            key={d.id}
+            key={option.id}
             type="button"
             tabIndex={-1}
-            className={d.id === value ? s.labelOn : ""}
-            onClick={() => onChange(d.id)}
+            className={option.id === value ? styles.labelOn : ""}
+            onClick={() => onChange(option.id)}
             disabled={disabled}
           >
-            {d.label}
+            {option.label}
           </button>
         ))}
       </div>
@@ -126,7 +126,7 @@ export default function DepthSlider({
         <AnimatePresence mode="wait" initial={false}>
           <m.p
             key={level.id}
-            className={s.detail}
+            className={styles.detail}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

@@ -31,22 +31,22 @@ function write(next: MindState) {
   try {
     localStorage.setItem(KEY, JSON.stringify(next));
   } catch {}
-  listeners.forEach((l) => l());
+  listeners.forEach((listener) => listener());
 }
 
 const getSnapshot = () => (cache ??= read());
 
-function subscribe(l: () => void) {
+function subscribe(listener: () => void) {
   const onStorage = (e: StorageEvent) => {
     if (e.key === KEY) {
       cache = null;
-      l();
+      listener();
     }
   };
-  listeners.add(l);
+  listeners.add(listener);
   window.addEventListener("storage", onStorage);
   return () => {
-    listeners.delete(l);
+    listeners.delete(listener);
     window.removeEventListener("storage", onStorage);
   };
 }
@@ -59,21 +59,21 @@ export function useMind() {
 export function addThought(text: string) {
   const note = text.trim().slice(0, 2000);
   if (!note) return;
-  const cur = getSnapshot();
-  write({ ...cur, thoughts: [{ id: Math.random().toString(36).slice(2, 10), text: note, at: Date.now() }, ...cur.thoughts].slice(0, 200) });
+  const current = getSnapshot();
+  write({ ...current, thoughts: [{ id: Math.random().toString(36).slice(2, 10), text: note, at: Date.now() }, ...current.thoughts].slice(0, 200) });
 }
 
 export function removeThought(id: string) {
-  const cur = getSnapshot();
-  write({ ...cur, thoughts: cur.thoughts.filter((t) => t.id !== id) });
+  const current = getSnapshot();
+  write({ ...current, thoughts: current.thoughts.filter((thought) => thought.id !== id) });
 }
 
 export const mindMark = () => ({ at: Date.now(), count: getSnapshot().thoughts.length });
 
 // at and count are from when the brief was requested, so notes added while it loaded still show as changed
 export function saveConclusion(conclusion: MindBrief, at: number = Date.now(), count?: number) {
-  const cur = getSnapshot();
-  write({ ...cur, conclusion: { ...conclusion, at, count: count ?? cur.thoughts.length } });
+  const current = getSnapshot();
+  write({ ...current, conclusion: { ...conclusion, at, count: count ?? current.thoughts.length } });
 }
 
 export const mindSync: Syncable<MindState> = {
@@ -83,7 +83,7 @@ export const mindSync: Syncable<MindState> = {
   merge: (local, remote) => {
     const [mine, theirs] = [clean(local).conclusion, clean(remote).conclusion];
     return {
-      thoughts: unionBy(local.thoughts, remote.thoughts, (t) => t.id)
+      thoughts: unionBy(local.thoughts, remote.thoughts, (thought) => thought.id)
         .sort((a, b) => b.at - a.at)
         .slice(0, 200),
       conclusion: (mine?.at ?? 0) > (theirs?.at ?? 0) ? mine : theirs,

@@ -2,32 +2,32 @@ import type { Card, Product } from "./types";
 import { hostOf } from "./url";
 
 export function digDeeperHref(card: Pick<Card, "slug" | "headline">) {
-  const q = `Find more evidence for “${card.headline}” and who already solves it`;
-  return `/app/research?about=${encodeURIComponent(card.slug)}&q=${encodeURIComponent(q)}`;
+  const question = `Find more evidence for “${card.headline}” and who already solves it`;
+  return `/app/research?about=${encodeURIComponent(card.slug)}&q=${encodeURIComponent(question)}`;
 }
 
-export const researchHref = (q: string, depth?: string) => `/app/research?q=${encodeURIComponent(q)}${depth ? `&depth=${depth}` : ""}`;
+export const researchHref = (question: string, depth?: string) => `/app/research?q=${encodeURIComponent(question)}${depth ? `&depth=${depth}` : ""}`;
 
 export const ideaHref = (slug: string) => `/app/idea/${slug}`;
 
-export const searchHref = (q: string) => `/app/search?q=${encodeURIComponent(q)}`;
+export const searchHref = (query: string) => `/app/search?q=${encodeURIComponent(query)}`;
 
-const clip = (s: string, n: number) => {
-  const t = s
+const clip = (text: string, maxLength: number) => {
+  const cleaned = text
     .replace(/\s+/g, " ")
     .trim()
     .replace(/[.!?]+$/, "");
-  return t.length > n ? `${t.slice(0, n - 1).trimEnd()}…` : t;
+  return cleaned.length > maxLength ? `${cleaned.slice(0, maxLength - 1).trimEnd()}…` : cleaned;
 };
 
 // new products have few reviews under their own name, so this passes context to let research look at similar tools
 export function productResearchHref(product: Pick<Product, "name" | "url" | "oneLine" | "forWho" | "category">) {
   const host = hostOf(product.url);
   const site = /^[\w-]+(\.[\w-]+)+$/.test(host) ? ` (${host})` : "";
-  const q =
+  const question =
     `What do people hate about ${clip(product.name, 60)}${site}? It is ${clip(product.oneLine, 160)}, for ${clip(product.forWho.toLowerCase(), 70)}. ` +
     `Also look at complaints about similar ${product.category.toLowerCase()} tools and why people switch between them.`;
-  return researchHref(q);
+  return researchHref(question);
 }
 
 // "//x", "/\x" and "/\t/x" read as another website to browsers, so refuse them and keep the result on origin

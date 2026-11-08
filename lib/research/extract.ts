@@ -30,7 +30,7 @@ const ExtractSchema = z.object({
 export type Complaint = { id: string; sourceId: number; quote: string; pain: string; who: string; signal?: Signal };
 type ExtractReport = { complaints: Complaint[]; offTopic: number; secondHand: number; unverified: number; failedBatches: number };
 
-async function pool<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<PromiseSettledResult<R>[]> {
+async function pool<T, R>(items: T[], limit: number, work: (item: T) => Promise<R>): Promise<PromiseSettledResult<R>[]> {
   const results: PromiseSettledResult<R>[] = new Array(items.length);
   let next = 0;
   await Promise.all(
@@ -38,7 +38,7 @@ async function pool<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>
       while (next < items.length) {
         const i = next++;
         try {
-          results[i] = { status: "fulfilled", value: await fn(items[i]) };
+          results[i] = { status: "fulfilled", value: await work(items[i]) };
         } catch (reason) {
           results[i] = { status: "rejected", reason };
         }
@@ -50,65 +50,65 @@ async function pool<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>
 
 export async function extractComplaints(
   sources: ResearchSource[],
-  opts: { topic: string; audience: string; batchSize: number; onBatch?: (done: number, total: number) => void; signal?: AbortSignal },
+  options: { topic: string; audience: string; batchSize: number; onBatch?: (done: number, total: number) => void; signal?: AbortSignal },
 ): Promise<ExtractReport> {
-  const byId = new Map(sources.map((s) => [s.id, s]));
+  const byId = new Map(sources.map((source) => [source.id, source]));
   const batches: ResearchSource[][] = [];
-  for (let i = 0; i < sources.length; i += opts.batchSize) batches.push(sources.slice(i, i + opts.batchSize));
+  for (let i = 0; i < sources.length; i += options.batchSize) batches.push(sources.slice(i, i + options.batchSize));
 
   let done = 0;
   const results = await pool(batches, 3, async (batch) => {
-    opts.signal?.throwIfAborted(); // visitor left, don't start more batches
-    const out = await generateJson(ExtractSchema, {
+    options.signal?.throwIfAborted(); // visitor left, don't start more batches
+    const response = await generateJson(ExtractSchema, {
       system: EXTRACT_SYSTEM,
       light: true,
       timeoutMs: 40_000,
-      signal: opts.signal,
-      prompt: `Topic: ${opts.topic}\nAudience: ${opts.audience}\n\nSources:\n${batch
+      signal: options.signal,
+      prompt: `Topic: ${options.topic}\nAudience: ${options.audience}\n\nSources:\n${batch
         .map(
-          (s) =>
-            `<source id="${s.id}" site="${s.site}"${s.postedAt ? ` date="${s.postedAt.slice(0, 10)}"` : ""}>\n${fence(s.title)}\n${fence(s.text.slice(0, 1800))}\n</source>`,
+          (source) =>
+            `<source id="${source.id}" site="${source.site}"${source.postedAt ? ` date="${source.postedAt.slice(0, 10)}"` : ""}>\n${fence(source.title)}\n${fence(source.text.slice(0, 1800))}\n</source>`,
         )
         .join("\n\n")}`,
     });
-    opts.onBatch?.(++done, batches.length);
-    return out.sources;
+    options.onBatch?.(++done, batches.length);
+    return response.sources;
   });
 
-  opts.signal?.throwIfAborted();
-  if (results.every((r) => r.status === "rejected")) {
+  options.signal?.throwIfAborted();
+  if (results.every((result) => result.status === "rejected")) {
     const first = results[0] as PromiseRejectedResult | undefined;
     throw first?.reason ?? new Error("Couldn't read the sources.");
   }
 
   const report: ExtractReport = { complaints: [], offTopic: 0, secondHand: 0, unverified: 0, failedBatches: 0 };
-  let n = 0;
-  for (const r of results) {
-    if (r.status !== "fulfilled") {
+  let complaintCount = 0;
+  for (const result of results) {
+    if (result.status !== "fulfilled") {
       report.failedBatches++;
       continue;
     }
-    for (const s of r.value) {
-      const src = byId.get(s.id);
-      if (!src) continue;
-      if (s.relevance < 2) {
+    for (const extractedSource of result.value) {
+      const source = byId.get(extractedSource.id);
+      if (!source) continue;
+      if (extractedSource.relevance < 2) {
         report.offTopic++;
         continue;
       }
-      if (!s.firstHand) {
+      if (!extractedSource.firstHand) {
         report.secondHand++;
         continue;
       }
-      for (const c of s.complaints) {
-        const quote = findQuote(c.quote, src.text);
+      for (const complaint of extractedSource.complaints) {
+        const quote = findQuote(complaint.quote, source.text);
         if (quote)
           report.complaints.push({
-            id: `c${++n}`,
-            sourceId: s.id,
+            id: `c${++complaintCount}`,
+            sourceId: extractedSource.id,
             quote,
-            pain: c.pain,
-            who: s.who,
-            signal: c.signal === "none" ? undefined : c.signal,
+            pain: complaint.pain,
+            who: extractedSource.who,
+            signal: complaint.signal === "none" ? undefined : complaint.signal,
           });
         else report.unverified++;
       }
@@ -117,4 +117,4 @@ export async function extractComplaints(
   return report;
 }
 
-export const fence = (t: string) => t.replace(/<\/?\s*(source|complaint|quote|product|competitor|card|message)\b/gi, "‹");
+export const fence = (text: string) => text.replace(/<\/?\s*(source|complaint|quote|product|competitor|card|message)\b/gi, "‹");

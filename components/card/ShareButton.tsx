@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Check, Share } from "lucide-react";
 import { ideaHref } from "@/lib/links";
 import type { Card } from "@/lib/types";
-import s from "./card.module.css";
+import styles from "./card.module.css";
 
 export default function ShareButton({ card }: { card: Card }) {
   const [copied, setCopied] = useState(false);
@@ -29,7 +29,12 @@ export default function ShareButton({ card }: { card: Card }) {
   }
 
   return (
-    <button type="button" onClick={share} className={`${s.act} ${s.actQuiet} ${s.iconBtn}`} aria-label={copied ? "Link copied" : "Share"}>
+    <button
+      type="button"
+      onClick={share}
+      className={`${styles.act} ${styles.actQuiet} ${styles.iconBtn}`}
+      aria-label={copied ? "Link copied" : "Share"}
+    >
       {copied ? <Check size={18} aria-hidden="true" /> : <Share size={18} aria-hidden="true" />}
     </button>
   );

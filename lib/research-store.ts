@@ -37,10 +37,10 @@ function read(): Thread[] {
     }
     // one-time move of the single chat from v1
     const old = JSON.parse(localStorage.getItem(OLD_KEY) ?? "[]") as ChatMessage[];
-    const messages = Array.isArray(old) ? old.filter((m) => !m.pending) : [];
+    const messages = Array.isArray(old) ? old.filter((message) => !message.pending) : [];
     if (!messages.length) return [];
     const now = Date.now();
-    const title = messages.find((m) => m.role === "user")?.text ?? "Research";
+    const title = messages.find((message) => message.role === "user")?.text ?? "Research";
     return [{ id: newId(), title, createdAt: now, updatedAt: now, messages }];
   } catch {
     return [];
@@ -48,33 +48,34 @@ function read(): Thread[] {
 }
 
 // pending replies aren't stored or synced, a reload can't resume the stream
-const storable = (list: Thread[]) => list.slice(0, MAX_THREADS).map((t) => ({ ...t, messages: t.messages.filter((m) => !m.pending).slice(-40) }));
+const storable = (list: Thread[]) =>
+  list.slice(0, MAX_THREADS).map((thread) => ({ ...thread, messages: thread.messages.filter((message) => !message.pending).slice(-40) }));
 
 function write(list: Thread[]) {
   cache = list;
   try {
     localStorage.setItem(KEY, JSON.stringify(storable(list)));
   } catch {}
-  listeners.forEach((l) => l());
+  listeners.forEach((listener) => listener());
 }
 
 const getSnapshot = () => (cache ??= read());
 // other tab changed it, re-read but keep this tab's mid-answer chats
-const subscribe = (l: () => void) => {
+const subscribe = (listener: () => void) => {
   const onStorage = (e: StorageEvent) => {
     if (e.key !== KEY) return;
-    const pending = (cache ?? []).filter((t) => t.messages.some((m) => m.pending));
+    const pending = (cache ?? []).filter((thread) => thread.messages.some((message) => message.pending));
     cache = null;
     if (pending.length) {
       const fresh = getSnapshot();
-      cache = [...pending, ...fresh.filter((t) => !pending.some((p) => p.id === t.id))];
+      cache = [...pending, ...fresh.filter((thread) => !pending.some((pendingThread) => pendingThread.id === thread.id))];
     }
-    l();
+    listener();
   };
-  listeners.add(l);
+  listeners.add(listener);
   window.addEventListener("storage", onStorage);
   return () => {
-    listeners.delete(l);
+    listeners.delete(listener);
     window.removeEventListener("storage", onStorage);
   };
 };
@@ -86,7 +87,7 @@ export function useThreads() {
 
 export function useThread(id: string | undefined) {
   const threads = useSyncExternalStore(subscribe, getSnapshot, () => EMPTY);
-  return id ? threads.find((t) => t.id === id) : undefined;
+  return id ? threads.find((thread) => thread.id === id) : undefined;
 }
 
 export function useStoreReady() {
@@ -104,14 +105,14 @@ export function createThread(title: string) {
   return thread.id;
 }
 
-export function updateThread(id: string, fn: (messages: ChatMessage[]) => ChatMessage[]) {
-  write(getSnapshot().map((t) => (t.id === id ? { ...t, messages: fn(t.messages), updatedAt: Date.now() } : t)));
+export function updateThread(id: string, update: (messages: ChatMessage[]) => ChatMessage[]) {
+  write(getSnapshot().map((thread) => (thread.id === id ? { ...thread, messages: update(thread.messages), updatedAt: Date.now() } : thread)));
 }
 
 export function findResearchCard(slug: string): Card | undefined {
-  for (const t of getSnapshot()) {
-    for (const m of t.messages) {
-      const card = m.cards?.find((c) => c.slug === slug);
+  for (const thread of getSnapshot()) {
+    for (const message of thread.messages) {
+      const card = message.cards?.find((candidate) => candidate.slug === slug);
       if (card) return card;
     }
   }
@@ -124,17 +125,17 @@ export const threadsSync: Syncable<Thread[]> = {
   replace: (list) => {
     const busy = new Map(
       getSnapshot()
-        .filter((t) => t.messages.some((m) => m.pending))
-        .map((t) => [t.id, t]),
+        .filter((thread) => thread.messages.some((message) => message.pending))
+        .map((thread) => [thread.id, thread]),
     );
-    write(list.map((t) => busy.get(t.id) ?? t));
+    write(list.map((thread) => busy.get(thread.id) ?? thread));
   },
   merge: (local, remote) =>
     unionBy(
       local,
       remote,
-      (t) => t.id,
-      (a, b) => (b.updatedAt > a.updatedAt ? b : a),
+      (thread) => thread.id,
+      (localThread, remoteThread) => (remoteThread.updatedAt > localThread.updatedAt ? remoteThread : localThread),
     ).sort((a, b) => b.updatedAt - a.updatedAt),
   subscribe,
   clear: () => write([]),

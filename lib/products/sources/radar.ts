@@ -15,16 +15,16 @@ export async function trafficRank(siteUrl: string): Promise<ProductProof | null>
   if (!URL.canParse(siteUrl)) return null;
   const domain = hostOf(siteUrl);
   if (!token || /apps\.apple\.com|github\.com/.test(domain)) return null;
-  const res = await fetch(`https://api.cloudflare.com/client/v4/radar/ranking/domain/${domain}`, {
+  const response = await fetch(`https://api.cloudflare.com/client/v4/radar/ranking/domain/${domain}`, {
     headers: { ...headers, Authorization: `Bearer ${token}` },
     signal: AbortSignal.timeout(8000),
   }).catch(() => null);
-  if (!res?.ok) return null;
-  const body = (await res.json()) as { result?: { details_0?: { top_locations?: unknown; bucket?: string | number; rank?: number } } };
-  const d = body.result?.details_0;
-  const rank = Number(d?.rank ?? d?.bucket);
+  if (!response?.ok) return null;
+  const body = (await response.json()) as { result?: { details_0?: { top_locations?: unknown; bucket?: string | number; rank?: number } } };
+  const details = body.result?.details_0;
+  const rank = Number(details?.rank ?? details?.bucket);
   if (!rank) return null;
-  const top = BUCKETS.find((b) => rank <= b);
+  const top = BUCKETS.find((bucket) => rank <= bucket);
   if (!top || top > 200000) return null; // too small to say anything
   return {
     kind: "traffic",

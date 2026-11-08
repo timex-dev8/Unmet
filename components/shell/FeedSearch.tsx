@@ -2,14 +2,14 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
-import s from "./shell.module.css";
+import styles from "./shell.module.css";
 
 export default function FeedSearch({ open }: { open: boolean }) {
   const router = useRouter();
   const current = useSearchParams().get("q") ?? "";
   return (
     <form
-      className={`${s.searchField} ${open ? s.searchFieldOpen : ""}`}
+      className={`${styles.searchField} ${open ? styles.searchFieldOpen : ""}`}
       role="search"
       onSubmit={(e) => {
         e.preventDefault();
@@ -18,7 +18,7 @@ export default function FeedSearch({ open }: { open: boolean }) {
       }}
     >
       <Search size={16} aria-hidden="true" />
-      <label htmlFor="feed-search" className={s.srOnly}>
+      <label htmlFor="feed-search" className={styles.srOnly}>
         Search the feed
       </label>
       {/* key so the box follows the url */}
@@ -26,7 +26,7 @@ export default function FeedSearch({ open }: { open: boolean }) {
         key={current}
         id="feed-search"
         name="q"
-        className={s.searchInput}
+        className={styles.searchInput}
         type="search"
         defaultValue={current}
         maxLength={120}

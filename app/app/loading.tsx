@@ -1,12 +1,12 @@
-import s from "./loading.module.css";
+import styles from "./loading.module.css";
 
 export default function Loading() {
   return (
-    <div className={s.wrap} aria-hidden="true">
-      <div className={s.title} />
-      <div className={s.block} />
-      <div className={s.block} />
-      <div className={s.block} />
+    <div className={styles.wrap} aria-hidden="true">
+      <div className={styles.title} />
+      <div className={styles.block} />
+      <div className={styles.block} />
+      <div className={styles.block} />
     </div>
   );
 }

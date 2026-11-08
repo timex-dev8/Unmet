@@ -1,7 +1,7 @@
 import { Check, Minus } from "lucide-react";
 import type { Report, Signal } from "@/lib/types";
 import { VERDICT } from "@/lib/verdict";
-import s from "./report.module.css";
+import styles from "./report.module.css";
 
 const SIGNALS: [Signal, string][] = [
   ["pays", "pay or would pay"],
@@ -11,40 +11,40 @@ const SIGNALS: [Signal, string][] = [
 ];
 
 export default function WorthBuilding({ report }: { report: Report }) {
-  const v = VERDICT[report.verdict];
+  const verdict = VERDICT[report.verdict];
   return (
-    <section className={s.section} aria-labelledby="worth">
-      <h2 id="worth" className={s.h2}>
+    <section className={styles.section} aria-labelledby="worth">
+      <h2 id="worth" className={styles.h2}>
         Worth building?
       </h2>
-      <div className={`${s.verdict} ${s[report.verdict]}`}>
-        <span className={s.verdictLabel}>{v.label}</span>
-        <span className={s.verdictNote}>{v.note}</span>
+      <div className={`${styles.verdict} ${styles[report.verdict]}`}>
+        <span className={styles.verdictLabel}>{verdict.label}</span>
+        <span className={styles.verdictNote}>{verdict.note}</span>
       </div>
 
-      <ul className={s.reasons}>
-        {report.reasons.map((r) => {
-          const negative = /^(only|no one)/i.test(r);
+      <ul className={styles.reasons}>
+        {report.reasons.map((reason) => {
+          const negative = /^(only|no one)/i.test(reason);
           return (
-            <li key={r}>
+            <li key={reason}>
               {negative ? <Minus size={16} aria-hidden="true" /> : <Check size={16} aria-hidden="true" />}
-              {r}
+              {reason}
             </li>
           );
         })}
       </ul>
 
-      <div className={s.signals}>
+      <div className={styles.signals}>
         {SIGNALS.map(([key, label]) => (
-          <div key={key} className={`${s.signal} ${report.signals[key] ? s.signalOn : ""}`}>
-            <span className={s.signalNum}>{report.signals[key]}</span>
-            <span className={s.signalLabel}>{label}</span>
+          <div key={key} className={`${styles.signal} ${report.signals[key] ? styles.signalOn : ""}`}>
+            <span className={styles.signalNum}>{report.signals[key]}</span>
+            <span className={styles.signalLabel}>{label}</span>
           </div>
         ))}
       </div>
 
       {(report.today || report.workarounds.length > 0) && (
-        <div className={s.today}>
+        <div className={styles.today}>
           {report.today && (
             <p>
               <strong>What they use today:</strong> {report.today}
@@ -57,7 +57,9 @@ export default function WorthBuilding({ report }: { report: Report }) {
           )}
         </div>
       )}
-      <p className={s.fine}>Counted from the verified complaints below. Signals are found by AI reading each post; the verdict itself is computed.</p>
+      <p className={styles.fine}>
+        Counted from the verified complaints below. Signals are found by AI reading each post; the verdict itself is computed.
+      </p>
     </section>
   );
 }

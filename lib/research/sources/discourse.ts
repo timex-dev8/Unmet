@@ -24,31 +24,31 @@ export async function searchDiscourse(query: string, sinceIso: string): Promise<
   const results = await Promise.allSettled(
     DISCOURSE_FORUMS.map(async (host) => {
       const params = new URLSearchParams({ q: `${query} after:${after}` });
-      const res = await fetch(`https://${host}/search.json?${params}`, {
+      const response = await fetch(`https://${host}/search.json?${params}`, {
         signal: AbortSignal.timeout(7000),
         headers: { Accept: "application/json" },
       });
-      if (!res.ok) return [];
-      const { posts = [], topics = [] } = (await res.json()) as { posts?: Post[]; topics?: Topic[] };
-      const byId = new Map(topics.map((t) => [t.id, t]));
-      return posts.slice(0, 4).flatMap((p) => {
-        const t = byId.get(p.topic_id);
-        if (!t) return [];
-        const likes = p.like_count ?? 0;
+      if (!response.ok) return [];
+      const { posts = [], topics = [] } = (await response.json()) as { posts?: Post[]; topics?: Topic[] };
+      const byId = new Map(topics.map((topic) => [topic.id, topic]));
+      return posts.slice(0, 4).flatMap((post) => {
+        const topic = byId.get(post.topic_id);
+        if (!topic) return [];
+        const likes = post.like_count ?? 0;
         return [
           {
-            title: plain(t.title),
-            url: `https://${host}/t/${t.slug}/${t.id}${p.post_number ? `/${p.post_number}` : ""}`,
+            title: plain(topic.title),
+            url: `https://${host}/t/${topic.slug}/${topic.id}${post.post_number ? `/${post.post_number}` : ""}`,
             site: host,
-            postedAt: p.created_at,
-            text: plain(`${t.title}. ${p.blurb}`),
+            postedAt: post.created_at,
+            text: plain(`${topic.title}. ${post.blurb}`),
             origin: "discourse" as const,
             kind: "forum" as const,
-            engagement: { score: likes * 2 + (t.posts_count ?? 0), label: `${likes} likes · ${t.posts_count ?? 0} replies in thread` },
+            engagement: { score: likes * 2 + (topic.posts_count ?? 0), label: `${likes} likes · ${topic.posts_count ?? 0} replies in thread` },
           },
         ];
       });
     }),
   );
-  return results.flatMap((r) => (r.status === "fulfilled" ? r.value : [])).filter((s) => s.text.length > 80);
+  return results.flatMap((result) => (result.status === "fulfilled" ? result.value : [])).filter((source) => source.text.length > 80);
 }

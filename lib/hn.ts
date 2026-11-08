@@ -35,27 +35,27 @@ export async function searchHN(query: string, sinceSeconds: number, limit = 12):
     numericFilters: `created_at_i>${sinceSeconds}`,
     hitsPerPage: String(limit),
   });
-  const res = await fetch(`${API}/search?${params}`, { signal: AbortSignal.timeout(8000) });
-  if (!res.ok) return [];
-  const { hits } = (await res.json()) as { hits: Hit[] };
+  const response = await fetch(`${API}/search?${params}`, { signal: AbortSignal.timeout(8000) });
+  if (!response.ok) return [];
+  const { hits } = (await response.json()) as { hits: Hit[] };
 
   return hits
-    .map((h) => {
-      const isStory = Boolean(h.title);
-      const text = plain(h.comment_text ?? [h.title, h.story_text].filter(Boolean).join(". ")).slice(0, 2000);
-      const points = h.points ?? 0;
+    .map((hit) => {
+      const isStory = Boolean(hit.title);
+      const text = plain(hit.comment_text ?? [hit.title, hit.story_text].filter(Boolean).join(". ")).slice(0, 2000);
+      const points = hit.points ?? 0;
       return {
-        title: h.title || `Comment on “${h.story_title ?? "a thread"}”`,
-        url: `https://news.ycombinator.com/item?id=${h.objectID}`,
+        title: hit.title || `Comment on “${hit.story_title ?? "a thread"}”`,
+        url: `https://news.ycombinator.com/item?id=${hit.objectID}`,
         site: "news.ycombinator.com",
-        postedAt: h.created_at,
+        postedAt: hit.created_at,
         text,
         origin: "hn" as const,
         kind: "hn" as const,
         engagement: isStory
-          ? { score: points + (h.num_comments ?? 0), label: `${points} points · ${h.num_comments ?? 0} comments` }
+          ? { score: points + (hit.num_comments ?? 0), label: `${points} points · ${hit.num_comments ?? 0} comments` }
           : { score: 1, label: "HN comment" },
       };
     })
-    .filter((h) => h.text.length > 60);
+    .filter((hit) => hit.text.length > 60);
 }

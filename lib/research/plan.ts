@@ -59,33 +59,35 @@ const DISCOVER_GROUPS = [
 type Plan = z.infer<typeof PlanSchema>;
 
 // operators don't help exa, strip any the model adds
-const plain = (q: string) =>
-  q
+const plain = (query: string) =>
+  query
     .replace(/\bsite:\S+/gi, "")
     .replace(/\b(OR|AND)\b/g, " ")
     .replace(/["()]/g, "")
     .replace(/\s+/g, " ")
     .trim();
 
-function pickGroups(n: number) {
+function pickGroups(count: number) {
   const pool = [...DISCOVER_GROUPS];
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
-  return pool.slice(0, n);
+  return pool.slice(0, count);
 }
 
-export async function makePlan(req: ResearchRequest, signal?: AbortSignal): Promise<Plan> {
+export async function makePlan(request: ResearchRequest, signal?: AbortSignal): Promise<Plan> {
   const prompt = [
-    req.history.length ? `Conversation so far:\n${req.history.map((t) => `<message role="${t.role}">${fence(t.text)}</message>`).join("\n")}` : "",
-    req.cards.length
-      ? `Ideas already found:\n${req.cards.map((c, i) => `#${i + 1} <card>${fence(`${c.headline}: ${c.summary}`)}</card>`).join("\n")}`
+    request.history.length
+      ? `Conversation so far:\n${request.history.map((turn) => `<message role="${turn.role}">${fence(turn.text)}</message>`).join("\n")}`
+      : "",
+    request.cards.length
+      ? `Ideas already found:\n${request.cards.map((card, i) => `#${i + 1} <card>${fence(`${card.headline}: ${card.summary}`)}</card>`).join("\n")}`
       : "",
     `Allowed Stack Exchange sites: ${STACK_SITES.join(", ")}`,
     `Allowed TrustMRR categories: ${TRUSTMRR_CATEGORIES.join(", ")}`,
     `Groups for a "discover" or "clarify" plan: ${pickGroups(4).join(", ")}`,
-    `New message: <message>${fence(req.message)}</message>`,
+    `New message: <message>${fence(request.message)}</message>`,
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -94,11 +96,11 @@ export async function makePlan(req: ResearchRequest, signal?: AbortSignal): Prom
 
   return {
     ...plan,
-    angles: plan.angles.map((a) => ({ ...a, query: plain(a.query) })).filter((a) => a.query.length > 3),
+    angles: plan.angles.map((angle) => ({ ...angle, query: plain(angle.query) })).filter((angle) => angle.query.length > 3),
     communityQuery: plain(plan.communityQuery) || plain(plan.topic),
     hnQuery: plain(plan.hnQuery) || plain(plan.topic),
     stackQuery: plain(plan.stackQuery),
-    stackSites: plan.stackSites.filter((s) => (STACK_SITES as readonly string[]).includes(s)),
+    stackSites: plan.stackSites.filter((site) => (STACK_SITES as readonly string[]).includes(site)),
     appTerms: plan.appTerms.map(plain).filter(Boolean),
     githubPhrase: plain(plan.githubPhrase),
     product: plan.mode === "gap" ? plan.product.trim() : "",

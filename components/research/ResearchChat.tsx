@@ -15,7 +15,7 @@ import { useSaved } from "@/lib/saved";
 import type { Card } from "@/lib/types";
 import DepthPicker from "./DepthPicker";
 import ResearchCard from "./ResearchCard";
-import s from "./research.module.css";
+import styles from "./research.module.css";
 
 type Context = Pick<Card, "slug" | "headline" | "summary">;
 
@@ -45,7 +45,7 @@ export default function ResearchChat({
   const authKnown = user !== undefined && guest !== undefined;
   const [openCard, setOpenCard] = useState<Card | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
-  const busy = messages.some((m) => m.pending);
+  const busy = messages.some((chatMessage) => chatMessage.pending);
 
   const lastSteps = messages[messages.length - 1]?.steps?.length ?? 0;
   useEffect(() => {
@@ -74,38 +74,40 @@ export default function ResearchChat({
     if (!message || busy || !configured || !authKnown) return; // lowOnly would submit a low run before auth is known
 
     // new research gets its own thread and url, the stream writes to it by id
-    let tid = threadId;
-    if (!tid) {
-      tid = createThread(message);
-      router.replace(`/app/research/${tid}`, { scroll: false });
+    let activeThreadId = threadId;
+    if (!activeThreadId) {
+      activeThreadId = createThread(message);
+      router.replace(`/app/research/${activeThreadId}`, { scroll: false });
     }
-    const id = tid;
-    const patch = (msgId: string, fn: (m: ChatMessage) => Partial<ChatMessage>) =>
-      updateThread(id, (list) => list.map((m) => (m.id === msgId ? { ...m, ...fn(m) } : m)));
+    const streamThreadId = activeThreadId;
+    const patch = (msgId: string, fn: (chatMessage: ChatMessage) => Partial<ChatMessage>) =>
+      updateThread(streamThreadId, (list) =>
+        list.map((chatMessage) => (chatMessage.id === msgId ? { ...chatMessage, ...fn(chatMessage) } : chatMessage)),
+      );
 
-    const prior = messages.filter((m) => !m.error);
-    const history = prior.slice(-8).map((m) => ({ role: m.role, text: m.text.slice(0, 1500) }));
+    const prior = messages.filter((chatMessage) => !chatMessage.error);
+    const history = prior.slice(-8).map((chatMessage) => ({ role: chatMessage.role, text: chatMessage.text.slice(0, 1500) }));
     const cards: Context[] = [
       ...(about && !threadId ? [about] : []),
-      ...prior.flatMap((m) => m.cards ?? []).map(({ slug, headline, summary }) => ({ slug, headline, summary })),
+      ...prior.flatMap((chatMessage) => chatMessage.cards ?? []).map(({ slug, headline, summary }) => ({ slug, headline, summary })),
     ].slice(-12);
 
     const reply: ChatMessage = { id: newId(), role: "assistant", text: "", steps: [], pending: true };
-    updateThread(id, (list) => [...list, { id: newId(), role: "user", text: message }, reply]);
+    updateThread(streamThreadId, (list) => [...list, { id: newId(), role: "user", text: message }, reply]);
 
     try {
-      const res = await fetch("/api/research", {
+      const response = await fetch("/api/research", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(await authHeaders()) },
         body: JSON.stringify({ message, history, cards, depth: lowOnly ? "low" : depth }),
       });
-      if (!res.ok || !res.body) {
-        const body = await res.json().catch(() => ({}));
+      if (!response.ok || !response.body) {
+        const body = await response.json().catch(() => ({}));
         patch(reply.id, () => ({ text: body.error ?? "Something went wrong. Please try again.", error: true, pending: false }));
         return;
       }
 
-      const reader = res.body.getReader();
+      const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
       try {
@@ -123,7 +125,7 @@ export default function ResearchChat({
             } catch {
               continue; // one bad line shouldnt kill the stream
             }
-            if (event.type === "step") patch(reply.id, (m) => ({ steps: [...(m.steps ?? []), event.label] }));
+            if (event.type === "step") patch(reply.id, (chatMessage) => ({ steps: [...(chatMessage.steps ?? []), event.label] }));
             else if (event.type === "result")
               patch(reply.id, () => ({
                 text: event.answer,
@@ -140,7 +142,9 @@ export default function ResearchChat({
         void reader.cancel().catch(() => {});
         throw err;
       }
-      patch(reply.id, (m) => (m.pending ? { text: "The research took too long. Please try again.", error: true, pending: false } : {}));
+      patch(reply.id, (chatMessage) =>
+        chatMessage.pending ? { text: "The research took too long. Please try again.", error: true, pending: false } : {},
+      );
     } catch {
       patch(reply.id, () => ({ text: "Couldn’t reach Unmet. Check your connection and try again.", error: true, pending: false }));
     }
@@ -167,10 +171,10 @@ export default function ResearchChat({
 
   if (threadId && ready && !thread) {
     return (
-      <main className={`${s.chat} ${s.chatEmpty}`}>
-        <div className={s.intro}>
-          <h1 className={s.title}>This research isn’t on this device.</h1>
-          <p className={s.lead}>Research is kept in the browser where you ran it, until accounts arrive.</p>
+      <main className={`${styles.chat} ${styles.chatEmpty}`}>
+        <div className={styles.intro}>
+          <h1 className={styles.title}>This research isn’t on this device.</h1>
+          <p className={styles.lead}>Research is kept in the browser where you ran it, until accounts arrive.</p>
           <p>
             <Link href="/app/research" className="pill pill-dark">
               Start a new research
@@ -182,31 +186,33 @@ export default function ResearchChat({
   }
 
   const empty = messages.length === 0;
-  const lastAnswerId = [...messages].reverse().find((m) => m.role === "assistant" && !m.pending && !m.error)?.id;
+  const lastAnswerId = [...messages]
+    .reverse()
+    .find((chatMessage) => chatMessage.role === "assistant" && !chatMessage.pending && !chatMessage.error)?.id;
 
   return (
-    <div className={s.layout}>
-      <main className={`${s.chat} ${empty ? s.chatEmpty : ""}`}>
+    <div className={styles.layout}>
+      <main className={`${styles.chat} ${empty ? styles.chatEmpty : ""}`}>
         {empty ? (
-          <div className={s.intro} data-wash>
-            <h1 className={s.title}>{about ? `Dig into “${about.headline}”` : "What do you want to find out?"}</h1>
-            <p className={s.lead}>
+          <div className={styles.intro} data-wash>
+            <h1 className={styles.title}>{about ? `Dig into “${about.headline}”` : "What do you want to find out?"}</h1>
+            <p className={styles.lead}>
               Ask about anything, or say you have no idea yet. You’ll get real problems people complain about, and ideas to solve them.
             </p>
           </div>
         ) : (
-          <div className={s.thread} aria-live="polite">
-            <h1 className={s.threadTitle}>{thread?.title ?? "Research"}</h1>
-            {messages.map((m, idx) =>
-              m.role === "user" ? (
-                <UserBubble key={m.id} text={m.text} />
+          <div className={styles.thread} aria-live="polite">
+            <h1 className={styles.threadTitle}>{thread?.title ?? "Research"}</h1>
+            {messages.map((chatMessage, messageIndex) =>
+              chatMessage.role === "user" ? (
+                <UserBubble key={chatMessage.id} text={chatMessage.text} />
               ) : (
                 <Reply
-                  key={m.id}
-                  m={m}
-                  isLast={m.id === lastAnswerId}
-                  lastQuery={messages.slice(0, idx).findLast((x) => x.role === "user")?.text ?? ""}
-                  onAsk={(q) => send(q)}
+                  key={chatMessage.id}
+                  chatMessage={chatMessage}
+                  isLast={chatMessage.id === lastAnswerId}
+                  lastQuery={messages.slice(0, messageIndex).findLast((earlier) => earlier.role === "user")?.text ?? ""}
+                  onAsk={(question) => send(question)}
                   onOpen={setOpenCard}
                   openSlug={openCard?.slug}
                 />
@@ -216,15 +222,15 @@ export default function ResearchChat({
           </div>
         )}
 
-        <div className={s.composerWrap}>
-          {!configured && <p className={s.notice}>AI research is being switched on. Check back soon.</p>}
-          <form className={s.composer} onSubmit={onSubmit}>
+        <div className={styles.composerWrap}>
+          {!configured && <p className={styles.notice}>AI research is being switched on. Check back soon.</p>}
+          <form className={styles.composer} onSubmit={onSubmit}>
             <label htmlFor="research-input" className="sr-only">
               Describe a market or problem
             </label>
             <textarea
               id="research-input"
-              className={s.input}
+              className={styles.input}
               rows={1}
               maxLength={800}
               value={input}
@@ -234,7 +240,7 @@ export default function ResearchChat({
               disabled={!configured}
             />
             {!lowOnly && <DepthPicker value={depth} onChange={setDepth} disabled={busy} placement={empty ? "down" : "up"} />}
-            <button type="submit" className={`glossy ${s.send}`} disabled={!input.trim() || busy || !configured || !authKnown} aria-label="Send">
+            <button type="submit" className={`glossy ${styles.send}`} disabled={!input.trim() || busy || !configured || !authKnown} aria-label="Send">
               {busy ? <LoaderCircle size={20} className="spin" aria-hidden="true" /> : <ArrowUp size={20} aria-hidden="true" />}
             </button>
           </form>
@@ -243,24 +249,24 @@ export default function ResearchChat({
       </main>
 
       {openCard && (
-        <aside className={s.panel} aria-label="Idea details">
-          <div className={s.panelBar}>
-            <span className={s.panelLabel}>Idea</span>
-            <div className={s.panelTools}>
-              <Link href={ideaHref(openCard.slug)} className={s.panelBtn} aria-label="Open as a full page">
+        <aside className={styles.panel} aria-label="Idea details">
+          <div className={styles.panelBar}>
+            <span className={styles.panelLabel}>Idea</span>
+            <div className={styles.panelTools}>
+              <Link href={ideaHref(openCard.slug)} className={styles.panelBtn} aria-label="Open as a full page">
                 <ExternalLink size={16} aria-hidden="true" />
               </Link>
-              <button type="button" className={s.panelBtn} onClick={() => setOpenCard(null)} aria-label="Close panel">
+              <button type="button" className={styles.panelBtn} onClick={() => setOpenCard(null)} aria-label="Close panel">
                 <X size={18} aria-hidden="true" />
               </button>
             </div>
           </div>
-          <div className={s.panelBody}>
+          <div className={styles.panelBody}>
             <IdeaSections card={openCard} headingLevel={2} />
           </div>
-          <div className={s.panelActions}>
+          <div className={styles.panelActions}>
             <SaveButton card={openCard} label="Save idea" />
-            <Link href={digDeeperHref(openCard)} className={s.digBtn}>
+            <Link href={digDeeperHref(openCard)} className={styles.digBtn}>
               <Sparkles size={15} aria-hidden="true" />
               Dig deeper
             </Link>
@@ -274,20 +280,20 @@ export default function ResearchChat({
 
 function UserBubble({ text }: { text: string }) {
   return (
-    <div className={s.userRow}>
-      <p className={s.user}>{text}</p>
+    <div className={styles.userRow}>
+      <p className={styles.user}>{text}</p>
     </div>
   );
 }
 
 function StepList({ steps, pending }: { steps: string[]; pending?: boolean }) {
   return (
-    <ol className={s.steps}>
+    <ol className={styles.steps}>
       {steps.map((step, i) => {
         const running = pending && i === steps.length - 1;
         return (
-          <li key={i} className={`rise ${running ? s.stepRunning : ""}`}>
-            {running ? <LoaderCircle size={15} className="spin" aria-hidden="true" /> : <Check size={15} className={s.pop} aria-hidden="true" />}
+          <li key={i} className={`rise ${running ? styles.stepRunning : ""}`}>
+            {running ? <LoaderCircle size={15} className="spin" aria-hidden="true" /> : <Check size={15} className={styles.pop} aria-hidden="true" />}
             {step}
           </li>
         );
@@ -297,39 +303,39 @@ function StepList({ steps, pending }: { steps: string[]; pending?: boolean }) {
 }
 
 function Reply({
-  m,
+  chatMessage,
   isLast,
   lastQuery,
   onAsk,
   onOpen,
   openSlug,
 }: {
-  m: ChatMessage;
+  chatMessage: ChatMessage;
   isLast: boolean;
   lastQuery: string;
-  onAsk: (q: string) => void;
+  onAsk: (question: string) => void;
   onOpen: (card: Card) => void;
   openSlug?: string;
 }) {
-  const steps = m.steps ?? [];
-  const cards = m.cards ?? [];
+  const steps = chatMessage.steps ?? [];
+  const cards = chatMessage.cards ?? [];
   const { save, isSaved } = useSaved();
-  const allSaved = cards.length > 0 && cards.every((c) => isSaved(c.slug));
+  const allSaved = cards.length > 0 && cards.every((card) => isSaved(card.slug));
 
-  const niche = cards.filter((c) => c.signal === "niche");
-  const popular = cards.filter((c) => c.signal !== "niche");
+  const niche = cards.filter((card) => card.signal === "niche");
+  const popular = cards.filter((card) => card.signal !== "niche");
   const both = niche.length > 0 && popular.length > 0;
-  const suggestions = m.suggestions ?? [];
+  const suggestions = chatMessage.suggestions ?? [];
   const followUps = [
     ...(lastQuery ? [{ label: "Find more niche problems", query: `Find more niche problems: ${lastQuery}` }] : []),
     ...(cards.length > 1 ? [{ label: "Which is easiest to build?", query: "Which is easiest to build?" }] : []),
-    ...suggestions.map((q) => ({ label: q, query: q })),
+    ...suggestions.map((suggestion) => ({ label: suggestion, query: suggestion })),
   ];
-  const showFootnote = !m.pending && !m.error && m.sourceCount && cards.length > 0;
+  const showFootnote = !chatMessage.pending && !chatMessage.error && chatMessage.sourceCount && cards.length > 0;
   const group = (list: Card[], heading: string | null, offset: number) => (
     <>
-      {heading && <h2 className={s.groupTitle}>{heading}</h2>}
-      <div className={s.cards}>
+      {heading && <h2 className={styles.groupTitle}>{heading}</h2>}
+      <div className={styles.cards}>
         {list.map((card, i) => (
           <ResearchCard key={card.slug} card={card} index={offset + i} onOpen={onOpen} selected={card.slug === openSlug} />
         ))}
@@ -338,44 +344,49 @@ function Reply({
   );
 
   return (
-    <div className={s.reply}>
-      {steps.length > 0 && m.pending && <StepList steps={steps} pending />}
-      {steps.length > 0 && !m.pending && m.mix && (
-        <details className={s.stepsFold}>
+    <div className={styles.reply}>
+      {steps.length > 0 && chatMessage.pending && <StepList steps={steps} pending />}
+      {steps.length > 0 && !chatMessage.pending && chatMessage.mix && (
+        <details className={styles.stepsFold}>
           <summary>
             <Check size={14} aria-hidden="true" />
-            {m.mix}
+            {chatMessage.mix}
           </summary>
           <StepList steps={steps} />
         </details>
       )}
-      {m.pending && steps.length === 0 && (
-        <p className={s.thinking}>
+      {chatMessage.pending && steps.length === 0 && (
+        <p className={styles.thinking}>
           <LoaderCircle size={15} className="spin" aria-hidden="true" /> Starting research…
         </p>
       )}
-      {m.text && <p className={m.error ? s.error : s.answer}>{m.text}</p>}
+      {chatMessage.text && <p className={chatMessage.error ? styles.error : styles.answer}>{chatMessage.text}</p>}
       {popular.length > 0 && group(popular, both ? "Main problems" : null, 0)}
       {niche.length > 0 && group(niche, "Niche problems: smaller and less proven", popular.length)}
-      {showFootnote ? <p className={s.footnote}>Sources from the last 12 months; every quote is checked against its source.</p> : null}
-      {!m.pending && !m.error && cards.length === 0 && suggestions.length > 0 && (
-        <div className={s.followUps}>
-          {suggestions.map((q) => (
-            <button key={q} type="button" className={s.example} onClick={() => onAsk(q)}>
-              {q}
+      {showFootnote ? <p className={styles.footnote}>Sources from the last 12 months; every quote is checked against its source.</p> : null}
+      {!chatMessage.pending && !chatMessage.error && cards.length === 0 && suggestions.length > 0 && (
+        <div className={styles.followUps}>
+          {suggestions.map((suggestion) => (
+            <button key={suggestion} type="button" className={styles.example} onClick={() => onAsk(suggestion)}>
+              {suggestion}
             </button>
           ))}
         </div>
       )}
       {isLast && cards.length > 0 && (
-        <div className={s.followUps}>
-          <button type="button" className={s.addAll} onClick={() => cards.forEach(save)} disabled={allSaved}>
+        <div className={styles.followUps}>
+          <button type="button" className={styles.addAll} onClick={() => cards.forEach(save)} disabled={allSaved}>
             {allSaved ? <Check size={15} aria-hidden="true" /> : <BookmarkPlus size={15} aria-hidden="true" />}
             {allSaved ? "On your board" : cards.length > 1 ? `Add all ${cards.length} to board` : "Add to board"}
           </button>
-          {followUps.map((f, i) => (
-            <button key={f.label} type="button" className={i === 0 ? `glossy ${s.nextStep}` : s.example} onClick={() => onAsk(f.query)}>
-              {f.label}
+          {followUps.map((followUp, i) => (
+            <button
+              key={followUp.label}
+              type="button"
+              className={i === 0 ? `glossy ${styles.nextStep}` : styles.example}
+              onClick={() => onAsk(followUp.query)}
+            >
+              {followUp.label}
             </button>
           ))}
         </div>
@@ -384,34 +395,34 @@ function Reply({
   );
 }
 
-function PastResearch({ onTry }: { onTry: (q: string) => void }) {
-  const threads = useThreads().filter((t) => t.messages.length > 0);
+function PastResearch({ onTry }: { onTry: (question: string) => void }) {
+  const threads = useThreads().filter((thread) => thread.messages.length > 0);
   if (!threads.length) {
     return (
-      <div className={s.examples}>
-        {EXAMPLE_SEARCHES.map((ex) => (
-          <button key={ex} type="button" className={s.example} onClick={() => onTry(ex)}>
-            {ex}
+      <div className={styles.examples}>
+        {EXAMPLE_SEARCHES.map((example) => (
+          <button key={example} type="button" className={styles.example} onClick={() => onTry(example)}>
+            {example}
           </button>
         ))}
       </div>
     );
   }
   return (
-    <section className={s.past} aria-labelledby="past-research">
-      <h2 id="past-research" className={`fade-text ${s.pastTitle}`}>
+    <section className={styles.past} aria-labelledby="past-research">
+      <h2 id="past-research" className={`fade-text ${styles.pastTitle}`}>
         Your research
       </h2>
-      <ul className={s.pastList}>
-        {threads.slice(0, 12).map((t) => {
-          const ideas = t.messages.reduce((n, m) => n + (m.cards?.length ?? 0), 0);
+      <ul className={styles.pastList}>
+        {threads.slice(0, 12).map((thread) => {
+          const ideas = thread.messages.reduce((total, chatMessage) => total + (chatMessage.cards?.length ?? 0), 0);
           return (
-            <li key={t.id}>
-              <Link href={`/app/research/${t.id}`} className={s.pastItem}>
-                <span className={s.pastText}>
-                  <span className={s.pastName}>{t.title}</span>
-                  <span className={s.pastMeta}>
-                    {ideas} {ideas === 1 ? "idea" : "ideas"} · {when(t.updatedAt)}
+            <li key={thread.id}>
+              <Link href={`/app/research/${thread.id}`} className={styles.pastItem}>
+                <span className={styles.pastText}>
+                  <span className={styles.pastName}>{thread.title}</span>
+                  <span className={styles.pastMeta}>
+                    {ideas} {ideas === 1 ? "idea" : "ideas"} · {when(thread.updatedAt)}
                   </span>
                 </span>
                 <ChevronRight size={18} aria-hidden="true" />

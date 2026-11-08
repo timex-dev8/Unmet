@@ -4,7 +4,7 @@ import { useId, useState } from "react";
 import { Gift, Globe, Plus, Search, ShieldCheck, type LucideIcon } from "lucide-react";
 import { m } from "motion/react";
 import MotionProvider from "@/components/motion/MotionProvider";
-import s from "./landing.module.css";
+import styles from "./landing.module.css";
 
 const FAQ: { q: string; a: string; icon: LucideIcon }[] = [
   {
@@ -34,7 +34,7 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 export default function FaqList() {
   return (
     <MotionProvider>
-      <div className={s.faq}>
+      <div className={styles.faq}>
         {FAQ.map((item) => (
           <FaqItem key={item.q} {...item} />
         ))}
@@ -47,14 +47,14 @@ function FaqItem({ q, a, icon: Icon }: { q: string; a: string; icon: LucideIcon 
   const [open, setOpen] = useState(false);
   const id = useId();
   return (
-    <div className={s.faqItem}>
-      <h3 className={s.faqHead}>
-        <button type="button" className={s.faqBtn} aria-expanded={open} aria-controls={id} onClick={() => setOpen((o) => !o)}>
-          <span className={`${s.tile} ${s.pearl} ${s.faqTile}`}>
+    <div className={styles.faqItem}>
+      <h3 className={styles.faqHead}>
+        <button type="button" className={styles.faqBtn} aria-expanded={open} aria-controls={id} onClick={() => setOpen((wasOpen) => !wasOpen)}>
+          <span className={`${styles.tile} ${styles.pearl} ${styles.faqTile}`}>
             <Icon strokeWidth={2} aria-hidden="true" />
           </span>
-          <span className={s.faqQ}>{q}</span>
-          <m.span className={s.faqPlus} initial={false} animate={{ rotate: open ? 45 : 0 }} transition={{ duration: 0.3, ease: EASE }}>
+          <span className={styles.faqQ}>{q}</span>
+          <m.span className={styles.faqPlus} initial={false} animate={{ rotate: open ? 45 : 0 }} transition={{ duration: 0.3, ease: EASE }}>
             <Plus size={18} strokeWidth={2} aria-hidden="true" />
           </m.span>
         </button>
@@ -62,7 +62,7 @@ function FaqItem({ q, a, icon: Icon }: { q: string; a: string; icon: LucideIcon 
       {/* always rendered so search engines can read it, inert keeps closed answers unreachable */}
       <m.div
         id={id}
-        className={s.faqPanel}
+        className={styles.faqPanel}
         inert={!open}
         initial={false}
         animate={{ height: open ? "auto" : 0, opacity: open ? 1 : 0 }}

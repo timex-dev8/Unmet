@@ -25,7 +25,7 @@ function write(list: Card[]) {
   try {
     localStorage.setItem(KEY, JSON.stringify(list));
   } catch {}
-  listeners.forEach((l) => l());
+  listeners.forEach((listener) => listener());
 }
 
 function subscribe(listener: () => void) {
@@ -49,18 +49,21 @@ const getServerSnapshot = () => EMPTY;
 export function useSaved() {
   const saved = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
-  const isSaved = useCallback((slug: string) => saved.some((c) => c.slug === slug), [saved]);
+  const isSaved = useCallback((slug: string) => saved.some((savedCard) => savedCard.slug === slug), [saved]);
 
   const save = useCallback((card: Card) => {
     const list = getSnapshot();
-    if (!list.some((c) => c.slug === card.slug)) write([card, ...list]);
+    if (!list.some((savedCard) => savedCard.slug === card.slug)) write([card, ...list]);
   }, []);
 
   const remove = useCallback((slug: string) => {
-    write(getSnapshot().filter((c) => c.slug !== slug));
+    write(getSnapshot().filter((savedCard) => savedCard.slug !== slug));
   }, []);
 
-  const toggle = useCallback((card: Card) => (getSnapshot().some((c) => c.slug === card.slug) ? remove(card.slug) : save(card)), [remove, save]);
+  const toggle = useCallback(
+    (card: Card) => (getSnapshot().some((savedCard) => savedCard.slug === card.slug) ? remove(card.slug) : save(card)),
+    [remove, save],
+  );
 
   return { saved, isSaved, save, remove, toggle };
 }
@@ -69,10 +72,10 @@ export const savedSync: Syncable<Card[]> = {
   kind: "saved",
   get: getSnapshot,
   replace: (list) => write(list),
-  merge: (local, remote) => unionBy(local, remote, (c) => c.slug),
-  subscribe: (l: () => void) => {
-    listeners.add(l);
-    return () => void listeners.delete(l);
+  merge: (local, remote) => unionBy(local, remote, (card) => card.slug),
+  subscribe: (listener: () => void) => {
+    listeners.add(listener);
+    return () => void listeners.delete(listener);
   },
   clear: () => write([]),
 };

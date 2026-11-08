@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import s from "./landing.module.css";
+import styles from "./landing.module.css";
 
 const LAYERS = [1, 2, 3, 4, 5, 6, 7, 8];
 
@@ -14,11 +14,11 @@ type Props = {
 };
 
 export default function GlassTile({ icon: Icon, size, tone = "clear", line, strokeWidth = 1.8, className }: Props) {
-  const classes = [s.g3, s[`t${size}`], s[tone], line && s.line, className];
+  const classes = [styles.g3, styles[`t${size}`], styles[tone], line && styles.line, className];
   return (
     <span className={classes.filter(Boolean).join(" ")} aria-hidden="true">
-      {LAYERS.map((n) => (
-        <i key={n} />
+      {LAYERS.map((layer) => (
+        <i key={layer} />
       ))}
       <Icon strokeWidth={strokeWidth} />
     </span>

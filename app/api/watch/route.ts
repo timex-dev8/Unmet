@@ -8,10 +8,11 @@ const Body = z.object({ niche: z.string().trim().min(3).max(60) });
 const MAX_PER_USER = 10;
 const MAX_USER_TOPICS = 60;
 
-const nicheOf = (s: string) => s.toLowerCase().replace(/\s+/g, " ");
-const missingColumn = (e: { code?: string; message?: string }) =>
-  e.code === "PGRST204" || e.code === "42703" || /column .*owner/i.test(e.message ?? "");
-const count = (q: PromiseLike<{ count: number | null; error: unknown }>) => Promise.resolve(q).then((r) => (r.error ? Infinity : (r.count ?? 0)));
+const nicheOf = (text: string) => text.toLowerCase().replace(/\s+/g, " ");
+const missingColumn = (error: { code?: string; message?: string }) =>
+  error.code === "PGRST204" || error.code === "42703" || /column .*owner/i.test(error.message ?? "");
+const count = (query: PromiseLike<{ count: number | null; error: unknown }>) =>
+  Promise.resolve(query).then((result) => (result.error ? Infinity : (result.count ?? 0)));
 
 async function guard(request: Request) {
   if (!supabaseConfigured()) return { error: Response.json({ error: "Not available yet." }, { status: 503 }) };
@@ -23,9 +24,9 @@ async function guard(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const g = await guard(request);
-  if (g.error) return g.error;
-  const { user, niche } = g;
+  const checked = await guard(request);
+  if (checked.error) return checked.error;
+  const { user, niche } = checked;
 
   // insert then count so parallel requests cant slip under the cap
   const add = (row: Record<string, string>) => db().from("feed_topics").upsert(row, { onConflict: "topic", ignoreDuplicates: true }).select("topic");
@@ -56,9 +57,9 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const g = await guard(request);
-  if (g.error) return g.error;
-  const { error } = await db().from("feed_topics").delete().eq("topic", g.niche).eq("origin", "user").eq("owner", g.user.id);
+  const checked = await guard(request);
+  if (checked.error) return checked.error;
+  const { error } = await db().from("feed_topics").delete().eq("topic", checked.niche).eq("origin", "user").eq("owner", checked.user.id);
   if (error && missingColumn(error)) return Response.json({ removed: false }); // owner unknown yet, leave it
   if (error) return Response.json({ error: "Couldn't remove that. Try again." }, { status: 500 });
   return Response.json({ removed: true });

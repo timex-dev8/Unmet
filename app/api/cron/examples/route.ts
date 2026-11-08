@@ -14,9 +14,9 @@ export async function GET(request: Request) {
     try {
       await runResearch(
         { message, history: [], cards: [], depth: "low" },
-        (e) => {
-          if (e.type === "result") result[message] = e.cards.length;
-          if (e.type === "error") result[message] = e.message;
+        (event) => {
+          if (event.type === "result") result[message] = event.cards.length;
+          if (event.type === "error") result[message] = event.message;
         },
         undefined,
         true,

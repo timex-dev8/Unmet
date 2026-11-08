@@ -13,8 +13,8 @@ type Repo = {
 
 export async function githubRising(): Promise<RawProduct[]> {
   const since = new Date(Date.now() - 90 * 86400_000).toISOString().slice(0, 10);
-  const q = `created:>${since} stars:>800`;
-  const res = await fetch(`https://api.github.com/search/repositories?q=${encodeURIComponent(q)}&sort=stars&per_page=40`, {
+  const searchQuery = `created:>${since} stars:>800`;
+  const response = await fetch(`https://api.github.com/search/repositories?q=${encodeURIComponent(searchQuery)}&sort=stars&per_page=40`, {
     headers: {
       ...headers,
       Accept: "application/vnd.github+json",
@@ -22,17 +22,19 @@ export async function githubRising(): Promise<RawProduct[]> {
     },
     signal: AbortSignal.timeout(10_000),
   }).catch(() => null);
-  if (!res?.ok) return [];
-  const { items = [] } = (await res.json()) as { items?: Repo[] };
+  if (!response?.ok) return [];
+  const { items = [] } = (await response.json()) as { items?: Repo[] };
   return items
-    .filter((r) => r.homepage && /^https?:\/\//.test(r.homepage) && r.description)
-    .map((r) => ({
-      name: r.full_name.split("/")[1],
-      url: r.homepage!,
-      description: `${r.description}. Topics: ${(r.topics ?? []).join(", ")}`,
-      proof: [{ kind: "stars", label: `${(r.stargazers_count / 1000).toFixed(1)}k GitHub stars in under 3 months`, url: r.html_url, site: "GitHub" }],
+    .filter((repo) => repo.homepage && /^https?:\/\//.test(repo.homepage) && repo.description)
+    .map((repo) => ({
+      name: repo.full_name.split("/")[1],
+      url: repo.homepage!,
+      description: `${repo.description}. Topics: ${(repo.topics ?? []).join(", ")}`,
+      proof: [
+        { kind: "stars", label: `${(repo.stargazers_count / 1000).toFixed(1)}k GitHub stars in under 3 months`, url: repo.html_url, site: "GitHub" },
+      ],
       rising: true,
       source: "GitHub" as const,
-      weight: Math.min(35, r.stargazers_count / 1000),
+      weight: Math.min(35, repo.stargazers_count / 1000),
     }));
 }

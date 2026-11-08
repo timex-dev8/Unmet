@@ -5,7 +5,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { authHeaders } from "@/lib/auth";
 import { toggleWatch, useInterests } from "@/lib/interests";
 import { researchHref } from "@/lib/links";
-import s from "./home.module.css";
+import styles from "./home.module.css";
 
 function useWatch() {
   return async (niche: string, watching: boolean) => {
@@ -26,33 +26,38 @@ export function Niches() {
 
   if (!niches.length) {
     return (
-      <Link href="/welcome/start?next=/app" className={s.setup}>
+      <Link href="/welcome/start?next=/app" className={styles.setup}>
         <span>
           <strong>Tell Unmet who you build for</strong>
           <span>Get problems from your niches first, and have them researched every few days.</span>
         </span>
-        <span className={`glossy ${s.setupGo}`}>Set up</span>
+        <span className={`glossy ${styles.setupGo}`}>Set up</span>
       </Link>
     );
   }
 
   return (
-    <div className={s.niches}>
-      {niches.map((n) => {
-        const on = watched.includes(n);
+    <div className={styles.niches}>
+      {niches.map((niche) => {
+        const isWatched = watched.includes(niche);
         return (
-          <div key={n} className={s.niche}>
-            <Link href={researchHref(`What problems do ${n} complain about?`, "low")} className={s.nicheName}>
-              {n}
+          <div key={niche} className={styles.niche}>
+            <Link href={researchHref(`What problems do ${niche} complain about?`, "low")} className={styles.nicheName}>
+              {niche}
             </Link>
-            <button type="button" className={`${s.watch} ${on ? s.watchOn : ""}`} aria-pressed={on} onClick={() => watch(n, on)}>
-              {on ? <Eye size={14} aria-hidden="true" /> : <EyeOff size={14} aria-hidden="true" />}
-              {on ? "Watching" : "Watch"}
+            <button
+              type="button"
+              className={`${styles.watch} ${isWatched ? styles.watchOn : ""}`}
+              aria-pressed={isWatched}
+              onClick={() => watch(niche, isWatched)}
+            >
+              {isWatched ? <Eye size={14} aria-hidden="true" /> : <EyeOff size={14} aria-hidden="true" />}
+              {isWatched ? "Watching" : "Watch"}
             </button>
           </div>
         );
       })}
-      <Link href="/welcome/start?next=/app" className={s.nicheEdit}>
+      <Link href="/welcome/start?next=/app" className={styles.nicheEdit}>
         Edit
       </Link>
     </div>

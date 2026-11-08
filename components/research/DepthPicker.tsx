@@ -7,7 +7,7 @@ import { ChevronDown, Gauge, Lock } from "lucide-react";
 import { useGuest, useLowOnly, useUser } from "@/lib/auth";
 import { DEPTHS, type Depth } from "@/lib/research-types";
 import DepthSlider from "./DepthSlider";
-import s from "./depthSlider.module.css";
+import styles from "./depthSlider.module.css";
 
 export default function DepthPicker({
   value,
@@ -16,7 +16,7 @@ export default function DepthPicker({
   placement = "down",
 }: {
   value: Depth;
-  onChange: (d: Depth) => void;
+  onChange: (depth: Depth) => void;
   disabled?: boolean;
   placement?: "up" | "down";
 }) {
@@ -28,57 +28,57 @@ export default function DepthPicker({
   const user = useUser();
   const guest = useGuest();
   const authKnown = user !== undefined && guest !== undefined;
-  const pick = (d: Depth) => {
+  const pick = (depth: Depth) => {
     if (!authKnown) return; // lowOnly isnt final yet
-    if (lowOnly && d !== "low") {
+    if (lowOnly && depth !== "low") {
       setBlocked(true);
       onChange("low");
       return;
     }
     setBlocked(false);
-    onChange(d);
+    onChange(depth);
   };
-  const root = useRef<HTMLDivElement>(null);
-  const button = useRef<HTMLButtonElement>(null);
+  const pickerRef = useRef<HTMLDivElement>(null);
+  const pillButtonRef = useRef<HTMLButtonElement>(null);
   const popId = useId();
-  const level = DEPTHS.find((d) => d.id === shown)!;
+  const level = DEPTHS.find((option) => option.id === shown)!;
 
   useEffect(() => {
     if (!open) return;
-    const onDown = (e: PointerEvent) => {
-      if (!root.current?.contains(e.target as Node)) setOpen(false);
+    const onPointerDown = (e: PointerEvent) => {
+      if (!pickerRef.current?.contains(e.target as Node)) setOpen(false);
     };
-    const onKey = (e: KeyboardEvent) => {
+    const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setOpen(false);
-        button.current?.focus();
+        pillButtonRef.current?.focus();
       }
     };
-    document.addEventListener("pointerdown", onDown);
-    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.removeEventListener("pointerdown", onDown);
-      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
     };
   }, [open]);
 
   const y = placement === "up" ? 6 : -6;
 
   return (
-    <div className={s.picker} ref={root}>
+    <div className={styles.picker} ref={pickerRef}>
       <button
-        ref={button}
+        ref={pillButtonRef}
         type="button"
-        className={`${s.pill} ${open ? s.pillOpen : ""}`}
-        onClick={() => setOpen((o) => !o)}
+        className={`${styles.pill} ${open ? styles.pillOpen : ""}`}
+        onClick={() => setOpen((wasOpen) => !wasOpen)}
         disabled={disabled}
         aria-expanded={open}
         aria-controls={popId}
         aria-label={`Research depth: ${level.label}`}
       >
         <Gauge size={16} aria-hidden="true" />
-        <span className={s.pillLabel}>{level.label}</span>
-        <ChevronDown size={14} className={s.chev} aria-hidden="true" />
+        <span className={styles.pillLabel}>{level.label}</span>
+        <ChevronDown size={14} className={styles.chev} aria-hidden="true" />
       </button>
 
       <AnimatePresence>
@@ -87,7 +87,7 @@ export default function DepthPicker({
             id={popId}
             role="dialog"
             aria-label="Research depth"
-            className={`${s.pop} ${placement === "up" ? s.popUp : s.popDown}`}
+            className={`${styles.pop} ${placement === "up" ? styles.popUp : styles.popDown}`}
             initial={{ opacity: 0, scale: 0.96, y }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y }}
@@ -95,7 +95,7 @@ export default function DepthPicker({
           >
             <DepthSlider value={shown} onChange={pick} detail />
             {lowOnly && (
-              <p className={`${s.lock} ${blocked ? s.lockOn : ""}`}>
+              <p className={`${styles.lock} ${blocked ? styles.lockOn : ""}`}>
                 <Lock size={13} aria-hidden="true" />
                 <span>
                   Deep and Deepest need a free account.{" "}

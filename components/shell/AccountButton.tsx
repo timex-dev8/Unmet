@@ -16,7 +16,7 @@ import {
 } from "@/lib/auth";
 import { authConfigured } from "@/lib/supabase/client";
 import { useSyncStatus } from "@/lib/sync";
-import s from "./account.module.css";
+import styles from "./account.module.css";
 
 // google sign-in is built but hidden until its on in supabase, flip to true then
 const GOOGLE_ENABLED = false;
@@ -35,7 +35,7 @@ export default function AccountButton({ variant }: { variant: "side" | "icon" })
   const user = useUser();
   const guest = useGuest();
   const status = useSyncStatus();
-  const ref = useRef<HTMLDialogElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const failed = useSyncExternalStore(noop, signinFailed, () => false);
   const reset = useSyncExternalStore(noop, resetLink, () => false);
   const [resetDone, setResetDone] = useState(false);
@@ -50,7 +50,7 @@ export default function AccountButton({ variant }: { variant: "side" | "icon" })
     url.searchParams.delete("signin");
     url.searchParams.delete("reset");
     window.history.replaceState(null, "", url);
-    ref.current?.showModal(); // onToggle mounts the contents
+    dialogRef.current?.showModal(); // onToggle mounts the contents
   }, [variant, failed, reset]);
 
   if (!authConfigured) return null;
@@ -60,28 +60,28 @@ export default function AccountButton({ variant }: { variant: "side" | "icon" })
   const open = () => {
     clearTimeout(hideTimer.current);
     setShown(true);
-    ref.current?.showModal();
+    dialogRef.current?.showModal();
   };
 
   return (
     <>
       {variant === "side" ? (
-        <button type="button" className={s.side} onClick={open}>
-          {user ? <span className={s.avatar}>{initial}</span> : <CircleUserRound size={20} aria-hidden="true" />}
-          <span className={s.sideText}>
-            <span className={s.sideName}>{user ? name : guest ? "Guest" : "Sign in"}</span>
-            <span className={s.sideSub}>{user ? STATUS_LABEL[status] : guest ? "Sign in for deeper research" : "Sync across your devices"}</span>
+        <button type="button" className={styles.side} onClick={open}>
+          {user ? <span className={styles.avatar}>{initial}</span> : <CircleUserRound size={20} aria-hidden="true" />}
+          <span className={styles.sideText}>
+            <span className={styles.sideName}>{user ? name : guest ? "Guest" : "Sign in"}</span>
+            <span className={styles.sideSub}>{user ? STATUS_LABEL[status] : guest ? "Sign in for deeper research" : "Sync across your devices"}</span>
           </span>
         </button>
       ) : (
-        <button type="button" className={s.icon} onClick={open} aria-label={user ? `Account: ${name}` : "Sign in"}>
-          {user ? <span className={s.avatar}>{initial}</span> : <CircleUserRound size={22} aria-hidden="true" />}
+        <button type="button" className={styles.icon} onClick={open} aria-label={user ? `Account: ${name}` : "Sign in"}>
+          {user ? <span className={styles.avatar}>{initial}</span> : <CircleUserRound size={22} aria-hidden="true" />}
         </button>
       )}
 
       <dialog
-        ref={ref}
-        className={s.dialog}
+        ref={dialogRef}
+        className={styles.dialog}
         aria-labelledby={shown ? `acct-${variant}` : undefined}
         onToggle={(e) => {
           if (e.newState === "open") {
@@ -94,12 +94,12 @@ export default function AccountButton({ variant }: { variant: "side" | "icon" })
           hideTimer.current = setTimeout(() => setShown(false), 300);
         }}
         onClick={(e) => {
-          if (e.target === ref.current) ref.current.close(); // backdrop tap
+          if (e.target === dialogRef.current) dialogRef.current.close(); // backdrop tap
         }}
       >
         {shown && (
           <>
-            <button type="button" className={s.close} onClick={() => ref.current?.close()} aria-label="Close">
+            <button type="button" className={styles.close} onClick={() => dialogRef.current?.close()} aria-label="Close">
               <X size={18} aria-hidden="true" />
             </button>
             {user && reset && !resetDone && variant === "side" ? (
@@ -107,7 +107,7 @@ export default function AccountButton({ variant }: { variant: "side" | "icon" })
                 id={`acct-${variant}`}
                 onDone={() => {
                   setResetDone(true);
-                  ref.current?.close();
+                  dialogRef.current?.close();
                 }}
               />
             ) : user ? (
@@ -172,15 +172,15 @@ export function SignInForm({ id, failed, bare = false }: { id: string; failed: b
 
   if (sent) {
     return (
-      <div className={bare ? `${s.body} ${s.bareSent}` : s.body}>
-        <span className={s.badge}>
+      <div className={bare ? `${styles.body} ${styles.bareSent}` : styles.body}>
+        <span className={styles.badge}>
           <Mail size={22} aria-hidden="true" />
         </span>
-        <h2 id={id} className={s.title}>
+        <h2 id={id} className={styles.title}>
           {sent.title}
         </h2>
-        <p className={s.sub}>{sent.text}</p>
-        <button type="button" className={s.textBtn} onClick={() => setSent(null)}>
+        <p className={styles.sub}>{sent.text}</p>
+        <button type="button" className={styles.textBtn} onClick={() => setSent(null)}>
           Back
         </button>
       </div>
@@ -191,44 +191,44 @@ export function SignInForm({ id, failed, bare = false }: { id: string; failed: b
   const action = mode === "link" ? "Email me a link" : creating ? "Create account" : "Sign in";
 
   return (
-    <div className={bare ? s.bare : s.body}>
-      <h2 id={id} className={bare ? "sr-only" : s.title}>
+    <div className={bare ? styles.bare : styles.body}>
+      <h2 id={id} className={bare ? "sr-only" : styles.title}>
         {title}
       </h2>
-      {!bare && <p className={s.sub}>Your research, board and saved ideas follow you to every device.</p>}
+      {!bare && <p className={styles.sub}>Your research, board and saved ideas follow you to every device.</p>}
 
       {GOOGLE_ENABLED && (
         <>
-          <button type="button" className={s.google} onClick={() => void run("google", signInWithGoogle)} disabled={!!busy}>
+          <button type="button" className={styles.google} onClick={() => void run("google", signInWithGoogle)} disabled={!!busy}>
             {busy === "google" ? <LoaderCircle size={18} className="spin" aria-hidden="true" /> : <GoogleLogo />}
             Continue with Google
           </button>
-          <div className={s.or}>
+          <div className={styles.or}>
             <span>or</span>
           </div>
         </>
       )}
 
-      <div className={s.modes} role="tablist" aria-label="How to sign in">
-        {(["password", "link"] as const).map((m) => (
+      <div className={styles.modes} role="tablist" aria-label="How to sign in">
+        {(["password", "link"] as const).map((signInMode) => (
           <button
-            key={m}
+            key={signInMode}
             type="button"
             role="tab"
-            aria-selected={mode === m}
-            className={`${s.mode} ${mode === m ? s.modeOn : ""}`}
+            aria-selected={mode === signInMode}
+            className={`${styles.mode} ${mode === signInMode ? styles.modeOn : ""}`}
             onClick={() => {
-              setMode(m);
+              setMode(signInMode);
               setError("");
             }}
           >
-            {mode === m && <Highlight id={`auth-mode-${id}`} className={s.modePill} />}
-            {m === "password" ? "Password" : "Email link"}
+            {mode === signInMode && <Highlight id={`auth-mode-${id}`} className={styles.modePill} />}
+            {signInMode === "password" ? "Password" : "Email link"}
           </button>
         ))}
       </div>
 
-      <form className={s.form} onSubmit={submit}>
+      <form className={styles.form} onSubmit={submit}>
         <label htmlFor={`${id}-email`} className="sr-only">
           Email
         </label>
@@ -239,7 +239,7 @@ export function SignInForm({ id, failed, bare = false }: { id: string; failed: b
           autoComplete="email"
           inputMode="email"
           placeholder="you@example.com"
-          className={s.input}
+          className={styles.input}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
@@ -255,7 +255,7 @@ export function SignInForm({ id, failed, bare = false }: { id: string; failed: b
               minLength={creating ? 8 : undefined}
               autoComplete={creating ? "new-password" : "current-password"}
               placeholder={creating ? "Password (8+ characters)" : "Password"}
-              className={s.input}
+              className={styles.input}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -268,17 +268,17 @@ export function SignInForm({ id, failed, bare = false }: { id: string; failed: b
       </form>
 
       {mode === "password" && (
-        <div className={s.links}>
+        <div className={styles.links}>
           {!creating && (
-            <button type="button" className={s.textBtn} onClick={forgot} disabled={!!busy}>
+            <button type="button" className={styles.textBtn} onClick={forgot} disabled={!!busy}>
               {busy === "reset" ? "Sending…" : "Forgot password?"}
             </button>
           )}
           <button
             type="button"
-            className={s.textBtn}
+            className={styles.textBtn}
             onClick={() => {
-              setCreating((c) => !c);
+              setCreating((wasCreating) => !wasCreating);
               setError("");
             }}
           >
@@ -288,11 +288,11 @@ export function SignInForm({ id, failed, bare = false }: { id: string; failed: b
       )}
 
       {error && (
-        <p className={s.error} role="alert">
+        <p className={styles.error} role="alert">
           {error}
         </p>
       )}
-      {!bare && <p className={s.fine}>Without an account, Unmet keeps everything in this browser only.</p>}
+      {!bare && <p className={styles.fine}>Without an account, Unmet keeps everything in this browser only.</p>}
     </div>
   );
 }
@@ -305,14 +305,14 @@ function NewPassword({ id, onDone }: { id: string; onDone: () => void }) {
 
   if (done) {
     return (
-      <div className={s.body}>
-        <span className={s.badge}>
+      <div className={styles.body}>
+        <span className={styles.badge}>
           <Check size={22} aria-hidden="true" />
         </span>
-        <h2 id={id} className={s.title}>
+        <h2 id={id} className={styles.title}>
           Password updated
         </h2>
-        <p className={s.sub}>Use it next time you sign in, on any device.</p>
+        <p className={styles.sub}>Use it next time you sign in, on any device.</p>
         <button type="button" className="pill pill-dark" onClick={onDone}>
           Done
         </button>
@@ -321,13 +321,13 @@ function NewPassword({ id, onDone }: { id: string; onDone: () => void }) {
   }
 
   return (
-    <div className={s.body}>
-      <h2 id={id} className={s.title}>
+    <div className={styles.body}>
+      <h2 id={id} className={styles.title}>
         Set a new password
       </h2>
-      <p className={s.sub}>At least 8 characters.</p>
+      <p className={styles.sub}>At least 8 characters.</p>
       <form
-        className={s.form}
+        className={styles.form}
         onSubmit={async (e) => {
           e.preventDefault();
           setError("");
@@ -352,7 +352,7 @@ function NewPassword({ id, onDone }: { id: string; onDone: () => void }) {
           minLength={8}
           autoComplete="new-password"
           placeholder="New password"
-          className={s.input}
+          className={styles.input}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
@@ -362,7 +362,7 @@ function NewPassword({ id, onDone }: { id: string; onDone: () => void }) {
         </button>
       </form>
       {error && (
-        <p className={s.error} role="alert">
+        <p className={styles.error} role="alert">
           {error}
         </p>
       )}
@@ -373,15 +373,15 @@ function NewPassword({ id, onDone }: { id: string; onDone: () => void }) {
 function SignedIn({ id, email, initial, status }: { id: string; email: string; initial: string; status: string }) {
   const [busy, setBusy] = useState(false);
   return (
-    <div className={s.body}>
-      <span className={`${s.avatar} ${s.avatarBig}`}>{initial}</span>
-      <h2 id={id} className={s.title}>
+    <div className={styles.body}>
+      <span className={`${styles.avatar} ${styles.avatarBig}`}>{initial}</span>
+      <h2 id={id} className={styles.title}>
         {email}
       </h2>
-      <p className={s.sub}>{status || "Signed in"} · your research, board, saved ideas and Mind follow you to every device.</p>
+      <p className={styles.sub}>{status || "Signed in"} · your research, board, saved ideas and Mind follow you to every device.</p>
       <button
         type="button"
-        className={s.signOut}
+        className={styles.signOut}
         disabled={busy}
         onClick={async () => {
           setBusy(true);
@@ -392,7 +392,7 @@ function SignedIn({ id, email, initial, status }: { id: string; email: string; i
         <LogOut size={17} aria-hidden="true" />
         Sign out
       </button>
-      <p className={s.fine}>Signing out clears this browser. Everything stays safe in your account.</p>
+      <p className={styles.fine}>Signing out clears this browser. Everything stays safe in your account.</p>
     </div>
   );
 }

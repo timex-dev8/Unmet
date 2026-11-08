@@ -109,23 +109,29 @@ const CLARIFY_OPTIONS = [
   "Problems for parents and families",
 ];
 
-const cacheKey = (req: ResearchRequest) => `v8:${req.depth}:${req.message.toLowerCase().replace(/\s+/g, " ").trim()}`;
-const isExampleSearch = (req: ResearchRequest) =>
-  req.depth === "low" && EXAMPLE_SEARCHES.some((e) => e.toLowerCase() === req.message.trim().toLowerCase());
+const cacheKey = (request: ResearchRequest) => `v8:${request.depth}:${request.message.toLowerCase().replace(/\s+/g, " ").trim()}`;
+const isExampleSearch = (request: ResearchRequest) =>
+  request.depth === "low" && EXAMPLE_SEARCHES.some((example) => example.toLowerCase() === request.message.trim().toLowerCase());
 
-export async function peekCached(req: ResearchRequest) {
-  if (req.history.length > 0) return null;
-  return getCached(cacheKey(req), isExampleSearch(req) ? EXAMPLE_CACHE_MS : undefined);
+export async function peekCached(request: ResearchRequest) {
+  if (request.history.length > 0) return null;
+  return getCached(cacheKey(request), isExampleSearch(request) ? EXAMPLE_CACHE_MS : undefined);
 }
 
-export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent) => void, signal?: AbortSignal, fresh = false, background = fresh) {
-  const base = DEPTH[req.depth];
+export async function runResearch(
+  request: ResearchRequest,
+  emit: (event: ResearchEvent) => void,
+  signal?: AbortSignal,
+  fresh = false,
+  background = fresh,
+) {
+  const base = DEPTH[request.depth];
   const check = () => signal?.throwIfAborted();
-  const isFirst = req.history.length === 0;
-  const key = cacheKey(req);
+  const isFirst = request.history.length === 0;
+  const key = cacheKey(request);
   // same first question + depth within 6h comes from the cache (research/store.ts)
   // example searches keep longer, fresh = the daily job, skips the cache
-  const isExample = isExampleSearch(req);
+  const isExample = isExampleSearch(request);
   const hit = isFirst && !fresh ? await getCached(key, isExample ? EXAMPLE_CACHE_MS : undefined) : null;
   if (hit) {
     emit({ ...hit, cached: true });
@@ -133,9 +139,9 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   }
 
   emit({ type: "step", label: "Planning the research" });
-  const plan = await makePlan(req, signal);
+  const plan = await makePlan(request, signal);
   check();
-  if (plan.mode === "answer" && req.cards.length) {
+  if (plan.mode === "answer" && request.cards.length) {
     emit({ type: "result", answer: plan.answer, cards: [], sourceCount: 0 });
     return;
   }
@@ -156,7 +162,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
 
   // discover casts a wide net, one search per group. a later "clarify" turn counts as discover
   const discover = plan.mode === "discover" || plan.mode === "clarify";
-  const cfg: Config = discover ? { ...base, openAngles: Math.max(base.openAngles, 4) } : base;
+  const config: Config = discover ? { ...base, openAngles: Math.max(base.openAngles, 4) } : base;
 
   const now = Math.floor(Date.now() / 1000);
   const since = now - WINDOW_DAYS * DAY;
@@ -164,24 +170,27 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   // a product's own name gets any site, last 24 months
   const wideSinceIso = new Date((now - PRODUCT_WINDOW_DAYS * DAY) * 1000).toISOString();
   const productDomain = plan.product
-    ? req.message.match(/\b(?:[a-z0-9-]+\.)+(?:com|io|co|app|ai|dev|net|org|so|xyz|tech|me|sh)\b/i)?.[0].toLowerCase()
+    ? request.message.match(/\b(?:[a-z0-9-]+\.)+(?:com|io|co|app|ai|dev|net|org|so|xyz|tech|me|sh)\b/i)?.[0].toLowerCase()
     : undefined;
 
-  const open = plan.angles.slice(0, cfg.openAngles);
-  const community = cfg.communityAngles
-    ? [plan.communityQuery, ...plan.angles.filter((a) => a.type === "review" || a.type === "wish").map((a) => a.query)].slice(0, cfg.communityAngles)
+  const open = plan.angles.slice(0, config.openAngles);
+  const community = config.communityAngles
+    ? [plan.communityQuery, ...plan.angles.filter((angle) => angle.type === "review" || angle.type === "wish").map((angle) => angle.query)].slice(
+        0,
+        config.communityAngles,
+      )
     : [];
-  const reddit = [...new Set([plan.communityQuery, ...plan.angles.map((a) => a.query)])].filter(Boolean).slice(0, cfg.reddit);
-  const useApps = cfg.apps && plan.segment !== "developer" && plan.appTerms.length > 0;
-  const useStack = cfg.stack && plan.stackSites.length > 0 && plan.stackQuery.length > 0;
-  const useDiscourse = cfg.stack && plan.segment !== "consumer";
-  const useGithub = cfg.github && plan.segment !== "consumer" && plan.githubPhrase.length > 0;
+  const reddit = [...new Set([plan.communityQuery, ...plan.angles.map((angle) => angle.query)])].filter(Boolean).slice(0, config.reddit);
+  const useApps = config.apps && plan.segment !== "developer" && plan.appTerms.length > 0;
+  const useStack = config.stack && plan.stackSites.length > 0 && plan.stackQuery.length > 0;
+  const useDiscourse = config.stack && plan.segment !== "consumer";
+  const useGithub = config.github && plan.segment !== "consumer" && plan.githubPhrase.length > 0;
 
   const jobs: { name: string; run: Promise<Omit<ResearchSource, "id">[]> }[] = [
-    ...open.map((a) => ({
+    ...open.map((angle) => ({
       name: NAMES.web,
-      run: searchWeb(a.query, a.objective, { since: sinceIso, type: "auto", fullText: cfg.fullText }).then((r) =>
-        discover ? r.map((x) => ({ ...x, group: a.query })) : r,
+      run: searchWeb(angle.query, angle.objective, { since: sinceIso, type: "auto", fullText: config.fullText }).then((found) =>
+        discover ? found.map((source) => ({ ...source, group: angle.query })) : found,
       ),
     })),
     ...(discover
@@ -194,36 +203,36 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
                   run: searchWeb(
                     `${plan.product}${productDomain && !plan.product.toLowerCase().includes(productDomain) ? ` ${productDomain}` : ""} review problems complaints`,
                     `Posts, reviews and discussions by people who used ${plan.product}${productDomain ? ` (${productDomain})` : ""}, or compared it with alternatives: what frustrated them.`,
-                    { since: wideSinceIso, type: "auto", fullText: cfg.fullText },
+                    { since: wideSinceIso, type: "auto", fullText: config.fullText },
                   ),
                 },
               ]
             : []),
-          ...community.map((q) => ({
+          ...community.map((query) => ({
             name: FORUMS,
-            run: searchWeb(q, `First-hand posts, questions and reviews from ${plan.audience} about their problems.`, {
+            run: searchWeb(query, `First-hand posts, questions and reviews from ${plan.audience} about their problems.`, {
               since: sinceIso,
               type: "auto",
-              fullText: cfg.fullText,
+              fullText: config.fullText,
               includeDomains: COMMUNITY_DOMAINS,
             }),
           })),
-          ...reddit.map((q) => ({
+          ...reddit.map((query) => ({
             name: NAMES.reddit,
             run: searchWeb(
-              q,
+              query,
               `First-hand Reddit posts and comments where ${plan.audience} describe their own problems, frustrations and workarounds.`,
               {
                 since: sinceIso,
                 type: "auto",
-                fullText: cfg.fullText,
+                fullText: config.fullText,
                 includeDomains: ["reddit.com"],
                 origin: "reddit",
               },
             ),
           })),
           // hacker news leans technical, developer topics only
-          ...(plan.segment === "developer" ? [{ name: NAMES.hn, run: searchHN(plan.hnQuery, since, cfg.high ? 15 : 10) }] : []),
+          ...(plan.segment === "developer" ? [{ name: NAMES.hn, run: searchHN(plan.hnQuery, since, config.high ? 15 : 10) }] : []),
           // bluesky on every level, free and fast. keyword match so short queries
           { name: NAMES.bluesky, run: searchBluesky([plan.hnQuery, plan.communityQuery.split(" ").slice(0, 4).join(" ")], sinceIso) },
           ...(useDiscourse ? [{ name: NAMES.discourse, run: searchDiscourse(plan.hnQuery, sinceIso) }] : []),
@@ -232,31 +241,33 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
           ...(useGithub ? [{ name: NAMES.github, run: searchGithubIssues(plan.githubPhrase, since) }] : []),
         ]),
   ];
-  const startupsJob = cfg.high ? startupsFor(plan.trustmrrCategory) : Promise.resolve([]);
+  const startupsJob = config.high ? startupsFor(plan.trustmrrCategory) : Promise.resolve([]);
 
   if (plan.product) emit({ type: "step", label: `Looking for what ${plan.product} users complain about` });
-  emit({ type: "step", label: `Searching ${[...new Set(jobs.map((j) => j.name))].join(", ")}` });
-  const settled = await Promise.allSettled(jobs.map((j) => j.run));
+  emit({ type: "step", label: `Searching ${[...new Set(jobs.map((job) => job.name))].join(", ")}` });
+  const settled = await Promise.allSettled(jobs.map((job) => job.run));
   check();
-  const raw = settled.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
-  if (settled.every((r) => r.status === "rejected")) throw new Error("Search failed. Check the EXA_API_KEY and try again.");
+  const raw = settled.flatMap((outcome) => (outcome.status === "fulfilled" ? outcome.value : []));
+  if (settled.every((outcome) => outcome.status === "rejected")) throw new Error("Search failed. Check the EXA_API_KEY and try again.");
 
-  const perService = new Map<string, { n: number; failed: boolean }>();
-  settled.forEach((r, i) => {
-    const e = perService.get(jobs[i].name) ?? { n: 0, failed: false };
-    if (r.status === "fulfilled") e.n += r.value.length;
+  const perService = new Map<string, { count: number; failed: boolean }>();
+  settled.forEach((outcome, i) => {
+    const service = perService.get(jobs[i].name) ?? { count: 0, failed: false };
+    if (outcome.status === "fulfilled") service.count += outcome.value.length;
     else {
-      e.failed = true;
-      console.warn(`[research] ${jobs[i].name} search failed:`, r.reason instanceof Error ? r.reason.message : r.reason);
+      service.failed = true;
+      console.warn(`[research] ${jobs[i].name} search failed:`, outcome.reason instanceof Error ? outcome.reason.message : outcome.reason);
     }
-    perService.set(jobs[i].name, e);
+    perService.set(jobs[i].name, service);
   });
-  const serviceLine = [...perService].map(([name, e]) => (e.failed && !e.n ? `${name} failed` : `${name} ${e.n}`)).join(", ");
+  const serviceLine = [...perService]
+    .map(([name, service]) => (service.failed && !service.count ? `${name} failed` : `${name} ${service.count}`))
+    .join(", ");
 
   const windowDays = plan.product ? PRODUCT_WINDOW_DAYS : WINDOW_DAYS;
   const quality = filterSources(raw, windowDays);
-  const sources = pickDiverse(quality.kept, cfg.maxSources);
-  const rejectedCount = Object.values(quality.rejected).reduce((a, b) => a + b, 0);
+  const sources = pickDiverse(quality.kept, config.maxSources);
+  const rejectedCount = Object.values(quality.rejected).reduce((total, count) => total + count, 0);
   emit({
     type: "step",
     label: `Found ${raw.length} sources (${serviceLine}), kept ${sources.length} after quality checks${rejectedCount ? ` (${quality.rejected.old} too old, ${quality.rejected.untrusted} vendor pages or listicles, ${quality.rejected.duplicate + quality.rejected.thin} duplicates or too thin)` : ""}`,
@@ -264,10 +275,11 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   if (sources.length === 0) {
     // an outage isn't nobody complaining. bluesky etc swallow errors so look at exa alone
     const exaResults = settled.filter((_, i) => EXA_JOBS.has(jobs[i].name));
-    if (exaResults.length && exaResults.every((r) => r.status === "rejected")) throw new Error("Search failed. Check the EXA_API_KEY and try again.");
+    if (exaResults.length && exaResults.every((outcome) => outcome.status === "rejected"))
+      throw new Error("Search failed. Check the EXA_API_KEY and try again.");
     emit({
       type: "result",
-      answer: await hunch(plan.topic, req.message, signal),
+      answer: await hunch(plan.topic, request.message, signal),
       cards: [],
       sourceCount: 0,
       suggestions: plan.suggestions,
@@ -279,12 +291,12 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   const extracted = await extractComplaints(sources, {
     topic: plan.topic,
     audience: plan.audience,
-    batchSize: cfg.batchSize,
+    batchSize: config.batchSize,
     signal,
     onBatch: (done, total) =>
-      total > 1 && emit({ type: "step", label: `Read ${Math.min(done * cfg.batchSize, sources.length)} of ${sources.length} sources` }),
+      total > 1 && emit({ type: "step", label: `Read ${Math.min(done * config.batchSize, sources.length)} of ${sources.length} sources` }),
   });
-  const withComplaints = new Set(extracted.complaints.map((c) => c.sourceId));
+  const withComplaints = new Set(extracted.complaints.map((complaint) => complaint.sourceId));
   emit({
     type: "step",
     label: `${extracted.complaints.length} verified complaints from ${withComplaints.size} sources (${extracted.offTopic} off-topic, ${extracted.secondHand} not first-hand, ${extracted.unverified} quotes failed the check)`,
@@ -294,7 +306,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     if (extracted.failedBatches) throw new LlmError("The AI was too busy to read the sources. Try again in a minute.", "rate_limited");
     emit({
       type: "result",
-      answer: await hunch(plan.topic, req.message, signal),
+      answer: await hunch(plan.topic, request.message, signal),
       cards: [],
       sourceCount: sources.length,
       mix: mixLine(sources),
@@ -307,13 +319,13 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   emit({ type: "step", label: `Grouping ${extracted.complaints.length} complaints into problems` });
   const grouped = await groupComplaints(extracted.complaints, sources, {
     topic: plan.topic,
-    request: req.message,
+    request: request.message,
     segment: plan.segment,
     light: background,
     signal,
   });
   let problems = grouped.problems;
-  if (cfg.high && problems.length > 1) {
+  if (config.high && problems.length > 1) {
     emit({ type: "step", label: "Reviewing the problems: dropping generic ones, merging duplicates" });
     problems = await critique(problems, extracted.complaints, { light: background, signal }).catch(() => problems);
   }
@@ -321,25 +333,25 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
 
   // three tiers: strong (meets the depth's bar), early (2 sources or one site), niche (single source)
   // each problem gets the best tier it fits, weaker ones are tagged
-  const opts = { topic: plan.topic, now, minSources: cfg.minSources, minSites: cfg.minSites, windowDays };
+  const cardOptions = { topic: plan.topic, now, minSources: config.minSources, minSites: config.minSites, windowDays };
   const strong: Card[] = [];
   const early: Card[] = [];
   const niche: Card[] = [];
   const complaintsOf = new Map<string, Complaint[]>(); // card slug -> verified complaints (for ideas)
-  const byId = new Map(extracted.complaints.map((c) => [c.id, c]));
+  const byId = new Map(extracted.complaints.map((complaint) => [complaint.id, complaint]));
   let topSlug = "";
-  for (const p of problems) {
-    let card = buildCard(p, extracted.complaints, sources, opts);
+  for (const problem of problems) {
+    let card = buildCard(problem, extracted.complaints, sources, cardOptions);
     if (card) strong.push(card);
-    else if ((card = buildCard(p, extracted.complaints, sources, { ...opts, minSources: 2, minSites: 1 })))
+    else if ((card = buildCard(problem, extracted.complaints, sources, { ...cardOptions, minSources: 2, minSites: 1 })))
       early.push((card = { ...card, signal: "early" }));
-    else if ((card = buildCard(p, extracted.complaints, sources, { ...opts, minSources: 1, minSites: 1 })))
+    else if ((card = buildCard(problem, extracted.complaints, sources, { ...cardOptions, minSources: 1, minSites: 1 })))
       niche.push((card = { ...card, signal: "niche" }));
-    if (card && p.isTop && card.signal !== "niche") topSlug = card.slug;
+    if (card && problem.isTop && card.signal !== "niche") topSlug = card.slug;
     if (card)
       complaintsOf.set(
         card.slug,
-        [...new Set(p.complaintIds)].map((id) => byId.get(id)).filter((c): c is Complaint => Boolean(c)),
+        [...new Set(problem.complaintIds)].map((id) => byId.get(id)).filter((complaint): complaint is Complaint => Boolean(complaint)),
       );
   }
   const byDemand = (a: Card, b: Card) => b.scores.demand.value - a.scores.demand.value;
@@ -348,7 +360,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     .slice(0, 5)
     .concat(niche.sort(byDemand).slice(0, 3));
 
-  if (cfg.high && cards.length) {
+  if (config.high && cards.length) {
     check();
     emit({ type: "step", label: "Checking who already solves the top problems" });
     const startups = await startupsJob;
@@ -357,14 +369,14 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
         const found = await findCompetitors(card, startups, signal).catch(() => null);
         if (!found) return; // search failed, keep the ai estimate
         card.competitors = found;
-        const c = competitionFrom(found);
+        const competition = competitionFrom(found);
         card.scores.competition = {
-          value: c.value,
-          label: c.value >= 67 ? "High" : c.value >= 40 ? "Medium" : "Low",
+          value: competition.value,
+          label: competition.value >= 67 ? "High" : competition.value >= 40 ? "Medium" : "Low",
           basis: "data",
-          reason: c.reason,
+          reason: competition.reason,
         };
-        const paid = found.filter((f) => f.mrr).sort((x, y) => (y.mrr ?? 0) - (x.mrr ?? 0))[0];
+        const paid = found.filter((competitor) => competitor.mrr).sort((a, b) => (b.mrr ?? 0) - (a.mrr ?? 0))[0];
         if (paid && card.report) card.report.reasons.push(`Proven market: ${paid.name} earns ${formatMrr(paid.mrr!)}/mo`);
       }),
     );
@@ -372,8 +384,10 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
 
   // strong problems get several ideas on deep/deepest, checked for existing products (one exa search per idea)
   // the rest get one idea from a single ai call
-  const ideaCards = cards.filter((c) => (complaintsOf.get(c.slug)?.length ?? 0) >= 2).slice(0, cfg.high ? 4 : req.depth === "low" ? 0 : 3);
-  const singleCards = cards.filter((c) => !ideaCards.includes(c));
+  const ideaCards = cards
+    .filter((card) => (complaintsOf.get(card.slug)?.length ?? 0) >= 2)
+    .slice(0, config.high ? 4 : request.depth === "low" ? 0 : 3);
+  const singleCards = cards.filter((card) => !ideaCards.includes(card));
   if (cards.length) {
     check();
     emit({ type: "step", label: `Turning ${cards.length === 1 ? "the problem" : `${cards.length} problems`} into product ideas` });
@@ -393,7 +407,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   if (cards.length === 0) {
     emit({
       type: "result",
-      answer: await hunch(plan.topic, req.message, signal),
+      answer: await hunch(plan.topic, request.message, signal),
       cards: [],
       sourceCount: sources.length,
       mix: mixLine(sources),
@@ -408,10 +422,10 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   const result = { type: "result" as const, answer, cards, sourceCount: sources.length, mix: mixLine(sources), suggestions: plan.suggestions };
   // save before answering so share links work right away
   // results missing ideas or sources (ai busy) aren't cached
-  const complete = cards.every((c) => c.ideas?.length) && !extracted.failedBatches;
+  const complete = cards.every((card) => card.ideas?.length) && !extracted.failedBatches;
   await Promise.all([isFirst && complete ? setCached(key, result) : null, saveIdeas(cards)]);
   console.log(
-    `[research] ${req.depth} "${plan.topic}": ${raw.length} found, ${sources.length} kept, ${extracted.complaints.length} complaints, ${cards.length} cards, ${jobs.length} searches`,
+    `[research] ${request.depth} "${plan.topic}": ${raw.length} found, ${sources.length} kept, ${extracted.complaints.length} complaints, ${cards.length} cards, ${jobs.length} searches`,
   );
   emit(result);
 }
@@ -429,15 +443,15 @@ const HunchSchema = z.object({
 async function hunch(topic: string, asked: string, signal?: AbortSignal) {
   const fallback = "People aren't complaining about this much online yet. These searches may find more:";
   try {
-    const out = await generateJson(HunchSchema, {
+    const response = await generateJson(HunchSchema, {
       system: HUNCH_SYSTEM,
       prompt: `Topic: ${topic}\nThe person asked: <quote>${fence(asked.slice(0, 300))}</quote>`,
       light: true,
       temperature: 0.9,
       signal,
     });
-    const ideas = out.hunches.map((h) => `• ${h.title}. ${h.why} Test it: ${h.test}`).join("\n");
-    return [out.answer.join("\n\n"), ideas && `Hunches, not proof yet:\n${ideas}`, "These searches may find real complaints:"]
+    const ideas = response.hunches.map((item) => `• ${item.title}. ${item.why} Test it: ${item.test}`).join("\n");
+    return [response.answer.join("\n\n"), ideas && `Hunches, not proof yet:\n${ideas}`, "These searches may find real complaints:"]
       .filter(Boolean)
       .join("\n\n");
   } catch {

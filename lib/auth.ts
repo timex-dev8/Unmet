@@ -17,7 +17,7 @@ function start() {
       client.auth.onAuthStateChange((_event, session) => {
         current = session?.user ?? null;
         if (current) setGuest(false); // guest data merges into the account
-        listeners.forEach((l) => l());
+        listeners.forEach((listener) => listener());
       }),
     (err) => {
       started = false; // retry on the next subscriber
@@ -26,10 +26,10 @@ function start() {
   );
 }
 
-function subscribe(l: () => void) {
+function subscribe(listener: () => void) {
   start();
-  listeners.add(l);
-  return () => listeners.delete(l);
+  listeners.add(listener);
+  return () => listeners.delete(listener);
 }
 
 export function useUser() {
@@ -63,16 +63,16 @@ function setGuest(on: boolean) {
   document.cookie = on
     ? `${GUEST_COOKIE}=1; Path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax`
     : `${GUEST_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
-  guestListeners.forEach((l) => l());
+  guestListeners.forEach((listener) => listener());
 }
 
 export const continueAsGuest = () => setGuest(true);
 
 export function useGuest() {
   return useSyncExternalStore(
-    (l) => {
-      guestListeners.add(l);
-      return () => void guestListeners.delete(l);
+    (listener) => {
+      guestListeners.add(listener);
+      return () => void guestListeners.delete(listener);
     },
     readGuest,
     () => undefined,

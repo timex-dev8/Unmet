@@ -8,7 +8,7 @@ import { Search } from "lucide-react";
 import Logo from "@/components/Logo";
 import AccountButton from "./AccountButton";
 import FeedSearch from "./FeedSearch";
-import s from "./shell.module.css";
+import styles from "./shell.module.css";
 
 // palette loads as its own chunk on first open
 const CommandPalette = dynamic(() => import("./CommandPalette"), { ssr: false });
@@ -33,7 +33,7 @@ export default function TopBar() {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setMounted(true);
-        setOpen((o) => !o);
+        setOpen((wasOpen) => !wasOpen);
       }
     }
     window.addEventListener("keydown", onKey);
@@ -46,8 +46,8 @@ export default function TopBar() {
   };
 
   return (
-    <header className={`${s.top} ${scrolled ? s.topScrolled : ""}`}>
-      <Link href="/app" className={s.topBrand} aria-label="Unmet home">
+    <header className={`${styles.top} ${scrolled ? styles.topScrolled : ""}`}>
+      <Link href="/app" className={styles.topBrand} aria-label="Unmet home">
         <Logo size={24} />
       </Link>
       {onFeed ? (
@@ -55,24 +55,24 @@ export default function TopBar() {
           <FeedSearch open={feedSearchOpen} />
         </Suspense>
       ) : (
-        <button type="button" className={s.searchField} onClick={openPalette}>
+        <button type="button" className={styles.searchField} onClick={openPalette}>
           <Search size={16} aria-hidden="true" />
           <span>Search ideas, research and actions</span>
         </button>
       )}
-      <div className={s.topActions}>
+      <div className={styles.topActions}>
         {onFeed ? (
           <button
             type="button"
-            className={s.searchIcon}
-            onClick={() => setFeedSearchOpen((o) => !o)}
+            className={styles.searchIcon}
+            onClick={() => setFeedSearchOpen((wasOpen) => !wasOpen)}
             aria-label="Search the feed"
             aria-expanded={feedSearchOpen}
           >
             <Search size={21} aria-hidden="true" />
           </button>
         ) : (
-          <button type="button" className={s.searchIcon} onClick={openPalette} aria-label="Search">
+          <button type="button" className={styles.searchIcon} onClick={openPalette} aria-label="Search">
             <Search size={21} aria-hidden="true" />
           </button>
         )}

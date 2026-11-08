@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ChevronRight, Menu, X } from "lucide-react";
 import Logo from "@/components/Logo";
 import LiquidGlass from "@/components/motion/LiquidGlass";
-import s from "./landing.module.css";
+import styles from "./landing.module.css";
 
 const sections = [
   { id: "how", label: "How it works" },
@@ -16,7 +16,7 @@ export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [current, setCurrent] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
-  const links = useRef<HTMLDivElement>(null);
+  const linksRef = useRef<HTMLDivElement>(null);
   const [bubble, setBubble] = useState<{ x: number; w: number } | null>(null);
 
   useEffect(() => {
@@ -33,23 +33,23 @@ export default function Nav() {
   }, []);
 
   useEffect(() => {
-    const els = sections.map((x) => document.getElementById(x.id)).filter((el): el is HTMLElement => !!el);
-    const io = new IntersectionObserver(
+    const sectionEls = sections.map((section) => document.getElementById(section.id)).filter((sectionEl): sectionEl is HTMLElement => !!sectionEl);
+    const observer = new IntersectionObserver(
       (entries) => {
-        for (const e of entries) if (e.isIntersecting) setCurrent(e.target.id);
+        for (const entry of entries) if (entry.isIntersecting) setCurrent(entry.target.id);
         if (window.scrollY < 300) setCurrent(null);
       },
       { rootMargin: "-30% 0px -60% 0px" },
     );
-    els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
+    sectionEls.forEach((sectionEl) => observer.observe(sectionEl));
+    return () => observer.disconnect();
   }, []);
 
   // measure the bubble from the link itself, shared layout drifts inside the fixed bar while scrolling
   useLayoutEffect(() => {
     const measure = () => {
-      const a = current ? links.current?.querySelector<HTMLElement>(`a[href="#${current}"]`) : null;
-      setBubble(a ? { x: a.offsetLeft, w: a.offsetWidth } : null);
+      const activeLink = current ? linksRef.current?.querySelector<HTMLElement>(`a[href="#${current}"]`) : null;
+      setBubble(activeLink ? { x: activeLink.offsetLeft, w: activeLink.offsetWidth } : null);
     };
     measure();
     window.addEventListener("resize", measure);
@@ -66,40 +66,45 @@ export default function Nav() {
   const light = scrolled && !open;
 
   return (
-    <div className={`${s.navWrap} ${light ? s.navLight : ""}`}>
-      <LiquidGlass radius={22} className={s.nav}>
-        <nav aria-label="Main" className={s.navInner}>
-          <Link href="/" className={s.brand} aria-label="Unmet home">
+    <div className={`${styles.navWrap} ${light ? styles.navLight : ""}`}>
+      <LiquidGlass radius={22} className={styles.nav}>
+        <nav aria-label="Main" className={styles.navInner}>
+          <Link href="/" className={styles.brand} aria-label="Unmet home">
             <Logo tone={light ? "dark" : "light"} size={24} />
           </Link>
 
-          <div ref={links} className={s.links}>
+          <div ref={linksRef} className={styles.links}>
             <span
-              className={s.bubble}
+              className={styles.bubble}
               style={{ opacity: bubble ? 1 : 0, width: bubble?.w ?? 0, transform: `translateX(${bubble?.x ?? 0}px)` }}
               aria-hidden="true"
             />
-            {sections.map((l) => (
-              <a key={l.id} href={`#${l.id}`} className={current === l.id ? s.linkOn : ""} aria-current={current === l.id ? "location" : undefined}>
-                {l.label}
+            {sections.map((link) => (
+              <a
+                key={link.id}
+                href={`#${link.id}`}
+                className={current === link.id ? styles.linkOn : ""}
+                aria-current={current === link.id ? "location" : undefined}
+              >
+                {link.label}
               </a>
             ))}
           </div>
 
-          <div className={s.navRight}>
-            <Link href="/welcome" className={s.signIn}>
+          <div className={styles.navRight}>
+            <Link href="/welcome" className={styles.signIn}>
               Sign in
             </Link>
-            <Link href="/welcome" className={`glossy ${s.navCta}`}>
+            <Link href="/welcome" className={`glossy ${styles.navCta}`}>
               Try free
             </Link>
             <button
               type="button"
-              className={s.menuBtn}
+              className={styles.menuBtn}
               aria-expanded={open}
               aria-controls="landing-menu"
               aria-label={open ? "Close menu" : "Open menu"}
-              onClick={() => setOpen((o) => !o)}
+              onClick={() => setOpen((wasOpen) => !wasOpen)}
             >
               {open ? <X size={18} aria-hidden="true" /> : <Menu size={18} aria-hidden="true" />}
             </button>
@@ -108,15 +113,15 @@ export default function Nav() {
       </LiquidGlass>
 
       {open && (
-        <LiquidGlass radius={22} className={s.sheet}>
-          <div id="landing-menu" className={s.sheetInner}>
-            {[...sections, { id: "faq", label: "Questions" }].map((l) => (
-              <a key={l.id} href={`#${l.id}`} className={current === l.id ? s.sheetOn : ""} onClick={() => setOpen(false)}>
-                {l.label}
+        <LiquidGlass radius={22} className={styles.sheet}>
+          <div id="landing-menu" className={styles.sheetInner}>
+            {[...sections, { id: "faq", label: "Questions" }].map((link) => (
+              <a key={link.id} href={`#${link.id}`} className={current === link.id ? styles.sheetOn : ""} onClick={() => setOpen(false)}>
+                {link.label}
                 <ChevronRight size={18} aria-hidden="true" />
               </a>
             ))}
-            <span className={s.sheetRule} />
+            <span className={styles.sheetRule} />
             <Link href="/welcome" onClick={() => setOpen(false)}>
               Sign in
               <ChevronRight size={18} aria-hidden="true" />

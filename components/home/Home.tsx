@@ -17,7 +17,7 @@ import type { Depth } from "@/lib/research-types";
 import { useSaved } from "@/lib/saved";
 import { VERDICT } from "@/lib/verdict";
 import { Niches } from "./Interests";
-import s from "./home.module.css";
+import styles from "./home.module.css";
 
 export default function Home({ cards, products = [] }: { cards: HomeIdea[]; products?: HomeProduct[] }) {
   const router = useRouter();
@@ -36,22 +36,22 @@ export default function Home({ cards, products = [] }: { cards: HomeIdea[]; prod
 
   function start(e: FormEvent) {
     e.preventDefault();
-    const q = input.trim();
-    if (q) router.push(researchHref(q, lowOnly ? "low" : depth));
+    const query = input.trim();
+    if (query) router.push(researchHref(query, lowOnly ? "low" : depth));
   }
 
   return (
-    <main className={s.home} data-wash>
-      <section className={`${s.hero} rise`}>
-        <h1 className={s.title}>What problem do you want to own?</h1>
-        <p className={s.lede}>Name a market or a product. Unmet finds what people complain about and turns it into ideas worth building.</p>
-        <form className={s.composer} onSubmit={start}>
+    <main className={styles.home} data-wash>
+      <section className={`${styles.hero} rise`}>
+        <h1 className={styles.title}>What problem do you want to own?</h1>
+        <p className={styles.lede}>Name a market or a product. Unmet finds what people complain about and turns it into ideas worth building.</p>
+        <form className={styles.composer} onSubmit={start}>
           <label htmlFor="home-q" className="sr-only">
             Describe a market or audience
           </label>
           <input
             id="home-q"
-            className={s.input}
+            className={styles.input}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Like “barbershops” or “Calendly”"
@@ -59,46 +59,46 @@ export default function Home({ cards, products = [] }: { cards: HomeIdea[]; prod
             enterKeyHint="go"
           />
           <DepthPicker value={depth} onChange={setDepth} />
-          <button type="submit" className={`glossy ${s.send}`} disabled={!input.trim()} aria-label="Start research">
+          <button type="submit" className={`glossy ${styles.send}`} disabled={!input.trim()} aria-label="Start research">
             <ArrowUp size={20} strokeWidth={2.6} aria-hidden="true" />
           </button>
         </form>
       </section>
 
       <section className="rise" style={stagger(2)} aria-labelledby="niches-title">
-        <h2 id="niches-title" className={`fade-text ${s.h2} ${s.nichesTitle}`}>
+        <h2 id="niches-title" className={`fade-text ${styles.h2} ${styles.nichesTitle}`}>
           Your niches
         </h2>
         <Niches />
       </section>
 
       <section aria-labelledby="for-you">
-        <div className={s.sectionHead}>
-          <h2 id="for-you" className={`fade-text ${s.h2}`}>
+        <div className={styles.sectionHead}>
+          <h2 id="for-you" className={`fade-text ${styles.h2}`}>
             For you
           </h2>
         </div>
-        <div className={s.cards}>
+        <div className={styles.cards}>
           {shown.map((card, i) => (
-            <HomeCard key={card.slug} card={card} i={i + 2} />
+            <HomeCard key={card.slug} card={card} index={i + 2} />
           ))}
-          {product && <HomeProduct product={product} i={shown.length + 2} />}
+          {product && <HomeProduct product={product} index={shown.length + 2} />}
         </div>
       </section>
 
       {trending.length > 0 && (
         <section aria-labelledby="trending">
-          <div className={s.sectionHead}>
-            <h2 id="trending" className={`fade-text ${s.h2}`}>
+          <div className={styles.sectionHead}>
+            <h2 id="trending" className={`fade-text ${styles.h2}`}>
               Trending products
             </h2>
-            <Link href="/app/feed" className={s.more}>
-              See all<span className={s.moreFeed}> in Feed</span> →
+            <Link href="/app/feed" className={styles.more}>
+              See all<span className={styles.moreFeed}> in Feed</span> →
             </Link>
           </div>
-          <div className={s.trending}>
-            {trending.map((p, i) => (
-              <TrendingCard key={p.slug} product={p} i={i + 4} />
+          <div className={styles.trending}>
+            {trending.map((trendingProduct, i) => (
+              <TrendingCard key={trendingProduct.slug} product={trendingProduct} index={i + 4} />
             ))}
           </div>
         </section>
@@ -109,27 +109,29 @@ export default function Home({ cards, products = [] }: { cards: HomeIdea[]; prod
 
 const stagger = (i: number) => ({ "--i": i }) as CSSProperties;
 
-function HomeCard({ card, i }: { card: HomeIdea; i: number }) {
-  const e = card.evidence;
+function HomeCard({ card, index }: { card: HomeIdea; index: number }) {
+  const evidence = card.evidence;
   const sites = card.sites;
   return (
-    <article className={`${s.card} rise`} style={stagger(i)}>
-      <div className={s.cardBody}>
-        <span className={s.meta}>
+    <article className={`${styles.card} rise`} style={stagger(index)}>
+      <div className={styles.cardBody}>
+        <span className={styles.meta}>
           {card.category}
           {card.trend === "rising" ? " · ↑ Rising" : ""}
         </span>
-        <h3 className={s.cardTitle}>
+        <h3 className={styles.cardTitle}>
           <Link href={ideaHref(card.slug)}>{card.headline}</Link>
         </h3>
-        <p className={s.evidence}>
-          {e.threads ? `${e.threads} sources on ${sites} ${sites === 1 ? "site" : "sites"}` : `${e.posts} mentions · ${e.site}`}
+        <p className={styles.evidence}>
+          {evidence.threads
+            ? `${evidence.threads} sources on ${sites} ${sites === 1 ? "site" : "sites"}`
+            : `${evidence.posts} mentions · ${evidence.site}`}
           {card.verdict ? ` · ${VERDICT[card.verdict].label}` : ""}
           {card.sample ? " · sample" : ""}
         </p>
-        <div className={s.cardActions}>
+        <div className={styles.cardActions}>
           <SaveButton card={card} load={loadCard} small />
-          <Link href={ideaHref(card.slug)} className={s.more}>
+          <Link href={ideaHref(card.slug)} className={styles.more}>
             See ideas →
           </Link>
         </div>
@@ -138,21 +140,21 @@ function HomeCard({ card, i }: { card: HomeIdea; i: number }) {
   );
 }
 
-function HomeProduct({ product, i }: { product: HomeProduct; i: number }) {
+function HomeProduct({ product, index }: { product: HomeProduct; index: number }) {
   const gaps = productResearchHref(product);
   return (
-    <article className={`${s.card} rise`} style={stagger(i)}>
-      <div className={s.cardBody}>
-        <span className={`${s.meta} ${s.metaWorking}`}>Working · {product.category}</span>
-        <h3 className={s.cardTitle}>
+    <article className={`${styles.card} rise`} style={stagger(index)}>
+      <div className={styles.cardBody}>
+        <span className={`${styles.meta} ${styles.metaWorking}`}>Working · {product.category}</span>
+        <h3 className={styles.cardTitle}>
           <a href={product.url} target="_blank" rel="noopener noreferrer">
             {product.name}
           </a>
         </h3>
-        <p className={s.productLine}>{product.oneLine}</p>
-        {product.proof[0] && <p className={s.evidence}>{product.proof[0].label}</p>}
-        <div className={s.cardActions}>
-          <Link href={gaps} className={s.more}>
+        <p className={styles.productLine}>{product.oneLine}</p>
+        {product.proof[0] && <p className={styles.evidence}>{product.proof[0].label}</p>}
+        <div className={styles.cardActions}>
+          <Link href={gaps} className={styles.more}>
             Find its gaps →
           </Link>
         </div>
@@ -161,27 +163,27 @@ function HomeProduct({ product, i }: { product: HomeProduct; i: number }) {
   );
 }
 
-function TrendingCard({ product, i }: { product: HomeProduct; i: number }) {
+function TrendingCard({ product, index }: { product: HomeProduct; index: number }) {
   const gaps = productResearchHref(product);
   const proof = product.proof[0];
   return (
-    <article className={`${s.trendCard} rise`} style={stagger(i)}>
-      <div className={s.trendTop}>
+    <article className={`${styles.trendCard} rise`} style={stagger(index)}>
+      <div className={styles.trendTop}>
         <ProductThumb product={product} />
-        <span className={s.trendSource}>{product.source}</span>
+        <span className={styles.trendSource}>{product.source}</span>
       </div>
-      <h3 className={s.trendName}>
+      <h3 className={styles.trendName}>
         <a href={product.url} target="_blank" rel="noopener noreferrer">
           {product.name}
         </a>
       </h3>
-      <p className={s.trendLine}>{product.oneLine}</p>
+      <p className={styles.trendLine}>{product.oneLine}</p>
       {proof && (
-        <a href={proof.url} target="_blank" rel="noopener noreferrer" className={s.trendChip}>
+        <a href={proof.url} target="_blank" rel="noopener noreferrer" className={styles.trendChip}>
           {proof.label}
         </a>
       )}
-      <Link href={gaps} className={`${s.more} ${s.trendGaps}`}>
+      <Link href={gaps} className={`${styles.more} ${styles.trendGaps}`}>
         Find its gaps →
       </Link>
     </article>

@@ -7,7 +7,7 @@ import { REMIX_SYSTEM, VALIDATE_SYSTEM } from "@/lib/research/prompts";
 // remix and validate for one card, ai only. evidence is just the cards verified quotes
 
 // ai written text is cut, not refused
-const cut = (n: number) => z.string().transform((s) => s.slice(0, n));
+const cut = (maxLength: number) => z.string().transform((text) => text.slice(0, maxLength));
 
 const Body = z.object({
   mode: z.enum(["remix", "validate"]),
@@ -19,12 +19,12 @@ const Body = z.object({
     quotes: z
       .array(cut(200))
       .min(1)
-      .transform((q) => q.slice(0, 12)),
+      .transform((quotes) => quotes.slice(0, 12)),
     today: cut(400).optional(),
     workarounds: z
       .array(cut(200))
       .default([])
-      .transform((w) => w.slice(0, 5)),
+      .transform((workarounds) => workarounds.slice(0, 5)),
     verdict: z.enum(["strong", "maybe", "weak"]).optional(),
   }),
   idea: z.object({ title: cut(120), pitch: cut(300) }).optional(),
@@ -67,21 +67,21 @@ export async function POST(request: Request) {
 
   try {
     if (mode === "validate") {
-      const out = await generateJson(ValidateSchema, {
+      const validation = await generateJson(ValidateSchema, {
         system: VALIDATE_SYSTEM,
         timeoutMs: 30_000,
         prompt: `${base}\n\nThe idea to test: ${idea ? `${idea.title}. ${idea.pitch}` : "the most promising product for this problem"}`,
       });
-      return Response.json({ validate: out });
+      return Response.json({ validate: validation });
     }
-    const out = await generateJson(IdeasSchema, {
+    const remixed = await generateJson(IdeasSchema, {
       system: REMIX_SYSTEM,
       timeoutMs: 60_000,
       temperature: 0.8,
       prompt: `${base}\n\nTwist the founder asked for: ${twist}${idea ? `\nStarting from this idea: ${idea.title}. ${idea.pitch}` : ""}`,
     });
     // remixes need only one cited quote
-    const ideas = finishIdeas(out.ideas, complaints, { report }, 1).map((d) => d.idea);
+    const ideas = finishIdeas(remixed.ideas, complaints, { report }, 1).map((draft) => draft.idea);
     return Response.json({ ideas });
   } catch (err) {
     const message = err instanceof LlmError ? err.message : "Couldn't generate that right now. Try again.";

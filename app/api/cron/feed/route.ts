@@ -37,7 +37,7 @@ export async function GET(request: Request) {
       try {
         // no new niche after 150s, medium can take minutes and must end inside the 5 min limit
         const report = await runFeed({ max, deadline: started + 150_000, signal: feedSignal });
-        const added = report.reduce((n, r) => n + r.added, 0);
+        const added = report.reduce((total, niche) => total + niche.added, 0);
         changed ||= added > 0;
         result.added = added;
         result.report = report;

@@ -9,12 +9,12 @@ import { kindOf } from "./quality";
 
 const LISTICLE = /\b\d+\s+(best|top)\b|alternatives|\bvs\.?\s|review|guide|how to|%|\bwhy\b|\bstop\b|template|lessons/i;
 const STOP = new Set(["their", "about", "which", "there", "would", "could", "people", "every", "after", "before", "without"]);
-const keywords = (s: string) =>
+const keywords = (text: string) =>
   new Set(
-    s
+    text
       .toLowerCase()
       .split(/[^a-z]+/)
-      .filter((w) => w.length > 4 && !STOP.has(w)),
+      .filter((word) => word.length > 4 && !STOP.has(word)),
   );
 
 // product page = homepage or shallow page, not an article
@@ -30,9 +30,9 @@ const isProductPage = (url: string) => {
 export function productName(title: string, site: string) {
   const parts = title
     .split(/\s[|–—-]\s|:\s/)
-    .map((p) => p.trim())
+    .map((part) => part.trim())
     .filter(Boolean);
-  const short = parts.find((p) => p.split(/\s+/).length <= 3 && !/^(how|why|what|the)\b/i.test(p));
+  const short = parts.find((part) => part.split(/\s+/).length <= 3 && !/^(how|why|what|the)\b/i.test(part));
   if (short) return short.slice(0, 40);
   const label = site.split(".").slice(-2, -1)[0] ?? site;
   return label.charAt(0).toUpperCase() + label.slice(1);
@@ -44,21 +44,21 @@ export async function findCompetitors(card: Card, startups: Startup[], signal?: 
   const pages = await searchProducts(`${card.headline}. Software or app for ${card.who}`, since, signal);
   const seen = new Set<string>();
   const web: Competitor[] = [];
-  for (const p of pages) {
-    const kind = kindOf(p.site, p.url);
-    if (kind !== "blog" || !isProductPage(p.url) || LISTICLE.test(p.title) || seen.has(p.site)) continue;
-    seen.add(p.site);
-    web.push({ name: productName(p.title, p.site), url: p.url, note: p.text.slice(0, 120) || undefined });
+  for (const page of pages) {
+    const kind = kindOf(page.site, page.url);
+    if (kind !== "blog" || !isProductPage(page.url) || LISTICLE.test(page.title) || seen.has(page.site)) continue;
+    seen.add(page.site);
+    web.push({ name: productName(page.title, page.site), url: page.url, note: page.text.slice(0, 120) || undefined });
     if (web.length >= 4) break;
   }
 
   const words = keywords(`${card.headline} ${card.summary}`);
   const verified: Competitor[] = startups
-    .map((s) => ({ s, overlap: [...keywords(s.description)].filter((w) => words.has(w)).length }))
-    .filter((x) => x.overlap >= 3 && !/^stealth/i.test(x.s.name))
-    .sort((a, b) => b.overlap - a.overlap || b.s.mrr - a.s.mrr)
+    .map((startup) => ({ startup, overlap: [...keywords(startup.description)].filter((word) => words.has(word)).length }))
+    .filter((match) => match.overlap >= 3 && !/^stealth/i.test(match.startup.name))
+    .sort((a, b) => b.overlap - a.overlap || b.startup.mrr - a.startup.mrr)
     .slice(0, 2)
-    .map(({ s }) => ({ name: s.name, url: s.website, note: s.description.slice(0, 120), mrr: s.mrr }));
+    .map(({ startup }) => ({ name: startup.name, url: startup.website, note: startup.description.slice(0, 120), mrr: startup.mrr }));
 
   return [...verified, ...web].slice(0, 5);
 }
@@ -69,8 +69,8 @@ export async function startupsFor(category: string) {
 }
 
 export function competitionFrom(found: Competitor[]) {
-  const verified = found.filter((c) => c.mrr);
-  const top = verified.reduce((m, c) => Math.max(m, c.mrr ?? 0), 0);
+  const verified = found.filter((competitor) => competitor.mrr);
+  const top = verified.reduce((highest, competitor) => Math.max(highest, competitor.mrr ?? 0), 0);
   const value = Math.min(92, 20 + found.length * 13 + (top > 1_000_000 ? 10 : 0));
   const reason = found.length
     ? `${found.length} existing ${found.length === 1 ? "product" : "products"} found${top ? `, top verified revenue ${formatMrr(top)}/mo` : ""}`

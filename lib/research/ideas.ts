@@ -70,11 +70,14 @@ export function ideasPrompt(
     card.report?.today ? `What they use today: ${card.report.today}` : "",
     card.report?.workarounds.length ? `Workarounds people describe: ${card.report.workarounds.join("; ")}` : "",
     card.competitors?.length
-      ? `Existing products:\n${card.competitors.map((c) => `<competitor>${fence(`${c.name}${c.note ? `: ${c.note}` : ""}`)}</competitor>`).join("\n")}`
+      ? `Existing products:\n${card.competitors.map((competitor) => `<competitor>${fence(`${competitor.name}${competitor.note ? `: ${competitor.note}` : ""}`)}</competitor>`).join("\n")}`
       : "",
     `\nVerified complaints:\n${complaints
       .slice(0, 12)
-      .map((c) => `<complaint id="${c.id}"${c.signal ? ` signal="${c.signal}"` : ""}>${fence(c.pain)} | ${fence(c.quote.slice(0, 220))}</complaint>`)
+      .map(
+        (complaint) =>
+          `<complaint id="${complaint.id}"${complaint.signal ? ` signal="${complaint.signal}"` : ""}>${fence(complaint.pain)} | ${fence(complaint.quote.slice(0, 220))}</complaint>`,
+      )
       .join("\n")}`,
   ]
     .filter(Boolean)
@@ -89,39 +92,41 @@ export function finishIdeas(
   card: Pick<Card, "report">,
   minCited = 2,
 ): Drafted[] {
-  const byId = new Map(complaints.map((c) => [c.id, c]));
+  const byId = new Map(complaints.map((complaint) => [complaint.id, complaint]));
   const verdictBonus = card.report?.verdict === "strong" ? 20 : card.report?.verdict === "maybe" ? 10 : 0;
-  const out: Drafted[] = [];
-  for (const d of drafts) {
-    const cited = [...new Set(d.complaintIds)].map((id) => byId.get(id)).filter((c): c is NonNullable<typeof c> => Boolean(c));
+  const finished: Drafted[] = [];
+  for (const draft of drafts) {
+    const cited = [...new Set(draft.complaintIds)]
+      .map((id) => byId.get(id))
+      .filter((complaint): complaint is NonNullable<typeof complaint> => Boolean(complaint));
     if (cited.length < minCited) continue;
-    const money = cited.filter((c) => c.signal === "pays" || c.signal === "switching" || c.signal === "price").length;
-    out.push({
+    const money = cited.filter((complaint) => complaint.signal === "pays" || complaint.signal === "switching" || complaint.signal === "price").length;
+    finished.push({
       idea: {
-        lens: d.lens as IdeaLens,
-        title: d.title,
-        pitch: d.pitch,
-        form: d.form,
-        norm: d.norm,
-        flaw: d.flaw,
-        shift: d.shift,
-        twists: d.twists,
-        whyLove: d.whyLove,
-        competitorCheck: d.competitorCheck,
-        unproven: d.unproven,
-        whoPays: d.whoPays,
-        price: d.price,
-        wedge: d.wedge,
-        mvp: d.mvp,
-        firstUsers: d.firstUsers,
-        risks: d.risks,
-        evidence: cited.slice(0, 3).map((c) => c.quote),
+        lens: draft.lens as IdeaLens,
+        title: draft.title,
+        pitch: draft.pitch,
+        form: draft.form,
+        norm: draft.norm,
+        flaw: draft.flaw,
+        shift: draft.shift,
+        twists: draft.twists,
+        whyLove: draft.whyLove,
+        competitorCheck: draft.competitorCheck,
+        unproven: draft.unproven,
+        whoPays: draft.whoPays,
+        price: draft.price,
+        wedge: draft.wedge,
+        mvp: draft.mvp,
+        firstUsers: draft.firstUsers,
+        risks: draft.risks,
+        evidence: cited.slice(0, 3).map((complaint) => complaint.quote),
         score: Math.min(95, 30 + verdictBonus + cited.length * 6 + money * 8),
       },
-      query: d.searchQuery,
+      query: draft.searchQuery,
     });
   }
-  return out.sort((a, b) => b.idea.score - a.idea.score);
+  return finished.sort((a, b) => b.idea.score - a.idea.score);
 }
 
 const isProductPage = (url: string) => {
@@ -136,7 +141,7 @@ const isProductPage = (url: string) => {
 async function checkBuilt({ idea, query }: Drafted, signal?: AbortSignal) {
   const since = new Date(Date.now() - 3 * 365 * 86400_000).toISOString();
   const pages = await searchProducts(query || idea.pitch, since, signal).catch(() => []);
-  const hit = pages.find((p) => kindOf(p.site, p.url) === "blog" && isProductPage(p.url));
+  const hit = pages.find((page) => kindOf(page.site, page.url) === "blog" && isProductPage(page.url));
   if (!hit) return;
   idea.similar = { name: productName(hit.title, hit.site), url: hit.url, note: hit.text.slice(0, 120) || undefined };
   idea.score = Math.max(10, idea.score - 10);
@@ -154,7 +159,7 @@ export async function generateIdeas(
   const focus = product
     ? `\n\nThese complaints are from users of ${product}. Prefer ideas that win them over: a wedge, an unbundled part done better, or a version made for a group ${product} serves badly. Name ${product} in the wedge.`
     : "";
-  const out = await generateJson(IdeasSchema, {
+  const response = await generateJson(IdeasSchema, {
     system: IDEAS_SYSTEM,
     light: !best, // better model is worth it for creative work but its quota is small
     signal,
@@ -162,12 +167,12 @@ export async function generateIdeas(
     temperature: 0.8,
     prompt: ideasPrompt(card, complaints) + focus,
   });
-  if (out.thoughts) card.thoughts = out.thoughts;
+  if (response.thoughts) card.thoughts = response.thoughts;
   // prefer two-complaint ideas, a thin card still gets its best single one
-  const backed = finishIdeas(out.ideas, complaints, card);
-  const drafted = (backed.length ? backed : finishIdeas(out.ideas, complaints, card, 1)).slice(0, 3);
-  if (check) await Promise.all(drafted.map((d) => checkBuilt(d, signal)));
-  return drafted.map((d) => d.idea).sort((a, b) => b.score - a.score);
+  const backed = finishIdeas(response.ideas, complaints, card);
+  const drafted = (backed.length ? backed : finishIdeas(response.ideas, complaints, card, 1)).slice(0, 3);
+  if (check) await Promise.all(drafted.map((draft) => checkBuilt(draft, signal)));
+  return drafted.map((draft) => draft.idea).sort((a, b) => b.score - a.score);
 }
 
 const BatchSchema = z.object({ ideas: z.array(IdeaDraft.extend({ problem: z.string() })) });
@@ -175,7 +180,7 @@ const BatchSchema = z.object({ ideas: z.array(IdeaDraft.extend({ problem: z.stri
 // one ai call for the remaining cards so a search doesn't burn the free rate limit
 export async function generateOneIdeaEach(cards: Card[], complaintsOf: (card: Card) => Complaint[], signal?: AbortSignal) {
   if (!cards.length) return;
-  const out = await generateJson(BatchSchema, {
+  const response = await generateJson(BatchSchema, {
     schemaNotes: false,
     system: IDEAS_BATCH_SYSTEM,
     light: true,
@@ -186,7 +191,7 @@ export async function generateOneIdeaEach(cards: Card[], complaintsOf: (card: Ca
   });
   cards.forEach((card, i) => {
     // checked against this card's own complaints so an idea can't land on the wrong problem
-    const drafts = out.ideas.filter((d) => d.problem === `P${i + 1}`);
+    const drafts = response.ideas.filter((draft) => draft.problem === `P${i + 1}`);
     const best = finishIdeas(drafts, complaintsOf(card), card, 1)[0];
     if (best) card.ideas = [best.idea];
   });

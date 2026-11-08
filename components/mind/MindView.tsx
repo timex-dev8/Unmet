@@ -8,7 +8,7 @@ import { addThought, mindMark, removeThought, saveConclusion, useMind } from "@/
 import type { MindBrief } from "@/lib/mind-types";
 import { useThreads } from "@/lib/research-store";
 import { useSaved } from "@/lib/saved";
-import s from "./mind.module.css";
+import styles from "./mind.module.css";
 
 const STARTERS = [
   { label: "A feature", text: "It should " },
@@ -46,15 +46,15 @@ export default function MindView({ configured }: { configured: boolean }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const box = useRef<HTMLTextAreaElement>(null);
+  const noteInput = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    if (!input && box.current) box.current.style.height = "";
+    if (!input && noteInput.current) noteInput.current.style.height = "";
   }, [input]);
 
   // notes are stored newest first, send them in written order
   const notes = [...thoughts].reverse();
-  const stale = Boolean(brief && (brief.count !== thoughts.length || thoughts.some((t) => t.at > brief.at)));
+  const stale = Boolean(brief && (brief.count !== thoughts.length || thoughts.some((thought) => thought.at > brief.at)));
 
   function add() {
     addThought(input);
@@ -72,30 +72,30 @@ export default function MindView({ configured }: { configured: boolean }) {
   }
   function spark(text: string) {
     addThought(text);
-    box.current?.focus();
+    noteInput.current?.focus();
   }
   function start(text: string) {
     const next = input.trim() ? `${input.trimEnd()}\n${text}` : text;
     setInput(next);
-    box.current?.focus();
-    requestAnimationFrame(() => box.current?.setSelectionRange(next.length, next.length));
+    noteInput.current?.focus();
+    requestAnimationFrame(() => noteInput.current?.setSelectionRange(next.length, next.length));
   }
 
   async function shape() {
     setLoading(true);
     setError("");
     const mark = mindMark();
-    const ideas = [...saved, ...threads.flatMap((t) => t.messages.flatMap((m) => m.cards ?? []))]
+    const ideas = [...saved, ...threads.flatMap((thread) => thread.messages.flatMap((chatMessage) => chatMessage.cards ?? []))]
       .slice(0, 40)
       .map(({ slug, headline, summary }) => ({ slug, headline, summary }));
     try {
-      const res = await fetch("/api/mind", {
+      const response = await fetch("/api/mind", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ thoughts: notes.slice(-120).map(({ id, text }) => ({ id, text })), ideas }),
       });
-      const body = await res.json();
-      if (!res.ok) throw new Error(body.error ?? "Something went wrong.");
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error ?? "Something went wrong.");
       saveConclusion(body as MindBrief, mark.at, mark.count);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -109,59 +109,70 @@ export default function MindView({ configured }: { configured: boolean }) {
   const showButton = !brief || stale || loading;
 
   return (
-    <div className={`${s.page} ${empty ? s.empty : ""}`} data-wash={empty ? "" : undefined}>
-      <header className={`${s.head} ${empty ? s.in : ""}`} style={stagger(0)}>
-        <h1 className={s.title}>Shape your idea</h1>
-        <p className={s.lead}>Turn your idea into a clear plan before you build.</p>
+    <div className={`${styles.page} ${empty ? styles.empty : ""}`} data-wash={empty ? "" : undefined}>
+      <header className={`${styles.head} ${empty ? styles.in : ""}`} style={stagger(0)}>
+        <h1 className={styles.title}>Shape your idea</h1>
+        <p className={styles.lead}>Turn your idea into a clear plan before you build.</p>
       </header>
 
-      <div className={`${s.grid} ${brief ? s.split : ""}`}>
-        <section className={s.write} aria-label="Your notes">
-          <form className={`${s.composer} ${empty ? s.in : ""}`} style={stagger(1)} onSubmit={onSubmit}>
+      <div className={`${styles.grid} ${brief ? styles.split : ""}`}>
+        <section className={styles.write} aria-label="Your notes">
+          <form className={`${styles.composer} ${empty ? styles.in : ""}`} style={stagger(1)} onSubmit={onSubmit}>
             <label htmlFor="note" className="sr-only">
               Describe your idea
             </label>
             <textarea
               id="note"
-              ref={box}
-              className={s.textarea}
+              ref={noteInput}
+              className={styles.textarea}
               rows={2}
               maxLength={2000}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onKeyDown}
               onInput={(e) => {
-                const t = e.currentTarget;
-                t.style.height = "auto";
-                t.style.height = `${t.scrollHeight}px`;
+                const textarea = e.currentTarget;
+                textarea.style.height = "auto";
+                textarea.style.height = `${textarea.scrollHeight}px`;
               }}
               placeholder="I want to build… It should… I’m not sure about…"
             />
-            <div className={s.bar}>
-              <div className={s.chips}>
-                {STARTERS.map((c) => (
-                  <button key={c.label} type="button" className={s.chip} onMouseDown={(e) => e.preventDefault()} onClick={() => start(c.text)}>
-                    + {c.label}
+            <div className={styles.bar}>
+              <div className={styles.chips}>
+                {STARTERS.map((starter) => (
+                  <button
+                    key={starter.label}
+                    type="button"
+                    className={styles.chip}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => start(starter.text)}
+                  >
+                    + {starter.label}
                   </button>
                 ))}
               </div>
-              <button type="submit" className={s.add} disabled={!input.trim()} aria-label="Add note">
+              <button type="submit" className={styles.add} disabled={!input.trim()} aria-label="Add note">
                 <ArrowUp size={18} aria-hidden="true" />
               </button>
             </div>
           </form>
-          <p className={s.hint}>Enter adds a note · Shift + Enter for a new line</p>
+          <p className={styles.hint}>Enter adds a note · Shift + Enter for a new line</p>
 
           {notes.length > 0 && (
             <>
-              <h2 className={s.label}>
+              <h2 className={styles.label}>
                 {notes.length} {notes.length === 1 ? "note" : "notes"}
               </h2>
-              <ul className={s.notes}>
-                {notes.map((t) => (
-                  <li key={t.id} className={`${s.note} rise`}>
-                    <p>{t.text}</p>
-                    <button type="button" className={s.remove} onClick={() => removeThought(t.id)} aria-label={`Remove “${t.text.slice(0, 40)}”`}>
+              <ul className={styles.notes}>
+                {notes.map((note) => (
+                  <li key={note.id} className={`${styles.note} rise`}>
+                    <p>{note.text}</p>
+                    <button
+                      type="button"
+                      className={styles.remove}
+                      onClick={() => removeThought(note.id)}
+                      aria-label={`Remove “${note.text.slice(0, 40)}”`}
+                    >
                       <X size={16} aria-hidden="true" />
                     </button>
                   </li>
@@ -171,40 +182,40 @@ export default function MindView({ configured }: { configured: boolean }) {
           )}
 
           {showButton && (
-            <div className={s.action}>
-              <button type="button" className={`pill glossy ${s.shape}`} onClick={shape} disabled={!canShape}>
+            <div className={styles.action}>
+              <button type="button" className={`pill glossy ${styles.shape}`} onClick={shape} disabled={!canShape}>
                 {loading && <LoaderCircle size={18} className="spin" aria-hidden="true" />}
                 {loading ? "Making it clear…" : brief ? "Update" : "Make it clear"}
               </button>
               {!configured ? (
-                <p className={s.helper}>The AI is being switched on.</p>
+                <p className={styles.helper}>The AI is being switched on.</p>
               ) : notes.length === 0 ? (
-                <p className={s.helper}>Add a note first. One long description is enough.</p>
+                <p className={styles.helper}>Add a note first. One long description is enough.</p>
               ) : (
-                stale && !loading && <p className={s.helper}>Your notes changed since this brief.</p>
+                stale && !loading && <p className={styles.helper}>Your notes changed since this brief.</p>
               )}
             </div>
           )}
           {empty && (
             <>
-              <section className={`${s.sparks} ${s.in}`} style={stagger(2)} aria-labelledby="sparks-label">
-                <h2 id="sparks-label" className={s.caption}>
+              <section className={`${styles.sparks} ${styles.in}`} style={stagger(2)} aria-labelledby="sparks-label">
+                <h2 id="sparks-label" className={styles.caption}>
                   Start from a spark
                 </h2>
-                <div className={s.sparkGrid}>
+                <div className={styles.sparkGrid}>
                   {SPARKS.map(({ icon: Icon, title, text }) => (
-                    <button key={title} type="button" className={s.spark} onClick={() => spark(text)}>
-                      <Icon size={20} className={s.sparkIcon} aria-hidden="true" />
-                      <span className={s.sparkTitle}>{title}</span>
-                      <span className={s.sparkText}>{text}</span>
+                    <button key={title} type="button" className={styles.spark} onClick={() => spark(text)}>
+                      <Icon size={20} className={styles.sparkIcon} aria-hidden="true" />
+                      <span className={styles.sparkTitle}>{title}</span>
+                      <span className={styles.sparkText}>{text}</span>
                     </button>
                   ))}
                 </div>
               </section>
-              <ol className={`${s.steps} ${s.in}`} style={stagger(3)} aria-label="How it works">
+              <ol className={`${styles.steps} ${styles.in}`} style={stagger(3)} aria-label="How it works">
                 {STEPS.map((step, i) => (
-                  <li key={step} className={s.step}>
-                    <span className={s.stepNum} aria-hidden="true">
+                  <li key={step} className={styles.step}>
+                    <span className={styles.stepNum} aria-hidden="true">
                       {i + 1}
                     </span>
                     {step}
@@ -214,7 +225,7 @@ export default function MindView({ configured }: { configured: boolean }) {
             </>
           )}
           {!brief && (
-            <details className={s.exampleToggle}>
+            <details className={styles.exampleToggle}>
               <summary>
                 See an example brief
                 <ChevronDown size={16} aria-hidden="true" />
@@ -223,14 +234,14 @@ export default function MindView({ configured }: { configured: boolean }) {
             </details>
           )}
           {error && (
-            <p className={s.error} role="alert">
+            <p className={styles.error} role="alert">
               {error}
             </p>
           )}
         </section>
 
         {brief && (
-          <section className={s.side} aria-live="polite" aria-label="Your brief">
+          <section className={styles.side} aria-live="polite" aria-label="Your brief">
             <Brief brief={brief} count={brief.count} quiet={stale} />
           </section>
         )}
@@ -251,33 +262,33 @@ function Brief({ brief, count, quiet, example }: { brief: MindBrief; count?: num
   const research = researchHref(brief.forWho ? `${brief.problem || brief.idea} (${brief.forWho})` : brief.problem || brief.idea);
 
   return (
-    <article className={`${s.brief} ${example ? s.example : ""}`}>
-      <p className={s.label}>{example ? "Example · what you’ll get" : "Your idea"}</p>
-      <p className={s.idea}>{brief.idea}</p>
+    <article className={`${styles.brief} ${example ? styles.example : ""}`}>
+      <p className={styles.label}>{example ? "Example · what you’ll get" : "Your idea"}</p>
+      <p className={styles.idea}>{brief.idea}</p>
       {!example && (
-        <p className={s.meta}>
+        <p className={styles.meta}>
           <strong>AI summary of your words, not evidence.</strong> From {count} {count === 1 ? "note" : "notes"}.
         </p>
       )}
 
-      <div className={s.sections}>
-        {sections.map((sec, i) => {
-          const empty = Array.isArray(sec.body) ? sec.body.length === 0 : !sec.body.trim();
-          if (empty && (sec.title === "Later" || sec.title === "Unclear or risky")) return null;
-          const List = sec.numbered ? "ol" : "ul";
+      <div className={styles.sections}>
+        {sections.map((section, i) => {
+          const empty = Array.isArray(section.body) ? section.body.length === 0 : !section.body.trim();
+          if (empty && (section.title === "Later" || section.title === "Unclear or risky")) return null;
+          const List = section.numbered ? "ol" : "ul";
           return (
-            <div key={sec.title} className={`${s.section} ${example ? "" : "rise"}`} style={stagger(i + 1)}>
-              <h3 className={s.label}>{sec.title}</h3>
+            <div key={section.title} className={`${styles.section} ${example ? "" : "rise"}`} style={stagger(i + 1)}>
+              <h3 className={styles.label}>{section.title}</h3>
               {empty ? (
-                <p className={s.missing}>Not clear from your notes yet.</p>
-              ) : Array.isArray(sec.body) ? (
-                <List className={s.list}>
-                  {sec.body.map((x) => (
-                    <li key={x}>{x}</li>
+                <p className={styles.missing}>Not clear from your notes yet.</p>
+              ) : Array.isArray(section.body) ? (
+                <List className={styles.list}>
+                  {section.body.map((line) => (
+                    <li key={line}>{line}</li>
                   ))}
                 </List>
               ) : (
-                <p className={s.text}>{sec.body}</p>
+                <p className={styles.text}>{section.body}</p>
               )}
             </div>
           );
@@ -285,12 +296,12 @@ function Brief({ brief, count, quiet, example }: { brief: MindBrief; count?: num
       </div>
 
       {!example && (
-        <div className={s.actions}>
-          <Link href={research} className={`pill ${quiet ? s.quietBtn : "glossy"} ${s.check}`}>
+        <div className={styles.actions}>
+          <Link href={research} className={`pill ${quiet ? styles.quietBtn : "glossy"} ${styles.check}`}>
             Check demand <ArrowRight size={16} aria-hidden="true" />
           </Link>
           {brief.matchSlug && (
-            <Link href={ideaHref(brief.matchSlug)} className={s.match}>
+            <Link href={ideaHref(brief.matchSlug)} className={styles.match}>
               You’ve already found this problem: “{brief.matchHeadline || "see the evidence"}” →
             </Link>
           )}

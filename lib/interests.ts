@@ -29,22 +29,22 @@ function write(next: Interests) {
   try {
     localStorage.setItem(KEY, JSON.stringify(next));
   } catch {}
-  listeners.forEach((l) => l());
+  listeners.forEach((listener) => listener());
 }
 
 const getSnapshot = () => (cache ??= read());
 
-function subscribe(l: () => void) {
+function subscribe(listener: () => void) {
   const onStorage = (e: StorageEvent) => {
     if (e.key === KEY) {
       cache = null;
-      l();
+      listener();
     }
   };
-  listeners.add(l);
+  listeners.add(listener);
   window.addEventListener("storage", onStorage);
   return () => {
-    listeners.delete(l);
+    listeners.delete(listener);
     window.removeEventListener("storage", onStorage);
   };
 }
@@ -64,10 +64,12 @@ export function useSeenAtLoad() {
 export function useInterests() {
   const interests = useSyncExternalStore(subscribe, getSnapshot, () => EMPTY);
 
-  const toggle = useCallback((c: Category) => {
-    const cur = getSnapshot();
-    const picked = cur.picked.includes(c) ? cur.picked.filter((p) => p !== c) : [...cur.picked, c];
-    write({ ...cur, picked });
+  const toggle = useCallback((category: Category) => {
+    const current = getSnapshot();
+    const picked = current.picked.includes(category)
+      ? current.picked.filter((pickedCategory) => pickedCategory !== category)
+      : [...current.picked, category];
+    write({ ...current, picked });
   }, []);
 
   const finishOnboarding = useCallback(() => write({ ...getSnapshot(), onboarded: true }), []);
@@ -76,27 +78,27 @@ export function useInterests() {
 }
 
 export function setProfile(profile: Profile) {
-  const cur = getSnapshot();
-  const picked = profile.category && !cur.picked.includes(profile.category) ? [...cur.picked, profile.category] : cur.picked;
-  write({ ...cur, profile, picked, onboarded: true });
+  const current = getSnapshot();
+  const picked = profile.category && !current.picked.includes(profile.category) ? [...current.picked, profile.category] : current.picked;
+  write({ ...current, profile, picked, onboarded: true });
 }
 
 export function toggleWatch(niche: string) {
-  const cur = getSnapshot();
-  const watched = cur.watched ?? [];
-  write({ ...cur, watched: watched.includes(niche) ? watched.filter((n) => n !== niche) : [...watched, niche].slice(-10) });
+  const current = getSnapshot();
+  const watched = current.watched ?? [];
+  write({ ...current, watched: watched.includes(niche) ? watched.filter((watchedNiche) => watchedNiche !== niche) : [...watched, niche].slice(-10) });
 }
 
 export function completeOnboarding(profile: Profile | null, watched: string[]) {
-  const cur = getSnapshot();
-  const picked = profile?.category && !cur.picked.includes(profile.category) ? [...cur.picked, profile.category] : cur.picked;
-  write({ ...cur, profile: profile ?? cur.profile, watched: [...new Set(watched)].slice(-10), picked, onboarded: true });
+  const current = getSnapshot();
+  const picked = profile?.category && !current.picked.includes(profile.category) ? [...current.picked, profile.category] : current.picked;
+  write({ ...current, profile: profile ?? current.profile, watched: [...new Set(watched)].slice(-10), picked, onboarded: true });
 }
 
 export function markSkipped(slug: string) {
-  const cur = getSnapshot();
-  if (cur.skipped.includes(slug)) return;
-  write({ ...cur, skipped: [...cur.skipped, slug].slice(-200) });
+  const current = getSnapshot();
+  if (current.skipped.includes(slug)) return;
+  write({ ...current, skipped: [...current.skipped, slug].slice(-200) });
 }
 
 export const interestsSync: Syncable<Interests> = {

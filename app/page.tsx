@@ -50,10 +50,10 @@ const SAMPLE: HeroExample = { query: "What do people hate about Calendly?", quot
 const proofOf = (card: Card) => (card.sources.length > 0 ? { slug: card.slug, count: card.sources.length } : null);
 
 async function heroExample(live: Card[]): Promise<HeroExample> {
-  const pinned = (await getCard(PINNED_SLUG)) ?? live.find((c) => c.headline === PINNED_HEADLINE);
+  const pinned = (await getCard(PINNED_SLUG)) ?? live.find((liveCard) => liveCard.headline === PINNED_HEADLINE);
   if (pinned?.quote) return { query: PINNED_TOPIC, quote: pinned.quote, idea: PINNED_IDEA, proof: proofOf(pinned) };
 
-  const card = live.find((c) => c.report && (c.ideas?.length ?? 0) >= 2) ?? live.find((c) => c.report);
+  const card = live.find((liveCard) => liveCard.report && (liveCard.ideas?.length ?? 0) >= 2) ?? live.find((liveCard) => liveCard.report);
   if (card?.query && card.quote) return { query: card.query, quote: card.quote, idea: card.ideas?.[0]?.title ?? null, proof: proofOf(card) };
   return SAMPLE;
 }
@@ -61,7 +61,7 @@ async function heroExample(live: Card[]): Promise<HeroExample> {
 export default async function Landing() {
   const live = await readFeed();
   const example = await heroExample(live);
-  const recent = live.filter((c) => !c.sample && !/\bADHD\b/.test(c.headline)).slice(0, 3);
+  const recent = live.filter((liveCard) => !liveCard.sample && !/\bADHD\b/.test(liveCard.headline)).slice(0, 3);
 
   return (
     <div data-landing>

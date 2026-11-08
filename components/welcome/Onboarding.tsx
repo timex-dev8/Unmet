@@ -7,13 +7,13 @@ import Logo from "@/components/Logo";
 import { authHeaders } from "@/lib/auth";
 import { completeOnboarding, useInterests, type Profile } from "@/lib/interests";
 import { researchHref, safeNext } from "@/lib/links";
-import s from "./welcome.module.css";
+import styles from "./welcome.module.css";
 
 const EXAMPLES = ["I'm a nurse", "small coffee shops", "indie game devs", "freelance designers"];
 
 function afterOnboarding(next: string, niche?: string) {
-  const to = safeNext(next);
-  if (to !== "/app") return to;
+  const destination = safeNext(next);
+  if (destination !== "/app") return destination;
   return niche ? researchHref(niche, "low") : "/app/research";
 }
 
@@ -32,9 +32,13 @@ export default function Onboarding({ next }: { next: string }) {
     setError("");
     setBusy(true);
     try {
-      const res = await fetch("/api/interests", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Couldn't read that. Try again.");
+      const response = await fetch("/api/interests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "Couldn't read that. Try again.");
       setProfile(data.profile as Profile);
       setPicked((data.profile as Profile).niches.slice(0, 3));
     } catch (err) {
@@ -71,28 +75,28 @@ export default function Onboarding({ next }: { next: string }) {
   const niches = [...new Set([...(profile?.niches ?? []), ...picked])];
 
   return (
-    <div className={s.onboarding}>
-      <header className={s.obTop}>
+    <div className={styles.onboarding}>
+      <header className={styles.obTop}>
         <Logo />
-        <button type="button" className={s.skip} onClick={skip}>
+        <button type="button" className={styles.skip} onClick={skip}>
           Skip
         </button>
       </header>
 
-      <main key={profile ? "niches" : "who"} className={`${s.obMain} rise`}>
-        <p className={s.step}>Step {profile ? 2 : 1} of 2</p>
+      <main key={profile ? "niches" : "who"} className={`${styles.obMain} rise`}>
+        <p className={styles.step}>Step {profile ? 2 : 1} of 2</p>
 
         {!profile ? (
           <>
-            <h1 className={s.obTitle}>Who do you want to build for?</h1>
-            <p className={s.obSub}>Something you know well works best. Unmet turns it into niches to watch.</p>
-            <form className={s.obForm} onSubmit={suggest}>
+            <h1 className={styles.obTitle}>Who do you want to build for?</h1>
+            <p className={styles.obSub}>Something you know well works best. Unmet turns it into niches to watch.</p>
+            <form className={styles.obForm} onSubmit={suggest}>
               <label htmlFor="ob-text" className="sr-only">
                 Who you want to build for
               </label>
               <input
                 id="ob-text"
-                className={s.obInput}
+                className={styles.obInput}
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder="e.g. “I'm a nurse”"
@@ -105,62 +109,68 @@ export default function Onboarding({ next }: { next: string }) {
                 {!busy && <ArrowRight size={17} aria-hidden="true" />}
               </button>
             </form>
-            <div className={s.examples}>
-              {EXAMPLES.map((ex) => (
-                <button key={ex} type="button" onClick={() => setText(ex)}>
-                  {ex}
+            <div className={styles.examples}>
+              {EXAMPLES.map((example) => (
+                <button key={example} type="button" onClick={() => setText(example)}>
+                  {example}
                 </button>
               ))}
             </div>
           </>
         ) : (
           <>
-            <h1 className={s.obTitle}>Pick the niches to follow.</h1>
-            <p className={s.obSub}>They rank first in your feed, and Unmet researches them every few days.</p>
-            <div className={s.nicheGrid}>
-              {niches.map((n) => {
-                const on = picked.includes(n);
+            <h1 className={styles.obTitle}>Pick the niches to follow.</h1>
+            <p className={styles.obSub}>They rank first in your feed, and Unmet researches them every few days.</p>
+            <div className={styles.nicheGrid}>
+              {niches.map((nicheName) => {
+                const isPicked = picked.includes(nicheName);
                 return (
                   <button
-                    key={n}
+                    key={nicheName}
                     type="button"
-                    aria-pressed={on}
-                    className={`${s.nicheChip} ${on ? `glossy ${s.nicheOn}` : s.nicheOff}`}
-                    onClick={() => setPicked((p) => (on ? p.filter((x) => x !== n) : [...p, n]))}
+                    aria-pressed={isPicked}
+                    className={`${styles.nicheChip} ${isPicked ? `glossy ${styles.nicheOn}` : styles.nicheOff}`}
+                    onClick={() => setPicked((current) => (isPicked ? current.filter((name) => name !== nicheName) : [...current, nicheName]))}
                   >
-                    {on && <Check size={15} aria-hidden="true" />}
-                    {n}
+                    {isPicked && <Check size={15} aria-hidden="true" />}
+                    {nicheName}
                   </button>
                 );
               })}
             </div>
             <form
-              className={s.ownForm}
+              className={styles.ownForm}
               onSubmit={(e) => {
                 e.preventDefault();
-                const n = own.trim().toLowerCase();
-                if (n.length >= 3 && !picked.includes(n)) setPicked((p) => [...p, n]);
+                const ownNiche = own.trim().toLowerCase();
+                if (ownNiche.length >= 3 && !picked.includes(ownNiche)) setPicked((current) => [...current, ownNiche]);
                 setOwn("");
               }}
             >
-              <input className={s.obInput} value={own} onChange={(e) => setOwn(e.target.value)} placeholder="Add your own niche" maxLength={60} />
-              <button type="submit" className={s.addBtn} aria-label="Add niche" disabled={own.trim().length < 3}>
+              <input
+                className={styles.obInput}
+                value={own}
+                onChange={(e) => setOwn(e.target.value)}
+                placeholder="Add your own niche"
+                maxLength={60}
+              />
+              <button type="submit" className={styles.addBtn} aria-label="Add niche" disabled={own.trim().length < 3}>
                 <Plus size={18} aria-hidden="true" />
               </button>
             </form>
-            <div className={s.obActions}>
-              <button type="button" className={s.back} onClick={() => setProfile(null)}>
+            <div className={styles.obActions}>
+              <button type="button" className={styles.back} onClick={() => setProfile(null)}>
                 Back
               </button>
-              <button type="button" className={`pill pill-dark ${s.finishBtn}`} onClick={finish} disabled={busy}>
+              <button type="button" className={`pill pill-dark ${styles.finishBtn}`} onClick={finish} disabled={busy}>
                 {busy && <LoaderCircle size={17} className="spin" aria-hidden="true" />}
-                <span className={s.finishText}>{finishLabel}</span>
+                <span className={styles.finishText}>{finishLabel}</span>
               </button>
             </div>
           </>
         )}
         {error && (
-          <p className={s.error} role="alert">
+          <p className={styles.error} role="alert">
             {error}
           </p>
         )}

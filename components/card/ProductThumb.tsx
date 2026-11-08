@@ -1,18 +1,18 @@
 import type { CSSProperties } from "react";
 import type { Product } from "@/lib/types";
-import t from "./productThumb.module.css";
+import styles from "./productThumb.module.css";
 
 /* ph serves originals via imgix, ask for a 2x crop */
 function thumbSrc(src: string, size: number) {
   try {
-    const u = new URL(src);
-    if (u.hostname !== "ph-files.imgix.net" || u.searchParams.has("s")) return src; // signed urls break if changed
+    const url = new URL(src);
+    if (url.hostname !== "ph-files.imgix.net" || url.searchParams.has("s")) return src; // signed urls break if changed
     const px = String(Math.round(size * 2));
-    u.searchParams.set("auto", "format");
-    u.searchParams.set("w", px);
-    u.searchParams.set("h", px);
-    u.searchParams.set("fit", "crop");
-    return u.toString();
+    url.searchParams.set("auto", "format");
+    url.searchParams.set("w", px);
+    url.searchParams.set("h", px);
+    url.searchParams.set("fit", "crop");
+    return url.toString();
   } catch {
     return src;
   }
@@ -38,13 +38,13 @@ export default function ProductThumb({
         loading="lazy"
         decoding="async"
         referrerPolicy="no-referrer"
-        className={t.thumb}
+        className={styles.thumb}
         style={style}
       />
     );
   }
   return (
-    <span className={`${t.thumb} ${t.letter}`} style={style} aria-hidden="true">
+    <span className={`${styles.thumb} ${styles.letter}`} style={style} aria-hidden="true">
       {product.name.trim().charAt(0).toUpperCase()}
     </span>
   );

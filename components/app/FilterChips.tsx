@@ -8,33 +8,38 @@ import { CATEGORIES, SOURCE_KINDS } from "@/lib/types";
 import type { FeedFilter } from "@/lib/cards";
 import { kindBadge } from "@/components/card/parts";
 import type { Source, SourceKind } from "@/lib/types";
-import s from "./app.module.css";
+import styles from "./app.module.css";
 
 const feedHref = (topic?: string, source?: string) => {
-  const q = new URLSearchParams();
-  if (topic) q.set("topic", topic);
-  if (source) q.set("source", source);
-  const str = q.toString();
-  return str ? `/app/feed?${str}` : "/app/feed";
+  const params = new URLSearchParams();
+  if (topic) params.set("topic", topic);
+  if (source) params.set("source", source);
+  const queryString = params.toString();
+  return queryString ? `/app/feed?${queryString}` : "/app/feed";
 };
 
 export default function FilterChips({ active, source, kinds = [] }: { active: FeedFilter; source?: string; kinds?: string[] }) {
   const chips: { label: string; value: FeedFilter }[] = [
     { label: "All", value: undefined },
     { label: "Trending", value: "Trending" },
-    ...CATEGORIES.map((c) => ({ label: c, value: c })),
+    ...CATEGORIES.map((category) => ({ label: category, value: category })),
   ];
   return (
-    <div className={s.filters}>
-      <nav className={s.chips} aria-label="Filter ideas">
-        {chips.map((c) => {
-          const on = c.value === active;
-          const href = feedHref(c.value, source);
+    <div className={styles.filters}>
+      <nav className={styles.chips} aria-label="Filter ideas">
+        {chips.map((chip) => {
+          const isActive = chip.value === active;
+          const href = feedHref(chip.value, source);
           return (
-            <Link key={c.label} href={href} className={`${s.chip} ${on ? s.chipOn : ""}`} aria-current={on ? "page" : undefined}>
-              {on && <Highlight id="feed-filter" className={s.chipPill} />}
-              {c.value === "Trending" && <TrendingUp size={15} strokeWidth={2.5} aria-hidden="true" />}
-              {c.label}
+            <Link
+              key={chip.label}
+              href={href}
+              className={`${styles.chip} ${isActive ? styles.chipOn : ""}`}
+              aria-current={isActive ? "page" : undefined}
+            >
+              {isActive && <Highlight id="feed-filter" className={styles.chipPill} />}
+              {chip.value === "Trending" && <TrendingUp size={15} strokeWidth={2.5} aria-hidden="true" />}
+              {chip.label}
             </Link>
           );
         })}
@@ -46,38 +51,43 @@ export default function FilterChips({ active, source, kinds = [] }: { active: Fe
 
 function SourceMenu({ active, source, kinds }: { active: FeedFilter; source?: string; kinds: string[] }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
-    const onPointer = (e: PointerEvent) => !ref.current?.contains(e.target as Node) && setOpen(false);
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    document.addEventListener("pointerdown", onPointer);
-    document.addEventListener("keydown", onKey);
+    const onPointerDown = (e: PointerEvent) => !menuRef.current?.contains(e.target as Node) && setOpen(false);
+    const onKeyDown = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.removeEventListener("pointerdown", onPointer);
-      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
     };
   }, [open]);
   // evidence kinds need a friendly name, product sources already have one
-  const label = (k: string) => (SOURCE_KINDS.includes(k as SourceKind) ? kindBadge({ kind: k } as Source) : k);
+  const label = (kind: string) => (SOURCE_KINDS.includes(kind as SourceKind) ? kindBadge({ kind } as Source) : kind);
   return (
-    <div className={s.sourceMenu} ref={ref}>
-      <button type="button" className={`${s.sourceBtn} ${source ? s.sourceBtnOn : ""}`} aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+    <div className={styles.sourceMenu} ref={menuRef}>
+      <button
+        type="button"
+        className={`${styles.sourceBtn} ${source ? styles.sourceBtnOn : ""}`}
+        aria-expanded={open}
+        onClick={() => setOpen((wasOpen) => !wasOpen)}
+      >
         <SlidersHorizontal size={15} aria-hidden="true" />
         {source ? label(source) : "Sources"}
       </button>
       {open && (
-        <div className={s.sourceList}>
-          {[undefined, ...kinds].map((k) => (
+        <div className={styles.sourceList}>
+          {[undefined, ...kinds].map((kind) => (
             <Link
-              key={k ?? "any"}
-              href={feedHref(active, k)}
-              className={s.sourceItem}
-              aria-current={k === source ? "page" : undefined}
+              key={kind ?? "any"}
+              href={feedHref(active, kind)}
+              className={styles.sourceItem}
+              aria-current={kind === source ? "page" : undefined}
               onClick={() => setOpen(false)}
             >
-              {k ? label(k) : "All sources"}
-              {k === source && <Check size={16} aria-hidden="true" />}
+              {kind ? label(kind) : "All sources"}
+              {kind === source && <Check size={16} aria-hidden="true" />}
             </Link>
           ))}
         </div>

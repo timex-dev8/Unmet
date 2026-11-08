@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import s from "./liquidGlass.module.css";
+import styles from "./liquidGlass.module.css";
 
 // bending needs chromium, safari and firefox get plain frosted glass
 export default function LiquidGlass({
@@ -16,20 +16,20 @@ export default function LiquidGlass({
   bend?: number;
 }) {
   const id = useId().replace(/:/g, "");
-  const ref = useRef<HTMLDivElement>(null);
+  const glassRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<{ url: string; w: number; h: number } | null>(null);
 
   useEffect(() => {
-    const el = ref.current;
-    const ua = navigator.userAgent;
-    if (!el || !/Chrome\//.test(ua) || /Firefox/.test(ua)) return;
+    const glassEl = glassRef.current;
+    const userAgent = navigator.userAgent;
+    if (!glassEl || !/Chrome\//.test(userAgent) || /Firefox/.test(userAgent)) return;
     let cancelled = false;
     let idle: number | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let first = true;
     const draw = () => {
       if (cancelled) return;
-      const { width, height } = el.getBoundingClientRect();
+      const { width, height } = glassEl.getBoundingClientRect();
       if (width && height) setMap({ url: displacementMap(Math.round(width), Math.round(height), radius), w: width, h: height });
     };
     const onResize = () => {
@@ -40,11 +40,11 @@ export default function LiquidGlass({
         else timer = setTimeout(draw, 0);
       } else timer = setTimeout(draw, 150);
     };
-    const ro = new ResizeObserver(onResize);
-    ro.observe(el);
+    const resizeObserver = new ResizeObserver(onResize);
+    resizeObserver.observe(glassEl);
     return () => {
       cancelled = true;
-      ro.disconnect();
+      resizeObserver.disconnect();
       clearTimeout(timer);
       if (idle !== undefined && typeof cancelIdleCallback === "function") cancelIdleCallback(idle);
     };
@@ -58,15 +58,15 @@ export default function LiquidGlass({
     const onMove = (e: PointerEvent) => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        const el = ref.current;
-        const r = el?.getBoundingClientRect();
-        if (!el || !r || (!r.width && !r.height)) return; // display: none
-        const dx = e.clientX - (r.left + r.width / 2);
-        const dy = e.clientY - (r.top + r.height / 2);
+        const glassEl = glassRef.current;
+        const rect = glassEl?.getBoundingClientRect();
+        if (!glassEl || !rect || (!rect.width && !rect.height)) return; // display: none
+        const dx = e.clientX - (rect.left + rect.width / 2);
+        const dy = e.clientY - (rect.top + rect.height / 2);
         const angle = (Math.atan2(dy, dx) * 180) / Math.PI + 90;
         if (Math.abs(((angle - last + 540) % 360) - 180) <= 2) return;
         last = angle;
-        el.style.setProperty("--rim-angle", `${angle.toFixed(1)}deg`);
+        glassEl.style.setProperty("--rim-angle", `${angle.toFixed(1)}deg`);
       });
     };
     window.addEventListener("pointermove", onMove, { passive: true });
@@ -78,20 +78,20 @@ export default function LiquidGlass({
 
   return (
     <div
-      ref={ref}
-      className={`${s.glass} ${className}`}
+      ref={glassRef}
+      className={`${styles.glass} ${className}`}
       style={{ borderRadius: radius, ...(map && { "--glass-bend": `url(#${id})` }) } as CSSProperties}
     >
       {map && (
-        <svg className={s.defs} width="0" height="0" aria-hidden="true">
+        <svg className={styles.defs} width="0" height="0" aria-hidden="true">
           <filter id={id} x="0" y="0" width="100%" height="100%" colorInterpolationFilters="sRGB">
             <feImage href={map.url} x="0" y="0" width={map.w} height={map.h} result="map" preserveAspectRatio="none" />
             <feDisplacementMap in="SourceGraphic" in2="map" scale={bend} xChannelSelector="R" yChannelSelector="B" />
           </filter>
         </svg>
       )}
-      <span className={s.rim} aria-hidden="true" />
-      <span className={`${s.rim} ${s.rimSoft}`} aria-hidden="true" />
+      <span className={styles.rim} aria-hidden="true" />
+      <span className={`${styles.rim} ${styles.rimSoft}`} aria-hidden="true" />
       {children}
     </div>
   );
@@ -103,45 +103,45 @@ const maps = new Map<string, string>();
 // R = horizontal shift, B = vertical, 128 = none. cached by size
 function displacementMap(fullW: number, fullH: number, fullRadius: number) {
   const key = `${fullW}x${fullH}r${fullRadius}`;
-  const hit = maps.get(key);
-  if (hit) return hit;
-  const w = Math.max(1, Math.round(fullW / SCALE));
-  const h = Math.max(1, Math.round(fullH / SCALE));
+  const cachedUrl = maps.get(key);
+  if (cachedUrl) return cachedUrl;
+  const mapWidth = Math.max(1, Math.round(fullW / SCALE));
+  const mapHeight = Math.max(1, Math.round(fullH / SCALE));
   const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return "";
-  const img = ctx.createImageData(w, h);
+  canvas.width = mapWidth;
+  canvas.height = mapHeight;
+  const context = canvas.getContext("2d");
+  if (!context) return "";
+  const imageData = context.createImageData(mapWidth, mapHeight);
   const band = Math.min(16, fullH / 2.5) / SCALE;
-  const hw = w / 2;
-  const hh = h / 2;
-  const r = Math.min(fullRadius / SCALE, hw, hh);
+  const halfWidth = mapWidth / 2;
+  const halfHeight = mapHeight / 2;
+  const cornerRadius = Math.min(fullRadius / SCALE, halfWidth, halfHeight);
   const sdf = (x: number, y: number) => {
-    const qx = Math.abs(x) - (hw - r);
-    const qy = Math.abs(y) - (hh - r);
-    return Math.min(Math.max(qx, qy), 0) + Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) - r;
+    const edgeX = Math.abs(x) - (halfWidth - cornerRadius);
+    const edgeY = Math.abs(y) - (halfHeight - cornerRadius);
+    return Math.min(Math.max(edgeX, edgeY), 0) + Math.hypot(Math.max(edgeX, 0), Math.max(edgeY, 0)) - cornerRadius;
   };
-  for (let py = 0; py < h; py++) {
-    for (let px = 0; px < w; px++) {
-      const x = px + 0.5 - hw;
-      const y = py + 0.5 - hh;
-      const d = sdf(x, y);
-      const t = Math.max(0, Math.min(1, 1 + d / band));
-      const k = t * t * (3 - 2 * t);
-      let nx = sdf(x + 1, y) - sdf(x - 1, y);
-      let ny = sdf(x, y + 1) - sdf(x, y - 1);
-      const len = Math.hypot(nx, ny) || 1;
-      nx /= len;
-      ny /= len;
-      const i = (py * w + px) * 4;
-      img.data[i] = 128 - nx * k * 127;
-      img.data[i + 1] = 128;
-      img.data[i + 2] = 128 - ny * k * 127;
-      img.data[i + 3] = 255;
+  for (let py = 0; py < mapHeight; py++) {
+    for (let px = 0; px < mapWidth; px++) {
+      const x = px + 0.5 - halfWidth;
+      const y = py + 0.5 - halfHeight;
+      const distance = sdf(x, y);
+      const blend = Math.max(0, Math.min(1, 1 + distance / band));
+      const strength = blend * blend * (3 - 2 * blend);
+      let normalX = sdf(x + 1, y) - sdf(x - 1, y);
+      let normalY = sdf(x, y + 1) - sdf(x, y - 1);
+      const length = Math.hypot(normalX, normalY) || 1;
+      normalX /= length;
+      normalY /= length;
+      const i = (py * mapWidth + px) * 4;
+      imageData.data[i] = 128 - normalX * strength * 127;
+      imageData.data[i + 1] = 128;
+      imageData.data[i + 2] = 128 - normalY * strength * 127;
+      imageData.data[i + 3] = 255;
     }
   }
-  ctx.putImageData(img, 0, 0);
+  context.putImageData(imageData, 0, 0);
   const url = canvas.toDataURL();
   if (maps.size > 12) maps.clear();
   maps.set(key, url);

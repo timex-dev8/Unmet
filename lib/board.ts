@@ -33,22 +33,22 @@ function write(next: BoardState) {
   try {
     localStorage.setItem(KEY, JSON.stringify(next));
   } catch {}
-  listeners.forEach((l) => l());
+  listeners.forEach((listener) => listener());
 }
 
 const getSnapshot = () => (cache ??= read());
 
-function subscribe(l: () => void) {
+function subscribe(listener: () => void) {
   const onStorage = (e: StorageEvent) => {
     if (e.key === KEY) {
       cache = null;
-      l();
+      listener();
     }
   };
-  listeners.add(l);
+  listeners.add(listener);
   window.addEventListener("storage", onStorage);
   return () => {
-    listeners.delete(l);
+    listeners.delete(listener);
     window.removeEventListener("storage", onStorage);
   };
 }
@@ -62,32 +62,32 @@ export function entryFor(board: BoardState, slug: string): BoardEntry {
 }
 
 export function moveTo(slug: string, stage: Stage) {
-  const cur = getSnapshot();
-  write({ ...cur, [slug]: { ...entryFor(cur, slug), stage, movedAt: Date.now() } });
+  const board = getSnapshot();
+  write({ ...board, [slug]: { ...entryFor(board, slug), stage, movedAt: Date.now() } });
 }
 
 export function setNote(slug: string, note: string) {
-  const cur = getSnapshot();
-  write({ ...cur, [slug]: { ...entryFor(cur, slug), note: note.slice(0, 1000) } });
+  const board = getSnapshot();
+  write({ ...board, [slug]: { ...entryFor(board, slug), note: note.slice(0, 1000) } });
 }
 
 export function removeEntry(slug: string) {
-  const cur = getSnapshot();
-  if (!(slug in cur)) return;
-  write(Object.fromEntries(Object.entries(cur).filter(([k]) => k !== slug)));
+  const board = getSnapshot();
+  if (!(slug in board)) return;
+  write(Object.fromEntries(Object.entries(board).filter(([entrySlug]) => entrySlug !== slug)));
 }
 
 export function nextStage(stage: Stage): Stage | null {
-  const i = STAGES.findIndex((s) => s.id === stage);
-  return i < STAGES.length - 1 ? STAGES[i + 1].id : null;
+  const index = STAGES.findIndex((item) => item.id === stage);
+  return index < STAGES.length - 1 ? STAGES[index + 1].id : null;
 }
 
 export function prevStage(stage: Stage): Stage | null {
-  const i = STAGES.findIndex((s) => s.id === stage);
-  return i > 0 ? STAGES[i - 1].id : null;
+  const index = STAGES.findIndex((item) => item.id === stage);
+  return index > 0 ? STAGES[index - 1].id : null;
 }
 
-export const stageLabel = (stage: Stage) => STAGES.find((s) => s.id === stage)!.label;
+export const stageLabel = (stage: Stage) => STAGES.find((item) => item.id === stage)!.label;
 
 export const boardSync: Syncable<BoardState> = {
   kind: "board",
@@ -95,9 +95,9 @@ export const boardSync: Syncable<BoardState> = {
   replace: (state) => write(state),
   // per idea, whichever side moved it last wins
   merge: (local, remote) => {
-    const out = { ...remote };
-    for (const [slug, e] of Object.entries(local)) if (!out[slug] || e.movedAt > out[slug].movedAt) out[slug] = e;
-    return out;
+    const merged = { ...remote };
+    for (const [slug, entry] of Object.entries(local)) if (!merged[slug] || entry.movedAt > merged[slug].movedAt) merged[slug] = entry;
+    return merged;
   },
   subscribe,
   clear: () => write({}),

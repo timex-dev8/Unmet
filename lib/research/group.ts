@@ -34,18 +34,18 @@ export type DraftProblem = z.infer<typeof GroupSchema>["problems"][number];
 export async function groupComplaints(
   complaints: Complaint[],
   sources: ResearchSource[],
-  ctx: { topic: string; request: string; segment: string; light?: boolean; signal?: AbortSignal },
+  context: { topic: string; request: string; segment: string; light?: boolean; signal?: AbortSignal },
 ) {
-  const byId = new Map(sources.map((s) => [s.id, s]));
+  const byId = new Map(sources.map((source) => [source.id, source]));
   return generateJson(GroupSchema, {
     system: GROUP_SYSTEM,
     timeoutMs: 45_000,
-    light: ctx.light,
-    signal: ctx.signal,
-    prompt: `Topic: ${ctx.topic}\nThe person asked: ${ctx.request}\nSegment: ${ctx.segment}\nCategories: ${CATEGORIES.join(", ")}\n\nVerified complaints:\n${complaints
-      .map((c) => {
-        const s = byId.get(c.sourceId)!;
-        return `<complaint id="${c.id}" source="${c.sourceId}" site="${s.site}">${fence(c.who)} | pain: ${fence(c.pain)} | ${fence(c.quote)}</complaint>`;
+    light: context.light,
+    signal: context.signal,
+    prompt: `Topic: ${context.topic}\nThe person asked: ${context.request}\nSegment: ${context.segment}\nCategories: ${CATEGORIES.join(", ")}\n\nVerified complaints:\n${complaints
+      .map((complaint) => {
+        const source = byId.get(complaint.sourceId)!;
+        return `<complaint id="${complaint.id}" source="${complaint.sourceId}" site="${source.site}">${fence(complaint.who)} | pain: ${fence(complaint.pain)} | ${fence(complaint.quote)}</complaint>`;
       })
       .join("\n")}`,
   });
@@ -66,19 +66,19 @@ const CritiqueSchema = z.object({
 export async function critique(
   problems: DraftProblem[],
   complaints: Complaint[],
-  ctx: { light?: boolean; signal?: AbortSignal } = {},
+  context: { light?: boolean; signal?: AbortSignal } = {},
 ): Promise<DraftProblem[]> {
   if (problems.length < 2) return problems;
-  const quotes = new Map(complaints.map((c) => [c.id, c.quote]));
+  const quotes = new Map(complaints.map((complaint) => [complaint.id, complaint.quote]));
   const review = await generateJson(CritiqueSchema, {
     system: CRITIQUE_SYSTEM,
     timeoutMs: 30_000,
-    light: ctx.light,
-    signal: ctx.signal,
+    light: context.light,
+    signal: context.signal,
     prompt: problems
       .map(
-        (p, i) =>
-          `#${i} ${p.headline}\n${p.summary}\nQuotes: ${p.complaintIds
+        (problem, i) =>
+          `#${i} ${problem.headline}\n${problem.summary}\nQuotes: ${problem.complaintIds
             .slice(0, 5)
             .map((id) => `<quote>${fence(quotes.get(id) ?? "")}</quote>`)
             .join(" ")}`,
@@ -86,17 +86,17 @@ export async function critique(
       .join("\n\n"),
   });
 
-  const out = problems.map((p) => ({ ...p, complaintIds: [...p.complaintIds] }));
+  const copies = problems.map((problem) => ({ ...problem, complaintIds: [...problem.complaintIds] }));
   const dropped = new Set<number>();
-  for (const r of review.problems) {
-    const p = out[r.index];
-    if (!p) continue;
-    if (r.headline.trim()) p.headline = r.headline.trim();
-    const target = out[r.mergeInto];
-    if (r.mergeInto !== r.index && target && !dropped.has(r.mergeInto)) {
-      target.complaintIds.push(...p.complaintIds);
-      dropped.add(r.index);
-    } else if (!r.keep) dropped.add(r.index);
+  for (const verdict of review.problems) {
+    const problem = copies[verdict.index];
+    if (!problem) continue;
+    if (verdict.headline.trim()) problem.headline = verdict.headline.trim();
+    const target = copies[verdict.mergeInto];
+    if (verdict.mergeInto !== verdict.index && target && !dropped.has(verdict.mergeInto)) {
+      target.complaintIds.push(...problem.complaintIds);
+      dropped.add(verdict.index);
+    } else if (!verdict.keep) dropped.add(verdict.index);
   }
-  return out.filter((_, i) => !dropped.has(i));
+  return copies.filter((_, i) => !dropped.has(i));
 }

@@ -28,20 +28,20 @@ export async function searchStackExchange(query: string, sites: string[], sinceS
         filter: "withbody",
         ...(process.env.STACKEXCHANGE_KEY ? { key: process.env.STACKEXCHANGE_KEY } : {}),
       });
-      const res = await fetch(`https://api.stackexchange.com/2.3/search/advanced?${params}`, { signal: AbortSignal.timeout(8000) });
-      if (!res.ok) return [];
-      const { items = [] } = (await res.json()) as { items?: Item[] };
-      return items.map((i) => ({
-        title: plain(i.title),
-        url: i.link,
-        site: hostOf(i.link),
-        postedAt: new Date(i.creation_date * 1000).toISOString(),
-        text: plain(`${i.title}. ${i.body ?? ""}`).slice(0, 2000),
+      const response = await fetch(`https://api.stackexchange.com/2.3/search/advanced?${params}`, { signal: AbortSignal.timeout(8000) });
+      if (!response.ok) return [];
+      const { items = [] } = (await response.json()) as { items?: Item[] };
+      return items.map((item) => ({
+        title: plain(item.title),
+        url: item.link,
+        site: hostOf(item.link),
+        postedAt: new Date(item.creation_date * 1000).toISOString(),
+        text: plain(`${item.title}. ${item.body ?? ""}`).slice(0, 2000),
         origin: "stackexchange" as const,
         kind: "qa" as const,
-        engagement: { score: i.score * 5 + Math.round(i.view_count / 100), label: `${i.score} votes · ${i.view_count} views` },
+        engagement: { score: item.score * 5 + Math.round(item.view_count / 100), label: `${item.score} votes · ${item.view_count} views` },
       }));
     }),
   );
-  return results.flatMap((r) => (r.status === "fulfilled" ? r.value : [])).filter((s) => s.text.length > 80);
+  return results.flatMap((result) => (result.status === "fulfilled" ? result.value : [])).filter((source) => source.text.length > 80);
 }

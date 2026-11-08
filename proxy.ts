@@ -13,12 +13,13 @@ const isSession = (name: string) => name.startsWith("sb-") && name.includes("-au
 export function proxy(request: NextRequest) {
   if (!authConfigured) return NextResponse.next();
   const { cookies, nextUrl } = request;
-  if (cookies.get("unmet_guest")?.value === "1" || cookies.getAll().some((c) => isSession(c.name) && c.value)) return NextResponse.next();
-  const to = new URL("/welcome", request.url);
+  if (cookies.get("unmet_guest")?.value === "1" || cookies.getAll().some((cookie) => isSession(cookie.name) && cookie.value))
+    return NextResponse.next();
+  const redirectUrl = new URL("/welcome", request.url);
   const query = new URLSearchParams(nextUrl.search);
   query.delete("_rsc"); // client navigations add it
-  to.searchParams.set("next", nextUrl.pathname + (query.size ? `?${query}` : ""));
-  return NextResponse.redirect(to);
+  redirectUrl.searchParams.set("next", nextUrl.pathname + (query.size ? `?${query}` : ""));
+  return NextResponse.redirect(redirectUrl);
 }
 
 export const config = {

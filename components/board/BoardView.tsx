@@ -11,7 +11,7 @@ import { STAGE_COLORS } from "@/lib/colors";
 import { digDeeperHref, ideaHref } from "@/lib/links";
 import { useSaved } from "@/lib/saved";
 import type { Card } from "@/lib/types";
-import s from "./board.module.css";
+import styles from "./board.module.css";
 
 export default function BoardView() {
   const { saved, remove } = useSaved();
@@ -19,7 +19,7 @@ export default function BoardView() {
   const [tab, setTab] = useState<Stage>("spotted");
   const [dropTarget, setDropTarget] = useState<Stage | null>(null);
 
-  const byStage = new Map<Stage, Card[]>(STAGES.map((st) => [st.id, []]));
+  const byStage = new Map<Stage, Card[]>(STAGES.map((stageDef) => [stageDef.id, []]));
   // unknown stage (synced from another version) shows as spotted
   for (const card of saved) (byStage.get(entryFor(board, card.slug).stage) ?? byStage.get("spotted")!).push(card);
   for (const list of byStage.values()) list.sort((a, b) => entryFor(board, b.slug).movedAt - entryFor(board, a.slug).movedAt);
@@ -28,18 +28,18 @@ export default function BoardView() {
     e.preventDefault();
     const slug = e.dataTransfer.getData("text/plain");
     // only these cards, any text can be dragged in from another page
-    if (saved.some((c) => c.slug === slug)) moveTo(slug, stage);
+    if (saved.some((savedCard) => savedCard.slug === slug)) moveTo(slug, stage);
     setDropTarget(null);
   }
 
   if (saved.length === 0) {
     return (
-      <main className={s.page}>
+      <main className={styles.page}>
         <Header count={0} />
-        <div className={s.empty}>
-          <p className={s.emptyTitle}>Your board is empty. Every product you’ll build starts as a saved idea.</p>
+        <div className={styles.empty}>
+          <p className={styles.emptyTitle}>Your board is empty. Every product you’ll build starts as a saved idea.</p>
           <p>Save ideas from the feed, research or Home. They land here as “Spotted”, then you move them forward as you learn.</p>
-          <div className={s.emptyActions}>
+          <div className={styles.emptyActions}>
             <Link href="/app/research" className="pill pill-dark">
               Start a research
             </Link>
@@ -53,44 +53,51 @@ export default function BoardView() {
   }
 
   return (
-    <main className={s.page}>
+    <main className={styles.page}>
       <Header count={saved.length} />
 
-      <div className={s.tabs} role="tablist" aria-label="Stages">
-        {STAGES.map((st) => (
-          <button key={st.id} type="button" role="tab" aria-selected={tab === st.id} className={s.tab} onClick={() => setTab(st.id)}>
-            {tab === st.id && <Highlight id="board-stage" className={s.tabPill} />}
-            <span className={s.stageDot} style={{ background: STAGE_COLORS[st.id] }} aria-hidden="true" />
-            <b>{byStage.get(st.id)!.length}</b>
-            {st.label}
+      <div className={styles.tabs} role="tablist" aria-label="Stages">
+        {STAGES.map((stageDef) => (
+          <button
+            key={stageDef.id}
+            type="button"
+            role="tab"
+            aria-selected={tab === stageDef.id}
+            className={styles.tab}
+            onClick={() => setTab(stageDef.id)}
+          >
+            {tab === stageDef.id && <Highlight id="board-stage" className={styles.tabPill} />}
+            <span className={styles.stageDot} style={{ background: STAGE_COLORS[stageDef.id] }} aria-hidden="true" />
+            <b>{byStage.get(stageDef.id)!.length}</b>
+            {stageDef.label}
           </button>
         ))}
       </div>
 
-      <div className={s.columns}>
-        {STAGES.map((st) => (
+      <div className={styles.columns}>
+        {STAGES.map((stageDef) => (
           <section
-            key={st.id}
-            aria-label={st.label}
-            className={`${s.column} ${tab === st.id ? s.columnActive : ""} ${dropTarget === st.id ? s.dropping : ""}`}
+            key={stageDef.id}
+            aria-label={stageDef.label}
+            className={`${styles.column} ${tab === stageDef.id ? styles.columnActive : ""} ${dropTarget === stageDef.id ? styles.dropping : ""}`}
             onDragOver={(e) => {
               e.preventDefault();
-              setDropTarget(st.id);
+              setDropTarget(stageDef.id);
             }}
-            onDragLeave={() => setDropTarget((t) => (t === st.id ? null : t))}
-            onDrop={(e) => onDrop(e, st.id)}
+            onDragLeave={() => setDropTarget((current) => (current === stageDef.id ? null : current))}
+            onDrop={(e) => onDrop(e, stageDef.id)}
           >
-            <div className={s.colHead}>
-              <span className={s.stageDot} style={{ background: STAGE_COLORS[st.id] }} aria-hidden="true" />
-              <h2 className={s.colTitle}>{st.label}</h2>
-              <span className={s.colCount}>{byStage.get(st.id)!.length}</span>
+            <div className={styles.colHead}>
+              <span className={styles.stageDot} style={{ background: STAGE_COLORS[stageDef.id] }} aria-hidden="true" />
+              <h2 className={styles.colTitle}>{stageDef.label}</h2>
+              <span className={styles.colCount}>{byStage.get(stageDef.id)!.length}</span>
             </div>
-            <p className={s.colHint}>{st.hint}</p>
-            {byStage.get(st.id)!.map((card) => (
+            <p className={styles.colHint}>{stageDef.hint}</p>
+            {byStage.get(stageDef.id)!.map((card) => (
               <Item
                 key={card.slug}
                 card={card}
-                stage={st.id}
+                stage={stageDef.id}
                 note={entryFor(board, card.slug).note}
                 onRemove={() => {
                   remove(card.slug);
@@ -98,7 +105,7 @@ export default function BoardView() {
                 }}
               />
             ))}
-            {byStage.get(st.id)!.length === 0 && <div className={s.drop}>Drop ideas here</div>}
+            {byStage.get(stageDef.id)!.length === 0 && <div className={styles.drop}>Drop ideas here</div>}
           </section>
         ))}
       </div>
@@ -108,10 +115,10 @@ export default function BoardView() {
 
 function Header({ count }: { count: number }) {
   return (
-    <div className={s.head}>
-      <h1 className={s.title}>Your board</h1>
+    <div className={styles.head}>
+      <h1 className={styles.title}>Your board</h1>
       {count > 0 && (
-        <p className={s.sub}>
+        <p className={styles.sub}>
           {count} saved {count === 1 ? "idea" : "ideas"}. Move each one forward as you learn more.
         </p>
       )}
@@ -129,7 +136,7 @@ function Item({ card, stage, note, onRemove }: { card: Card; stage: Stage; note:
   };
   const next = nextStage(stage);
   const prev = prevStage(stage);
-  const e = card.evidence;
+  const evidence = card.evidence;
 
   // same layoutId in every column so a moved card glides over, layout closes the gap
   return (
@@ -140,65 +147,65 @@ function Item({ card, stage, note, onRemove }: { card: Card; stage: Stage; note:
       transition={{ type: "spring", stiffness: 420, damping: 36, opacity: { duration: 0.2 } }}
     >
       <article
-        className={s.item}
+        className={styles.item}
         draggable
-        onDragStart={(ev) => {
-          ev.dataTransfer.setData("text/plain", card.slug);
-          ev.dataTransfer.effectAllowed = "move";
+        onDragStart={(event) => {
+          event.dataTransfer.setData("text/plain", card.slug);
+          event.dataTransfer.effectAllowed = "move";
         }}
       >
-        <div className={s.meta}>
+        <div className={styles.meta}>
           <span>{card.category}</span>
           <TrendBadge trend={card.trend} />
-          <button type="button" className={s.remove} onClick={leave} aria-label={`Remove “${card.headline}” from board`}>
+          <button type="button" className={styles.remove} onClick={leave} aria-label={`Remove “${card.headline}” from board`}>
             <X size={15} aria-hidden="true" />
           </button>
         </div>
-        <h3 className={s.itemTitle}>
+        <h3 className={styles.itemTitle}>
           <Link href={ideaHref(card.slug)}>{card.headline}</Link>
         </h3>
-        <p className={s.evidence}>
-          <strong>{e.posts} mentions</strong> · {e.site} · {windowLabel(e.days)}
+        <p className={styles.evidence}>
+          <strong>{evidence.posts} mentions</strong> · {evidence.site} · {windowLabel(evidence.days)}
         </p>
 
         {editing ? (
           <textarea
-            className={s.noteInput}
+            className={styles.noteInput}
             defaultValue={note}
             autoFocus
             rows={3}
             placeholder="What did you learn? Who should you talk to?"
             aria-label={`Note for “${card.headline}”`}
-            onBlur={(ev) => {
-              setNote(card.slug, ev.target.value.trim());
+            onBlur={(event) => {
+              setNote(card.slug, event.target.value.trim());
               setEditing(false);
             }}
           />
         ) : note ? (
-          <button type="button" className={s.note} onClick={() => setEditing(true)} aria-label="Edit note">
+          <button type="button" className={styles.note} onClick={() => setEditing(true)} aria-label="Edit note">
             {note}
           </button>
         ) : null}
 
-        <div className={s.actions}>
+        <div className={styles.actions}>
           {prev && (
-            <button type="button" className={s.iconBtn} onClick={() => moveTo(card.slug, prev)} aria-label={`Move back to ${stageLabel(prev)}`}>
+            <button type="button" className={styles.iconBtn} onClick={() => moveTo(card.slug, prev)} aria-label={`Move back to ${stageLabel(prev)}`}>
               <ArrowLeft size={16} aria-hidden="true" />
             </button>
           )}
           {next ? (
-            <button type="button" className={`glossy ${s.moveBtn}`} onClick={() => moveTo(card.slug, next)}>
+            <button type="button" className={`glossy ${styles.moveBtn}`} onClick={() => moveTo(card.slug, next)}>
               {stageLabel(next)} <ArrowRight size={15} aria-hidden="true" />
             </button>
           ) : (
-            <span className={s.done}>In progress</span>
+            <span className={styles.done}>In progress</span>
           )}
           {!note && !editing && (
-            <button type="button" className={s.iconBtn} onClick={() => setEditing(true)} aria-label="Add a note">
+            <button type="button" className={styles.iconBtn} onClick={() => setEditing(true)} aria-label="Add a note">
               <NotebookPen size={16} aria-hidden="true" />
             </button>
           )}
-          <Link href={digDeeperHref(card)} className={s.iconBtn} aria-label={`Dig deeper into “${card.headline}”`}>
+          <Link href={digDeeperHref(card)} className={styles.iconBtn} aria-label={`Dig deeper into “${card.headline}”`}>
             <Sparkles size={16} aria-hidden="true" />
           </Link>
         </div>

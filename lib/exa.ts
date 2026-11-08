@@ -27,8 +27,8 @@ type RawSource = Omit<ResearchSource, "id">;
 
 const TIMEOUT_MS = 15_000;
 
-export async function searchWeb(query: string, objective: string, opts: WebSearchOptions): Promise<RawSource[]> {
-  const contents = opts.fullText ? { text: { maxCharacters: 2500 } } : { highlights: true as const };
+export async function searchWeb(query: string, objective: string, options: WebSearchOptions): Promise<RawSource[]> {
+  const contents = options.fullText ? { text: { maxCharacters: 2500 } } : { highlights: true as const };
   const request = (type: string) =>
     exa().search(
       query,
@@ -36,33 +36,40 @@ export async function searchWeb(query: string, objective: string, opts: WebSearc
         type,
         contents,
         objective,
-        startPublishedDate: opts.since,
-        ...(opts.includeDomains ? { includeDomains: opts.includeDomains } : {}),
+        startPublishedDate: options.since,
+        ...(options.includeDomains ? { includeDomains: options.includeDomains } : {}),
       },
       { timeout: TIMEOUT_MS },
     );
 
-  let res;
+  let response;
   try {
-    res = await request(opts.type);
+    response = await request(options.type);
   } catch (err) {
-    if (opts.type === "auto") throw err;
-    console.warn(`[exa] "${opts.type}" search failed, retrying with "auto":`, err instanceof Error ? err.message : err);
-    res = await request("auto");
+    if (options.type === "auto") throw err;
+    console.warn(`[exa] "${options.type}" search failed, retrying with "auto":`, err instanceof Error ? err.message : err);
+    response = await request("auto");
   }
 
-  return res.results
-    .map((r) => {
-      const rr = r as { text?: string; highlights?: string[] };
-      const text = (rr.text ?? (rr.highlights ?? []).join(" … ")).replace(/\s+/g, " ").trim();
-      const host = hostOf(r.url);
-      return { title: r.title?.trim() || host, url: r.url, site: host, postedAt: r.publishedDate, text, origin: opts.origin ?? "web" };
+  return response.results
+    .map((result) => {
+      const rawResult = result as { text?: string; highlights?: string[] };
+      const text = (rawResult.text ?? (rawResult.highlights ?? []).join(" … ")).replace(/\s+/g, " ").trim();
+      const host = hostOf(result.url);
+      return {
+        title: result.title?.trim() || host,
+        url: result.url,
+        site: host,
+        postedAt: result.publishedDate,
+        text,
+        origin: options.origin ?? "web",
+      };
     })
-    .filter((r) => r.text.length > 80);
+    .filter((source) => source.text.length > 80);
 }
 
 export async function searchProducts(query: string, since: string, signal?: AbortSignal) {
-  const res = await exa().search(
+  const response = await exa().search(
     query,
     {
       type: "auto",
@@ -73,10 +80,10 @@ export async function searchProducts(query: string, since: string, signal?: Abor
     },
     { timeout: TIMEOUT_MS, signal },
   );
-  return res.results.map((r) => ({
-    title: r.title?.trim() || hostOf(r.url),
-    url: r.url,
-    site: hostOf(r.url),
-    text: ((r as { highlights?: string[] }).highlights ?? []).join(" … "),
+  return response.results.map((result) => ({
+    title: result.title?.trim() || hostOf(result.url),
+    url: result.url,
+    site: hostOf(result.url),
+    text: ((result as { highlights?: string[] }).highlights ?? []).join(" … "),
   }));
 }

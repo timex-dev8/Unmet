@@ -20,31 +20,31 @@ type Entry = {
 };
 
 // apple serves any size from the same URL, ask for 256px (sharp on retina)
-const iconOf = (e: Entry) =>
-  [...(e["im:image"] ?? [])]
+const iconOf = (entry: Entry) =>
+  [...(entry["im:image"] ?? [])]
     .sort((a, b) => Number(b.attributes?.height ?? 0) - Number(a.attributes?.height ?? 0))[0]
     ?.label.replace(/\/\d+x\d+bb\.(png|jpg)$/, "/256x256bb.$1");
 
 export async function appStoreGrossing(perGenre = 25): Promise<RawProduct[]> {
   const lists = await Promise.allSettled(
     GENRES.map(async ([id, genre]) => {
-      const res = await fetch(`https://itunes.apple.com/us/rss/topgrossingapplications/limit=${perGenre}/genre=${id}/json`, {
+      const response = await fetch(`https://itunes.apple.com/us/rss/topgrossingapplications/limit=${perGenre}/genre=${id}/json`, {
         headers,
         signal: AbortSignal.timeout(10_000),
       });
-      if (!res.ok) return [];
-      const body = (await res.json()) as { feed?: { entry?: Entry[] } };
-      return (body.feed?.entry ?? []).map((e, i): RawProduct => ({
-        name: e["im:name"].label.split(/[:–—-]\s/)[0].trim(),
-        url: e.id.label.split("?")[0],
-        description: `${e["im:artist"]?.label ?? ""}. ${(e.summary?.label ?? "").slice(0, 600)}`,
+      if (!response.ok) return [];
+      const body = (await response.json()) as { feed?: { entry?: Entry[] } };
+      return (body.feed?.entry ?? []).map((entry, i): RawProduct => ({
+        name: entry["im:name"].label.split(/[:–—-]\s/)[0].trim(),
+        url: entry.id.label.split("?")[0],
+        description: `${entry["im:artist"]?.label ?? ""}. ${(entry.summary?.label ?? "").slice(0, 600)}`,
         hint: genre,
-        proof: [{ kind: "grossing", label: `#${i + 1} top-grossing in ${genre} (US)`, url: e.id.label.split("?")[0], site: "App Store" }],
-        image: iconOf(e),
+        proof: [{ kind: "grossing", label: `#${i + 1} top-grossing in ${genre} (US)`, url: entry.id.label.split("?")[0], site: "App Store" }],
+        image: iconOf(entry),
         source: "App Store",
         weight: 60 - i * 1.5,
       }));
     }),
   );
-  return lists.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
+  return lists.flatMap((list) => (list.status === "fulfilled" ? list.value : []));
 }

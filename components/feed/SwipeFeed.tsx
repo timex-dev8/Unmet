@@ -10,7 +10,7 @@ import { markSkipped, useInterests, useSeenAtLoad } from "@/lib/interests";
 import { profileKeywords, textMatch } from "@/lib/rank";
 import { useSaved } from "@/lib/saved";
 import type { Card, Product } from "@/lib/types";
-import s from "./feed.module.css";
+import styles from "./feed.module.css";
 
 // 1 = next, -1 = back, 2 = saved
 type Dir = 1 | -1 | 2;
@@ -20,8 +20,8 @@ const SWIPE_VELOCITY = 600;
 const HINT_KEY = "unmet:hint-seen";
 
 type Item = Card | Product;
-const isProduct = (x: Item | undefined): x is Product => (x as Product | undefined)?.kind === "product";
-const keyOf = (x: Item) => (isProduct(x) ? `product-${x.slug}` : x.slug);
+const isProduct = (item: Item | undefined): item is Product => (item as Product | undefined)?.kind === "product";
+const keyOf = (item: Item) => (isProduct(item) ? `product-${item.slug}` : item.slug);
 
 export default function SwipeFeed({ cards: input, products = [] }: { cards: Card[]; products?: Product[] }) {
   const { interests: liveInterests } = useInterests();
@@ -39,14 +39,14 @@ export default function SwipeFeed({ cards: input, products = [] }: { cards: Card
     const matched = keywords.length ? [...input].sort((a, b) => textMatch(b, keywords) - textMatch(a, keywords)) : input;
     // unpassed cards first so a return visit opens on something new
     const problems = [...matched].sort((a, b) => Number(seen.includes(a.slug)) - Number(seen.includes(b.slug)));
-    const out: Item[] = [];
-    let p = 0;
-    let c = 0;
-    while (c < problems.length || p < products.length) {
-      if ((out.length % 3 === 2 && p < products.length) || c >= problems.length) out.push(products[p++]);
-      else out.push(problems[c++]);
+    const mixed: Item[] = [];
+    let productIndex = 0;
+    let problemIndex = 0;
+    while (problemIndex < problems.length || productIndex < products.length) {
+      if ((mixed.length % 3 === 2 && productIndex < products.length) || problemIndex >= problems.length) mixed.push(products[productIndex++]);
+      else mixed.push(problems[problemIndex++]);
     }
-    return out;
+    return mixed;
   }, [input, products, interests, seen]);
   const [index, setIndex] = useState(0);
   const [dir, setDir] = useState<Dir>(1);
@@ -59,19 +59,19 @@ export default function SwipeFeed({ cards: input, products = [] }: { cards: Card
   const card = cards[index];
   const nextCard = cards[index + 1];
 
-  const flash = useCallback((msg: string) => {
-    setToast(msg);
+  const flash = useCallback((message: string) => {
+    setToast(message);
     clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setToast(""), 1600);
   }, []);
 
-  const go = useCallback(
-    (d: Dir) => {
+  const move = useCallback(
+    (direction: Dir) => {
       markHintSeen();
       const current = cards[index];
-      if (d === 1 && current && !isProduct(current)) markSkipped(current.slug);
-      setDir(d);
-      setIndex((i) => (d === -1 ? Math.max(i - 1, 0) : Math.min(i + 1, cards.length)));
+      if (direction === 1 && current && !isProduct(current)) markSkipped(current.slug);
+      setDir(direction);
+      setIndex((i) => (direction === -1 ? Math.max(i - 1, 0) : Math.min(i + 1, cards.length)));
     },
     [cards, index],
   );
@@ -80,55 +80,56 @@ export default function SwipeFeed({ cards: input, products = [] }: { cards: Card
     const current = cards[index];
     if (!current) return;
     // products arent saved, a right swipe just moves on
-    if (isProduct(current)) return go(1);
+    if (isProduct(current)) return move(1);
     save(current);
     flash("Saved");
-    go(2);
-  }, [cards, index, save, flash, go]);
+    move(2);
+  }, [cards, index, save, flash, move]);
 
   // keys: down/up move, S saves. ignored while typing or with a sheet open
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
-      const t = e.target as HTMLElement;
+      const target = e.target as HTMLElement;
       if (
-        t.closest("input, textarea, select, [contenteditable]:not([contenteditable=false]), dialog[open]") ||
+        target.closest("input, textarea, select, [contenteditable]:not([contenteditable=false]), dialog[open]") ||
         document.querySelector("dialog[open]")
       )
         return;
       if (e.key === "ArrowDown" || e.key === "j") {
         e.preventDefault();
-        go(1);
+        move(1);
       } else if (e.key === "ArrowUp" || e.key === "k") {
         e.preventDefault();
-        go(-1);
+        move(-1);
       } else if (e.key.toLowerCase() === "s") {
         saveAndNext();
       }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [go, saveAndNext]);
+  }, [move, saveAndNext]);
 
   function onDragEnd(_: unknown, info: PanInfo) {
     const { offset, velocity } = info;
     if (offset.x > SWIPE_DISTANCE || velocity.x > SWIPE_VELOCITY) saveAndNext();
-    else if (offset.y < -SWIPE_DISTANCE || velocity.y < -SWIPE_VELOCITY) go(1);
-    else if ((offset.y > SWIPE_DISTANCE || velocity.y > SWIPE_VELOCITY) && index > 0) go(-1);
+    else if (offset.y < -SWIPE_DISTANCE || velocity.y < -SWIPE_VELOCITY) move(1);
+    else if ((offset.y > SWIPE_DISTANCE || velocity.y > SWIPE_VELOCITY) && index > 0) move(-1);
   }
 
   const duration = reduce ? 0 : 0.32;
   const variants = {
-    enter: (d: Dir) => (d === -1 ? { y: -500, opacity: 0 } : { y: 16, scale: 0.96, opacity: 0.6 }),
+    enter: (direction: Dir) => (direction === -1 ? { y: -500, opacity: 0 } : { y: 16, scale: 0.96, opacity: 0.6 }),
     center: { x: 0, y: 0, scale: 1, opacity: 1, rotate: 0 },
-    exit: (d: Dir) => (d === 2 ? { x: 480, rotate: 10, opacity: 0 } : d === 1 ? { y: -600, opacity: 0 } : { y: 40, scale: 0.96, opacity: 0 }),
+    exit: (direction: Dir) =>
+      direction === 2 ? { x: 480, rotate: 10, opacity: 0 } : direction === 1 ? { y: -600, opacity: 0 } : { y: 40, scale: 0.96, opacity: 0 },
   };
 
   if (!cards.length) {
     return (
-      <div className={s.end}>
-        <h2 className={s.endTitle}>No ideas here yet.</h2>
-        <p className={s.endText}>Try another filter or search for a problem.</p>
+      <div className={styles.end}>
+        <h2 className={styles.endTitle}>No ideas here yet.</h2>
+        <p className={styles.endText}>Try another filter or search for a problem.</p>
         <Link href="/app/search" className="pill pill-dark">
           Search
         </Link>
@@ -138,17 +139,17 @@ export default function SwipeFeed({ cards: input, products = [] }: { cards: Card
 
   return (
     <>
-      <div className={s.stage}>
-        {nextCard && <div className={s.peek} aria-hidden="true" />}
+      <div className={styles.stage}>
+        {nextCard && <div className={styles.peek} aria-hidden="true" />}
 
         <AnimatePresence initial={false} custom={dir}>
           {card ? (
             <SwipeCard key={keyOf(card)} card={card} dir={dir} variants={variants} duration={duration} onDragEnd={onDragEnd} />
           ) : (
-            <m.div key="end" className={s.end} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration }}>
-              <h2 className={s.endTitle}>You’ve seen every idea.</h2>
-              <p className={s.endText}>New problems are added as people post them.</p>
-              <div className={s.endActions}>
+            <m.div key="end" className={styles.end} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration }}>
+              <h2 className={styles.endTitle}>You’ve seen every idea.</h2>
+              <p className={styles.endText}>New problems are added as people post them.</p>
+              <div className={styles.endActions}>
                 <Link href="/app/board" className="pill pill-dark">
                   View saved
                 </Link>
@@ -162,33 +163,33 @@ export default function SwipeFeed({ cards: input, products = [] }: { cards: Card
         </AnimatePresence>
 
         {card && (
-          <div className={s.sideNav}>
-            <button type="button" onClick={() => go(-1)} disabled={index === 0} aria-label="Previous idea">
+          <div className={styles.sideNav}>
+            <button type="button" onClick={() => move(-1)} disabled={index === 0} aria-label="Previous idea">
               <ChevronUp size={22} aria-hidden="true" />
             </button>
-            <button type="button" onClick={() => go(1)} aria-label="Next idea">
+            <button type="button" onClick={() => move(1)} aria-label="Next idea">
               <ChevronDown size={22} aria-hidden="true" />
             </button>
           </div>
         )}
       </div>
 
-      <div className={s.footer}>
+      <div className={styles.footer}>
         {card && (
           <>
-            <button type="button" className={s.navBtn} onClick={() => go(1)}>
+            <button type="button" className={styles.navBtn} onClick={() => move(1)}>
               <ChevronUp size={16} aria-hidden="true" />
-              <span className={s.touchHint}>{hintSeen ? "Next" : "Swipe up for next · right to save"}</span>
-              <span className={s.keyHint}>Next · or use ↑ ↓ and S to save</span>
+              <span className={styles.touchHint}>{hintSeen ? "Next" : "Swipe up for next · right to save"}</span>
+              <span className={styles.keyHint}>Next · or use ↑ ↓ and S to save</span>
             </button>
-            <span className={s.counter} aria-live="polite">
+            <span className={styles.counter} aria-live="polite">
               {index + 1} of {cards.length}
             </span>
           </>
         )}
       </div>
 
-      <div className={`${s.toast} ${toast ? s.toastOn : ""}`} role="status" aria-live="polite">
+      <div className={`${styles.toast} ${toast ? styles.toastOn : ""}`} role="status" aria-live="polite">
         {toast && (
           <>
             <Bookmark size={15} fill="currentColor" aria-hidden="true" />
@@ -219,7 +220,7 @@ function SwipeCard({
 
   return (
     <m.div
-      className={s.cardWrap}
+      className={styles.cardWrap}
       custom={dir}
       variants={variants as never}
       initial="enter"
@@ -233,7 +234,7 @@ function SwipeCard({
       style={{ x, rotate }}
     >
       {!isProduct(card) && (
-        <m.div className={s.stamp} style={{ opacity: stamp }} aria-hidden="true">
+        <m.div className={styles.stamp} style={{ opacity: stamp }} aria-hidden="true">
           <Bookmark size={18} fill="currentColor" />
           Save
         </m.div>
@@ -246,9 +247,9 @@ function SwipeCard({
 const hintListeners = new Set<() => void>();
 function useHintSeen() {
   return useSyncExternalStore(
-    (l) => {
-      hintListeners.add(l);
-      return () => hintListeners.delete(l);
+    (listener) => {
+      hintListeners.add(listener);
+      return () => hintListeners.delete(listener);
     },
     () => {
       try {
@@ -267,5 +268,5 @@ function markHintSeen() {
   } catch {
     return;
   }
-  hintListeners.forEach((l) => l());
+  hintListeners.forEach((listener) => listener());
 }

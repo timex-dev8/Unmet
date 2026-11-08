@@ -52,35 +52,35 @@ export function filterSources(sources: Omit<ResearchSource, "id">[], windowDays:
   const seenText = new Set<string>();
   const kept: ResearchSource[] = [];
 
-  for (const s of sources) {
-    const kind = s.kind ?? kindOf(s.site, s.url);
-    const fingerprint = s.text
+  for (const source of sources) {
+    const kind = source.kind ?? kindOf(source.site, source.url);
+    const fingerprint = source.text
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "")
       .slice(0, 160);
-    if (seenUrl.has(s.url) || seenText.has(fingerprint)) {
+    if (seenUrl.has(source.url) || seenText.has(fingerprint)) {
       rejected.duplicate++;
       continue;
     }
-    if (DROP_DOMAIN.test(s.site) || ((kind === "blog" || kind === "news") && LISTICLE.test(s.title))) {
+    if (DROP_DOMAIN.test(source.site) || ((kind === "blog" || kind === "news") && LISTICLE.test(source.title))) {
       rejected.untrusted++;
       continue;
     }
-    if (s.text.length < (kind === "app-review" || kind === "social" ? 60 : 120)) {
+    if (source.text.length < (kind === "app-review" || kind === "social" ? 60 : 120)) {
       rejected.thin++;
       continue;
     }
-    const posted = s.postedAt ? Date.parse(s.postedAt) : NaN;
+    const posted = source.postedAt ? Date.parse(source.postedAt) : NaN;
     const ageDays = Number.isNaN(posted) ? null : (now - posted) / DAY;
     if (ageDays !== null && ageDays > windowDays) {
       rejected.old++;
       continue;
     }
-    seenUrl.add(s.url);
+    seenUrl.add(source.url);
     seenText.add(fingerprint);
     const freshness = ageDays === null ? 0.6 : ageDays <= 180 ? 1.2 : 1;
-    const engagement = s.engagement ? 1 + Math.min(Math.log10(1 + s.engagement.score) / 4, 0.5) : 1;
-    kept.push({ ...s, kind, id: 0, weight: Math.round(KIND_WEIGHT[kind] * freshness * engagement * 100) / 100 });
+    const engagement = source.engagement ? 1 + Math.min(Math.log10(1 + source.engagement.score) / 4, 0.5) : 1;
+    kept.push({ ...source, kind, id: 0, weight: Math.round(KIND_WEIGHT[kind] * freshness * engagement * 100) / 100 });
   }
   return { kept, rejected };
 }
@@ -98,18 +98,18 @@ const ORIGIN_CAP: Partial<Record<ResearchSource["origin"], number>> = {
 
 export function pickDiverse(sources: ResearchSource[], max: number): ResearchSource[] {
   const byOrigin = new Map<string, ResearchSource[]>();
-  for (const s of [...sources].sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0))) {
-    const key = s.group ?? s.origin; // discover-mode sources balance by group, a group key has no cap
+  for (const source of [...sources].sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0))) {
+    const key = source.group ?? source.origin; // discover-mode sources balance by group, a group key has no cap
     const list = byOrigin.get(key) ?? [];
-    if (list.length < (s.group ? Infinity : (ORIGIN_CAP[s.origin] ?? Infinity))) list.push(s);
+    if (list.length < (source.group ? Infinity : (ORIGIN_CAP[source.origin] ?? Infinity))) list.push(source);
     byOrigin.set(key, list);
   }
-  const out: ResearchSource[] = [];
-  while (out.length < max && [...byOrigin.values()].some((l) => l.length)) {
+  const picked: ResearchSource[] = [];
+  while (picked.length < max && [...byOrigin.values()].some((list) => list.length)) {
     for (const list of byOrigin.values()) {
       const next = list.shift();
-      if (next && out.length < max) out.push(next);
+      if (next && picked.length < max) picked.push(next);
     }
   }
-  return out.map((s, i) => ({ ...s, id: i + 1 }));
+  return picked.map((source, i) => ({ ...source, id: i + 1 }));
 }

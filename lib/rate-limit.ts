@@ -22,19 +22,21 @@ function ipBucket(ip: string) {
   let text = raw;
   const dotted = text.match(/^(.*:)(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
   if (dotted) {
-    const [a, b, c, d] = dotted.slice(2).map(Number);
-    text = `${dotted[1]}${((a << 8) | b).toString(16)}:${((c << 8) | d).toString(16)}`;
+    const [first, second, third, fourth] = dotted.slice(2).map(Number);
+    text = `${dotted[1]}${((first << 8) | second).toString(16)}:${((third << 8) | fourth).toString(16)}`;
   }
   const [head, tail] = text.split("::");
   const left = head ? head.split(":") : [];
   const right = tail ? tail.split(":") : [];
   const groups = text.includes("::") ? [...left, ...Array(8 - left.length - right.length).fill("0"), ...right] : left;
-  const g = groups.map((x) => parseInt(x || "0", 16));
-  if (g.length !== 8 || g.some((n) => Number.isNaN(n))) return raw;
-  if (g.slice(0, 5).every((n) => n === 0) && g[5] === 0xffff) return `${g[6] >> 8}.${g[6] & 255}.${g[7] >> 8}.${g[7] & 255}`;
-  return `${g
+  const hextets = groups.map((group) => parseInt(group || "0", 16));
+  if (hextets.length !== 8 || hextets.some((hextet) => Number.isNaN(hextet))) return raw;
+  if (hextets.slice(0, 5).every((hextet) => hextet === 0) && hextets[5] === 0xffff) {
+    return `${hextets[6] >> 8}.${hextets[6] & 255}.${hextets[7] >> 8}.${hextets[7] & 255}`;
+  }
+  return `${hextets
     .slice(0, 4)
-    .map((n) => n.toString(16))
+    .map((hextet) => hextet.toString(16))
     .join(":")}::/64`;
 }
 
@@ -54,7 +56,7 @@ let rpcMissingUntil = 0; // retried every 10 minutes so running the sql works wi
 
 function takeInMemory(bucket: string, perHour: number) {
   const now = Date.now();
-  const recent = (memHits.get(bucket) ?? []).filter((t) => now - t < HOUR);
+  const recent = (memHits.get(bucket) ?? []).filter((hitTime) => now - hitTime < HOUR);
   if (recent.length >= perHour) return false;
   memHits.set(bucket, [...recent, now]);
   return true;
@@ -87,9 +89,9 @@ export async function takeDailyPool(route: string, perDay: number): Promise<bool
     } else console.warn("[rate-limit] daily check failed, counting in memory:", error.message);
   }
   const day = Math.floor(Date.now() / 86400_000);
-  const cur = dayMem.get(bucket);
-  const n = cur && cur.day === day ? cur.n : 0;
-  if (n >= perDay) return false;
-  dayMem.set(bucket, { day, n: n + 1 });
+  const entry = dayMem.get(bucket);
+  const used = entry && entry.day === day ? entry.n : 0;
+  if (used >= perDay) return false;
+  dayMem.set(bucket, { day, n: used + 1 });
   return true;
 }

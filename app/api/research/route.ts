@@ -13,7 +13,7 @@ import type { Depth, ResearchEvent } from "@/lib/research-types";
 export const maxDuration = 300;
 
 // ai text is cut, not refused, so a long one never breaks a follow up
-const cut = (n: number) => z.string().transform((s) => s.slice(0, n));
+const cut = (maxLength: number) => z.string().transform((text) => text.slice(0, maxLength));
 
 const Body = z.object({
   message: z.string().trim().min(2).max(800),
@@ -46,13 +46,13 @@ async function limited(visitor: string, isUser: boolean, depth: Depth) {
     dayLimit: isUser ? USER_DAY : GUEST_DAY,
     globalDayLimit: isUser ? Number(process.env.RESEARCH_USERS_DAILY_CAP ?? 600) : Number(process.env.RESEARCH_DAILY_CAP ?? 50),
   };
-  let ok = await takeResearchSlot(slot);
-  if (ok === null) {
+  let allowed = await takeResearchSlot(slot);
+  if (allowed === null) {
     // cant check the limit: no costly depths
     if (depth !== "low") return "Deeper research is paused for a moment. Try Quick, or again in a minute.";
-    ok = takeMemorySlot(slot);
+    allowed = takeMemorySlot(slot);
   }
-  if (ok) return null;
+  if (allowed) return null;
   return cost > 1
     ? "Not enough research left right now for Deepest. Try Deep, or wait a bit."
     : "You've used your research for now. Try again a bit later.";
@@ -90,15 +90,15 @@ export async function POST(request: Request) {
   const stream = new ReadableStream({
     async start(controller) {
       const found: ResearchEvent[] = [];
-      const emit = (e: ResearchEvent) => {
+      const emit = (event: ResearchEvent) => {
         if (abort.signal.aborted) return;
-        if (e.type === "result" && !e.cached) found.push(e);
-        controller.enqueue(encoder.encode(JSON.stringify(e) + "\n"));
+        if (event.type === "result" && !event.cached) found.push(event);
+        controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
       };
       try {
         await runResearch(parsed.data, emit, abort.signal);
         // feed gets the category as topic, never anything from the persons message
-        const cards = found.flatMap((e) => (e.type === "result" ? e.cards : []));
+        const cards = found.flatMap((event) => (event.type === "result" ? event.cards : []));
         const topic = (cards[0]?.category || "research").slice(0, 80);
         if (cards.length) after(() => addToFeed(cards, topic).catch(() => 0));
       } catch (err) {

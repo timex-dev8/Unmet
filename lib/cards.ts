@@ -8,12 +8,12 @@ const ENOUGH_LIVE = 30;
 
 const PAGE_SIZE = 30;
 
-async function allCards(opts: { category?: string; rising?: boolean } = {}) {
-  const live = await readFeed(opts);
+async function allCards(options: { category?: string; rising?: boolean } = {}) {
+  const live = await readFeed(options);
   if (live.length >= ENOUGH_LIVE) return live;
   let fill = samples;
-  if (opts.rising) fill = fill.filter((c) => c.trend === "rising");
-  else if (opts.category) fill = fill.filter((c) => c.category === opts.category);
+  if (options.rising) fill = fill.filter((card) => card.trend === "rising");
+  else if (options.category) fill = fill.filter((card) => card.category === options.category);
   return [...live, ...fill];
 }
 
@@ -35,18 +35,20 @@ export async function getAllCards() {
 }
 
 export async function getCard(slug: string) {
-  return samples.find((c) => c.slug === slug) ?? (await readFeedCard(slug));
+  return samples.find((card) => card.slug === slug) ?? (await readFeedCard(slug));
 }
 
 export async function getAllSlugs() {
-  return samples.map((c) => c.slug);
+  return samples.map((card) => card.slug);
 }
 
 export async function searchCards(query: string) {
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
   if (!words.length) return [];
-  return (await allCards()).filter((c) => {
-    const text = [c.headline, c.summary, c.who, c.category, c.quote, ...c.aiSuggestions.map((s) => s.text)].join(" ").toLowerCase();
-    return words.every((w) => text.includes(w));
+  return (await allCards()).filter((card) => {
+    const text = [card.headline, card.summary, card.who, card.category, card.quote, ...card.aiSuggestions.map((suggestion) => suggestion.text)]
+      .join(" ")
+      .toLowerCase();
+    return words.every((word) => text.includes(word));
   });
 }

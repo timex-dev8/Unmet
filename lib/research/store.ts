@@ -50,16 +50,16 @@ export type SlotRequest = {
 let rpcMissingUntil = 0; // retried every 10 minutes so running the sql works without a deploy
 
 // true = go, false = over a limit, null = couldn't check (deeper research stays closed). take_research_slot checks and records in one locked step
-export async function takeResearchSlot(r: SlotRequest): Promise<boolean | null> {
-  if (!supabaseConfigured()) return takeMemorySlot(r);
+export async function takeResearchSlot(slot: SlotRequest): Promise<boolean | null> {
+  if (!supabaseConfigured()) return takeMemorySlot(slot);
   if (Date.now() > rpcMissingUntil) {
     const { data, error } = await db().rpc("take_research_slot", {
-      visitor: r.visitor,
-      is_user: r.isUser,
-      hour_limit: r.hourLimit,
-      day_limit: r.dayLimit,
-      global_day_limit: r.globalDayLimit,
-      cost: r.cost,
+      visitor: slot.visitor,
+      is_user: slot.isUser,
+      hour_limit: slot.hourLimit,
+      day_limit: slot.dayLimit,
+      global_day_limit: slot.globalDayLimit,
+      cost: slot.cost,
     });
     if (!error) return data === true;
     if (!missingFunction(error)) {
@@ -69,10 +69,10 @@ export async function takeResearchSlot(r: SlotRequest): Promise<boolean | null> 
     rpcMissingUntil = Date.now() + 10 * 60_000;
     console.warn("[store] take_research_slot isn't in the database yet (run supabase/schema.sql); using the old check");
   }
-  return legacySlot(r);
+  return legacySlot(slot);
 }
 
-async function legacySlot(r: SlotRequest): Promise<boolean | null> {
+async function legacySlot(slot: SlotRequest): Promise<boolean | null> {
   const hourAgo = Date.now() - HOUR;
   const dayStart = new Date().setUTCHours(0, 0, 0, 0);
   const { data, error } = await db()
@@ -86,32 +86,32 @@ async function legacySlot(r: SlotRequest): Promise<boolean | null> {
   let hour = 0;
   let day = 0;
   let everyone = 0;
-  for (const h of data) {
-    const at = Date.parse(h.at);
-    if (h.visitor === r.visitor && at > hourAgo) hour += h.cost;
-    if (h.visitor === r.visitor && at >= dayStart) day += h.cost;
-    if (at >= dayStart) everyone += h.cost;
+  for (const hit of data) {
+    const at = Date.parse(hit.at);
+    if (hit.visitor === slot.visitor && at > hourAgo) hour += hit.cost;
+    if (hit.visitor === slot.visitor && at >= dayStart) day += hit.cost;
+    if (at >= dayStart) everyone += hit.cost;
   }
-  if (hour + r.cost > r.hourLimit || day + r.cost > r.dayLimit) return false;
-  if (r.globalDayLimit && everyone + r.cost > r.globalDayLimit) return false;
-  const { error: writeError } = await db().from("research_hits").insert({ visitor: r.visitor, cost: r.cost });
+  if (hour + slot.cost > slot.hourLimit || day + slot.cost > slot.dayLimit) return false;
+  if (slot.globalDayLimit && everyone + slot.cost > slot.globalDayLimit) return false;
+  const { error: writeError } = await db().from("research_hits").insert({ visitor: slot.visitor, cost: slot.cost });
   if (writeError) warn("usage write", writeError);
   return true;
 }
 
 // this server's own count, used without supabase and for Low when the db can't be checked
-export function takeMemorySlot(r: SlotRequest) {
+export function takeMemorySlot(slot: SlotRequest) {
   const now = Date.now();
   const hourAgo = now - HOUR;
   const dayStart = new Date().setUTCHours(0, 0, 0, 0);
   while (memHits.length && memHits[0].at < Math.min(hourAgo, dayStart)) memHits.shift();
-  const sum = (f: (h: (typeof memHits)[number]) => boolean) => memHits.filter(f).reduce((a, h) => a + h.cost, 0);
-  const hour = sum((h) => h.visitor === r.visitor && h.at > hourAgo);
-  const day = sum((h) => h.visitor === r.visitor && h.at >= dayStart);
-  const everyone = sum((h) => h.isUser === r.isUser && h.at >= dayStart);
-  if (hour + r.cost > r.hourLimit || day + r.cost > r.dayLimit) return false;
-  if (r.globalDayLimit && everyone + r.cost > r.globalDayLimit) return false;
-  memHits.push({ visitor: r.visitor, isUser: r.isUser, cost: r.cost, at: now });
+  const sum = (matches: (hit: (typeof memHits)[number]) => boolean) => memHits.filter(matches).reduce((total, hit) => total + hit.cost, 0);
+  const hour = sum((hit) => hit.visitor === slot.visitor && hit.at > hourAgo);
+  const day = sum((hit) => hit.visitor === slot.visitor && hit.at >= dayStart);
+  const everyone = sum((hit) => hit.isUser === slot.isUser && hit.at >= dayStart);
+  if (hour + slot.cost > slot.hourLimit || day + slot.cost > slot.dayLimit) return false;
+  if (slot.globalDayLimit && everyone + slot.cost > slot.globalDayLimit) return false;
+  memHits.push({ visitor: slot.visitor, isUser: slot.isUser, cost: slot.cost, at: now });
   return true;
 }
 

@@ -23,11 +23,11 @@ import { ideaHref } from "@/lib/links";
 import type { Card } from "@/lib/types";
 import FaqList from "./FaqList";
 import GlassTile from "./GlassTile";
-import s from "./landing.module.css";
+import styles from "./landing.module.css";
 
 function Tile({ children, className, pearl, fill }: { children: ReactNode; className?: string; pearl?: boolean; fill?: boolean }) {
   return (
-    <span className={`${s.tile} ${pearl ? s.pearl : ""} ${fill ? s.tileFill : ""} ${className ?? ""}`} aria-hidden="true">
+    <span className={`${styles.tile} ${pearl ? styles.pearl : ""} ${fill ? styles.tileFill : ""} ${className ?? ""}`} aria-hidden="true">
       {children}
     </span>
   );
@@ -43,11 +43,11 @@ const SOURCES: { name: string; icon: LucideIcon; fill?: boolean }[] = [
 
 export function SourceStrip() {
   return (
-    <section className={`${s.section} ${s.sourcesSection}`} aria-label="Where Unmet looks">
-      <ul className={s.sources}>
+    <section className={`${styles.section} ${styles.sourcesSection}`} aria-label="Where Unmet looks">
+      <ul className={styles.sources}>
         {SOURCES.map(({ name, icon: Icon, fill }) => (
           <li key={name}>
-            <Tile pearl fill={fill} className={s.sourceTile}>
+            <Tile pearl fill={fill} className={styles.sourceTile}>
               <Icon strokeWidth={1.8} />
             </Tile>
             <p>{name}</p>
@@ -60,30 +60,30 @@ export function SourceStrip() {
 
 export function HowItWorks() {
   return (
-    <section id="how" className={s.section}>
-      <h2 className={s.h2}>How it works</h2>
-      <ol className={s.steps}>
-        <li className={s.step}>
-          <div className={`${s.pic} ${s.picSearch}`} aria-hidden="true">
+    <section id="how" className={styles.section}>
+      <h2 className={styles.h2}>How it works</h2>
+      <ol className={styles.steps}>
+        <li className={styles.step}>
+          <div className={`${styles.pic} ${styles.picSearch}`} aria-hidden="true">
             <Tile pearl>
               <Search strokeWidth={2} />
             </Tile>
-            <div className={s.pill}>Wedding photographers</div>
+            <div className={styles.pill}>Wedding photographers</div>
           </div>
           <h3>Name a market</h3>
         </li>
-        <li className={s.step}>
-          <div className={`${s.pic} ${s.picRead}`} aria-hidden="true">
-            <div className={s.cluster}>
-              <GlassTile icon={MessageSquare} size={56} tone="gb" className={s.rMsg} />
-              <GlassTile icon={Check} size={72} tone="gb" line strokeWidth={2.2} className={s.rCheck} />
-              <GlassTile icon={Star} size={56} tone="gb" className={s.rStar} />
+        <li className={styles.step}>
+          <div className={`${styles.pic} ${styles.picRead}`} aria-hidden="true">
+            <div className={styles.cluster}>
+              <GlassTile icon={MessageSquare} size={56} tone="gb" className={styles.rMsg} />
+              <GlassTile icon={Check} size={72} tone="gb" line strokeWidth={2.2} className={styles.rCheck} />
+              <GlassTile icon={Star} size={56} tone="gb" className={styles.rStar} />
             </div>
           </div>
           <h3>We read real posts</h3>
         </li>
-        <li className={s.step}>
-          <div className={`${s.pic} ${s.picIdeas}`} aria-hidden="true">
+        <li className={styles.step}>
+          <div className={`${styles.pic} ${styles.picIdeas}`} aria-hidden="true">
             <GlassTile icon={Lightbulb} size={72} strokeWidth={1.6} />
           </div>
           <h3>Get ideas worth building</h3>
@@ -105,25 +105,25 @@ const CATEGORY_ICON: Partial<Record<string, LucideIcon>> = {
 export function RecentProblems({ cards }: { cards: Card[] }) {
   if (cards.length === 0) return null;
   return (
-    <section id="problems" className={`${s.section} ${s.problemsSection}`}>
-      <h2 className={s.h2}>Latest problems we found</h2>
-      <ul className={s.problems}>
-        {cards.map((c) => {
-          const Icon = CATEGORY_ICON[c.category] ?? MessageSquare;
+    <section id="problems" className={`${styles.section} ${styles.problemsSection}`}>
+      <h2 className={styles.h2}>Latest problems we found</h2>
+      <ul className={styles.problems}>
+        {cards.map((card) => {
+          const Icon = CATEGORY_ICON[card.category] ?? MessageSquare;
           return (
-            <li key={c.slug}>
-              <Link href={ideaHref(c.slug)} className={s.problem}>
-                <Tile className={s.problemTile}>
+            <li key={card.slug}>
+              <Link href={ideaHref(card.slug)} className={styles.problem}>
+                <Tile className={styles.problemTile}>
                   <Icon strokeWidth={1.8} />
                 </Tile>
-                <span className={s.problemText}>{c.headline}</span>
-                <ArrowRight className={s.arrow} size={20} strokeWidth={2} aria-hidden="true" />
+                <span className={styles.problemText}>{card.headline}</span>
+                <ArrowRight className={styles.arrow} size={20} strokeWidth={2} aria-hidden="true" />
               </Link>
             </li>
           );
         })}
       </ul>
-      <Link href="/app/feed" className={s.all}>
+      <Link href="/app/feed" className={styles.all}>
         See all problems
       </Link>
     </section>
@@ -148,24 +148,24 @@ const PLANS = [
 
 export function Pricing() {
   return (
-    <section id="pricing" className={s.section}>
-      <h2 className={s.h2}>Free while we build it with you</h2>
-      <div className={s.plans}>
-        {PLANS.map((p) => (
-          <div key={p.name} className={`${s.plan} ${p.featured ? s.planBlue : s.planMist}`}>
-            <p className={s.planName}>{p.name}</p>
-            <p className={s.planPrice}>Free</p>
-            <p className={s.planNote}>{p.note}</p>
+    <section id="pricing" className={styles.section}>
+      <h2 className={styles.h2}>Free while we build it with you</h2>
+      <div className={styles.plans}>
+        {PLANS.map((plan) => (
+          <div key={plan.name} className={`${styles.plan} ${plan.featured ? styles.planBlue : styles.planMist}`}>
+            <p className={styles.planName}>{plan.name}</p>
+            <p className={styles.planPrice}>Free</p>
+            <p className={styles.planNote}>{plan.note}</p>
             <ul>
-              {p.items.map((i) => (
-                <li key={i}>
+              {plan.items.map((item) => (
+                <li key={item}>
                   <Check size={17} aria-hidden="true" />
-                  {i}
+                  {item}
                 </li>
               ))}
             </ul>
-            <Link href="/welcome" className={s.planCta}>
-              {p.cta}
+            <Link href="/welcome" className={styles.planCta}>
+              {plan.cta}
             </Link>
           </div>
         ))}
@@ -176,8 +176,8 @@ export function Pricing() {
 
 export function Faq() {
   return (
-    <section id="faq" className={`${s.section} ${s.faqSection}`}>
-      <h2 className={s.h2}>Questions</h2>
+    <section id="faq" className={`${styles.section} ${styles.faqSection}`}>
+      <h2 className={styles.h2}>Questions</h2>
       <FaqList />
     </section>
   );
@@ -185,19 +185,19 @@ export function Faq() {
 
 export function Closing() {
   return (
-    <footer className={s.closing}>
-      <div className={s.closingTiles}>
-        <GlassTile icon={MessageSquare} size={56} className={`${s.closingSide} ${s.c1}`} />
-        <GlassTile icon={Lightbulb} size={72} tone="b1" strokeWidth={1.7} className={s.c2} />
-        <GlassTile icon={TrendingUp} size={56} line className={`${s.closingSide} ${s.c3}`} />
+    <footer className={styles.closing}>
+      <div className={styles.closingTiles}>
+        <GlassTile icon={MessageSquare} size={56} className={`${styles.closingSide} ${styles.c1}`} />
+        <GlassTile icon={Lightbulb} size={72} tone="b1" strokeWidth={1.7} className={styles.c2} />
+        <GlassTile icon={TrendingUp} size={56} line className={`${styles.closingSide} ${styles.c3}`} />
       </div>
-      <h2 className={s.closingTitle}>Don’t spend months on the wrong idea.</h2>
-      <Link href="/welcome/try" className={`glossy ${s.btn}`}>
+      <h2 className={styles.closingTitle}>Don’t spend months on the wrong idea.</h2>
+      <Link href="/welcome/try" className={`glossy ${styles.btn}`}>
         Find my idea, free
       </Link>
-      <nav aria-label="Footer" className={s.footer}>
+      <nav aria-label="Footer" className={styles.footer}>
         <span>Unmet · Ideas from real complaints, with the proof</span>
-        <span className={s.footerLinks}>
+        <span className={styles.footerLinks}>
           <a href="#how">How it works</a>
           <a href="#pricing">Pricing</a>
           <Link href="/welcome">Sign in</Link>

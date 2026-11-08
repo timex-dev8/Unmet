@@ -23,13 +23,13 @@ let status: SyncStatus = "off";
 const statusListeners = new Set<() => void>();
 function setStatus(next: SyncStatus) {
   status = next;
-  statusListeners.forEach((l) => l());
+  statusListeners.forEach((listener) => listener());
 }
 export function useSyncStatus() {
   return useSyncExternalStore(
-    (l) => {
-      statusListeners.add(l);
-      return () => void statusListeners.delete(l);
+    (listener) => {
+      statusListeners.add(listener);
+      return () => void statusListeners.delete(listener);
     },
     () => status,
     () => "off" as const,
@@ -39,9 +39,9 @@ export function useSyncStatus() {
 let userId: string | null = null;
 let applying = false; // true while writing downloaded data so it isn't uploaded back
 let needsMerge = false; // local data not merged into the account yet
-let gen = 0; // bumped on every start/end so a slow endSync can't undo a newer sign-in
+let generation = 0; // bumped on every start/end so a slow endSync can't undo a newer sign-in
 const dirty = new Set<SyncKind>();
-const revs = new Map<SyncKind, number>(); // bumped per change so a slow upload can't mark a newer one saved
+const revisions = new Map<SyncKind, number>(); // bumped per change so a slow upload can't mark a newer one saved
 const timers = new Map<SyncKind, ReturnType<typeof setTimeout>>();
 let unsubscribe: (() => void)[] = [];
 
@@ -86,14 +86,14 @@ async function upload(store: Syncable<unknown>, id: string) {
 }
 
 async function save(store: Syncable<unknown>, id: string) {
-  const rev = revs.get(store.kind);
+  const revision = revisions.get(store.kind);
   await upload(store, id);
-  if (revs.get(store.kind) === rev) dirty.delete(store.kind);
+  if (revisions.get(store.kind) === revision) dirty.delete(store.kind);
 }
 
 function schedule(store: Syncable<unknown>, delay = DELAY) {
   dirty.add(store.kind);
-  revs.set(store.kind, (revs.get(store.kind) ?? 0) + 1);
+  revisions.set(store.kind, (revisions.get(store.kind) ?? 0) + 1);
   clearTimeout(timers.get(store.kind));
   setStatus("syncing");
   const id = userId;
@@ -116,7 +116,7 @@ function schedule(store: Syncable<unknown>, delay = DELAY) {
 export async function flushSync(ms = 4000): Promise<boolean> {
   const id = userId;
   if (!id || !dirty.size) return !dirty.size;
-  timers.forEach((t) => clearTimeout(t));
+  timers.forEach((timer) => clearTimeout(timer));
   timers.clear();
   const jobs = Promise.allSettled(STORES.filter((store) => dirty.has(store.kind)).map((store) => save(store, id)));
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -129,16 +129,16 @@ export async function flushSync(ms = 4000): Promise<boolean> {
 async function pull(merge: boolean) {
   const id = userId;
   if (!id) return;
-  const startRevs = new Map(revs);
+  const startRevisions = new Map(revisions);
   const { data, error } = await (await supabase()).from("user_data").select("kind, data").eq("user_id", id);
   if (error) throw error;
   if (userId !== id) return; // signed out or switched meanwhile, never restore that account's data
-  const remote = new Map(data.map((r) => [r.kind as SyncKind, r.data]));
+  const remote = new Map(data.map((row) => [row.kind as SyncKind, row.data]));
   for (const store of STORES) {
     // local change on its way up, don't overwrite (a merge keeps it anyway)
     if (!merge && dirty.has(store.kind)) continue;
     // changed here during the download so this copy is stale, next pull catches up
-    if (!merge && revs.get(store.kind) !== startRevs.get(store.kind)) continue;
+    if (!merge && revisions.get(store.kind) !== startRevisions.get(store.kind)) continue;
     const theirs = remote.get(store.kind);
     if (theirs === undefined) {
       if (merge) schedule(store, 0); // account is empty, upload this browser's data
@@ -182,7 +182,7 @@ const onVisible = async () => {
 };
 
 export async function startSync(id: string) {
-  gen++;
+  generation++;
   if (userId === id) return;
   stopSync();
   const owner = readFlag();
@@ -204,12 +204,12 @@ export async function startSync(id: string) {
 }
 
 function stopSync() {
-  unsubscribe.forEach((u) => u());
+  unsubscribe.forEach((stopListening) => stopListening());
   unsubscribe = [];
-  timers.forEach((t) => clearTimeout(t));
+  timers.forEach((timer) => clearTimeout(timer));
   timers.clear();
   dirty.clear();
-  revs.clear();
+  revisions.clear();
   document.removeEventListener("visibilitychange", onVisible);
   userId = null;
   needsMerge = false;
@@ -217,11 +217,11 @@ function stopSync() {
 }
 
 export async function endSync() {
-  const my = ++gen;
+  const myGeneration = ++generation;
   const id = userId;
   // last chance for recent changes (signOut normally uploaded already)
   const saved = id ? await flushSync(3000) : true;
-  if (my !== gen) return; // signed in again meanwhile
+  if (myGeneration !== generation) return; // signed in again meanwhile
   const unmerged = Boolean(id) && needsMerge;
   stopSync();
   if (id && (!saved || unmerged)) {

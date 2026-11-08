@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, ClipboardCheck, Copy, LoaderCircle, Sparkles } from "lucide-react";
 import { LENS_LABEL } from "@/lib/lenses";
 import type { Card, Idea } from "@/lib/types";
-import s from "./report.module.css";
+import styles from "./report.module.css";
 
 const TWISTS = ["More like this", "Make it B2B", "Make it cheaper", "Make it AI-first", "Make it for consumers"];
 
@@ -24,9 +24,9 @@ function payload(card: Card) {
 }
 
 async function ask(body: object) {
-  const res = await fetch("/api/ideas", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error ?? "Couldn't do that right now. Try again.");
+  const response = await fetch("/api/ideas", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error ?? "Couldn't do that right now. Try again.");
   return data;
 }
 
@@ -41,7 +41,7 @@ export default function IdeasSection({ card }: { card: Card }) {
     setBusy(twist);
     try {
       const data = await ask({ mode: "remix", twist, card: payload(card) });
-      setIdeas((cur) => [...cur, ...(data.ideas as Idea[])]);
+      setIdeas((currentIdeas) => [...currentIdeas, ...(data.ideas as Idea[])]);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -50,38 +50,38 @@ export default function IdeasSection({ card }: { card: Card }) {
   }
 
   return (
-    <section className={s.section} aria-labelledby="ideas">
-      <h2 id="ideas" className={s.h2}>
+    <section className={styles.section} aria-labelledby="ideas">
+      <h2 id="ideas" className={styles.h2}>
         Ideas you could build
       </h2>
-      <p className={s.lede}>Each idea answers real complaints from this problem. Anything still unproven is labelled.</p>
+      <p className={styles.lede}>Each idea answers real complaints from this problem. Anything still unproven is labelled.</p>
 
-      {card.thoughts && <p className={s.pitch}>{card.thoughts}</p>}
+      {card.thoughts && <p className={styles.pitch}>{card.thoughts}</p>}
 
-      <div className={s.ideas}>
+      <div className={styles.ideas}>
         {ideas.map((idea, i) => (
           <IdeaView key={`${idea.title}-${i}`} idea={idea} card={card} />
         ))}
       </div>
 
       {canAsk && (
-        <div className={s.remix}>
-          <span className={s.remixLabel}>
+        <div className={styles.remix}>
+          <span className={styles.remixLabel}>
             <Sparkles size={15} aria-hidden="true" />
             {ideas.length ? "Get more ideas" : "Generate ideas"}
           </span>
-          <div className={s.chips}>
-            {(ideas.length ? TWISTS : ["More like this"]).map((t) => (
-              <button key={t} type="button" className={s.chip} disabled={!!busy} onClick={() => remix(t)}>
-                {busy === t && <LoaderCircle size={14} className="spin" aria-hidden="true" />}
-                {ideas.length || t !== "More like this" ? t : "Generate ideas"}
+          <div className={styles.chips}>
+            {(ideas.length ? TWISTS : ["More like this"]).map((twist) => (
+              <button key={twist} type="button" className={styles.chip} disabled={!!busy} onClick={() => remix(twist)}>
+                {busy === twist && <LoaderCircle size={14} className="spin" aria-hidden="true" />}
+                {ideas.length || twist !== "More like this" ? twist : "Generate ideas"}
               </button>
             ))}
           </div>
         </div>
       )}
       {error && (
-        <p className={s.error} role="alert">
+        <p className={styles.error} role="alert">
           {error}
         </p>
       )}
@@ -116,36 +116,36 @@ function IdeaView({ idea, card }: { idea: Idea; card: Card }) {
   ];
 
   return (
-    <article className={`${s.idea} rise`}>
-      <div className={s.ideaTop}>
-        <span className={s.badges}>
-          <span className={s.lens}>{LENS_LABEL[idea.lens]}</span>
-          {idea.form === "feature" && <span className={s.lens}>Feature, not a startup</span>}
+    <article className={`${styles.idea} rise`}>
+      <div className={styles.ideaTop}>
+        <span className={styles.badges}>
+          <span className={styles.lens}>{LENS_LABEL[idea.lens]}</span>
+          {idea.form === "feature" && <span className={styles.lens}>Feature, not a startup</span>}
         </span>
-        <span className={s.score} title="From the evidence it answers, money signals and existing products">
+        <span className={styles.score} title="From the evidence it answers, money signals and existing products">
           {idea.score}
         </span>
       </div>
-      <h3 className={s.ideaTitle}>{idea.title}</h3>
-      <p className={s.pitch}>{idea.pitch}</p>
+      <h3 className={styles.ideaTitle}>{idea.title}</h3>
+      <p className={styles.pitch}>{idea.pitch}</p>
 
       {(idea.norm || idea.flaw || idea.shift) && (
-        <div className={s.take}>
+        <div className={styles.take}>
           {idea.norm && (
             <p>
-              <span className={s.answersLabel}>What most apps do</span>
+              <span className={styles.answersLabel}>What most apps do</span>
               {idea.norm}
             </p>
           )}
           {idea.flaw && (
             <p>
-              <span className={s.answersLabel}>What&apos;s wrong with that</span>
+              <span className={styles.answersLabel}>What&apos;s wrong with that</span>
               {idea.flaw}
             </p>
           )}
           {idea.shift && (
-            <p className={s.shift}>
-              <span className={s.answersLabel}>A different approach</span>
+            <p className={styles.shift}>
+              <span className={styles.answersLabel}>A different approach</span>
               {idea.shift}
             </p>
           )}
@@ -153,12 +153,12 @@ function IdeaView({ idea, card }: { idea: Idea; card: Card }) {
       )}
 
       {idea.twists && idea.twists.length > 0 && (
-        <div className={s.block}>
-          <span className={s.answersLabel}>Interesting twists</span>
-          <ul className={s.twists}>
-            {idea.twists.map((t) => (
-              <li key={t.name}>
-                <strong>{t.name}</strong> {t.how}
+        <div className={styles.block}>
+          <span className={styles.answersLabel}>Interesting twists</span>
+          <ul className={styles.twists}>
+            {idea.twists.map((twist) => (
+              <li key={twist.name}>
+                <strong>{twist.name}</strong> {twist.how}
               </li>
             ))}
           </ul>
@@ -166,32 +166,32 @@ function IdeaView({ idea, card }: { idea: Idea; card: Card }) {
       )}
 
       {idea.whyLove && (
-        <div className={s.block}>
-          <span className={s.answersLabel}>Why people might love it</span>
+        <div className={styles.block}>
+          <span className={styles.answersLabel}>Why people might love it</span>
           <p>{idea.whyLove}</p>
         </div>
       )}
 
-      <dl className={s.facts}>
-        {rows.map(([k, v]) => (
-          <div key={k}>
-            <dt>{k}</dt>
-            <dd>{v}</dd>
+      <dl className={styles.facts}>
+        {rows.map(([label, value]) => (
+          <div key={label}>
+            <dt>{label}</dt>
+            <dd>{value}</dd>
           </div>
         ))}
       </dl>
 
       {idea.evidence.length > 0 && (
-        <div className={s.answers}>
-          <span className={s.answersLabel}>Answers these complaints</span>
-          {idea.evidence.map((q) => (
-            <q key={q}>{q}</q>
+        <div className={styles.answers}>
+          <span className={styles.answersLabel}>Answers these complaints</span>
+          {idea.evidence.map((quote) => (
+            <q key={quote}>{quote}</q>
           ))}
         </div>
       )}
 
       {idea.similar && (
-        <a href={idea.similar.url} target="_blank" rel="noopener noreferrer" className={s.similar}>
+        <a href={idea.similar.url} target="_blank" rel="noopener noreferrer" className={styles.similar}>
           <span>
             <strong>Closest existing product:</strong> {idea.similar.name}
           </span>
@@ -200,15 +200,15 @@ function IdeaView({ idea, card }: { idea: Idea; card: Card }) {
       )}
 
       {idea.competitorCheck && (
-        <div className={s.block}>
-          <span className={s.answersLabel}>Competitive reality</span>
+        <div className={styles.block}>
+          <span className={styles.answersLabel}>Competitive reality</span>
           <p>{idea.competitorCheck}</p>
         </div>
       )}
 
       {idea.unproven && (
-        <div className={s.block}>
-          <span className={s.answersLabel}>Still unproven</span>
+        <div className={styles.block}>
+          <span className={styles.answersLabel}>Still unproven</span>
           <p>{idea.unproven}</p>
         </div>
       )}
@@ -216,13 +216,13 @@ function IdeaView({ idea, card }: { idea: Idea; card: Card }) {
       {plan ? (
         <ValidationPlan plan={plan} />
       ) : (
-        <button type="button" className={`glossy ${s.validate}`} onClick={validate} disabled={busy}>
+        <button type="button" className={`glossy ${styles.validate}`} onClick={validate} disabled={busy}>
           {busy ? <LoaderCircle size={16} className="spin" aria-hidden="true" /> : <ClipboardCheck size={16} aria-hidden="true" />}
           Validate in a day
         </button>
       )}
       {error && (
-        <p className={s.error} role="alert">
+        <p className={styles.error} role="alert">
           {error}
         </p>
       )}
@@ -235,32 +235,32 @@ function ValidationPlan({ plan }: { plan: Validation }) {
   const copyTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(copyTimer.current), []);
   return (
-    <div className={`${s.plan} rise`}>
-      <p className={s.planLabel}>1 · Landing page (in their words)</p>
-      <div className={s.landing}>
+    <div className={`${styles.plan} rise`}>
+      <p className={styles.planLabel}>1 · Landing page (in their words)</p>
+      <div className={styles.landing}>
         <strong>{plan.headline}</strong>
         <span>{plan.subhead}</span>
         <ul>
-          {plan.bullets.map((b) => (
-            <li key={b}>{b}</li>
+          {plan.bullets.map((bullet) => (
+            <li key={bullet}>{bullet}</li>
           ))}
         </ul>
-        <span className={`glossy ${s.fakeBtn}`}>{plan.cta}</span>
+        <span className={`glossy ${styles.fakeBtn}`}>{plan.cta}</span>
       </div>
 
-      <p className={s.planLabel}>2 · Ask 5 people these questions</p>
-      <ol className={s.questions}>
-        {plan.questions.map((q) => (
-          <li key={q}>{q}</li>
+      <p className={styles.planLabel}>2 · Ask 5 people these questions</p>
+      <ol className={styles.questions}>
+        {plan.questions.map((question) => (
+          <li key={question}>{question}</li>
         ))}
       </ol>
 
-      <p className={s.planLabel}>3 · Message someone who complained</p>
-      <div className={s.outreach}>
+      <p className={styles.planLabel}>3 · Message someone who complained</p>
+      <div className={styles.outreach}>
         <p>{plan.outreach}</p>
         <button
           type="button"
-          className={s.copy}
+          className={styles.copy}
           onClick={async () => {
             try {
               await navigator.clipboard.writeText(plan.outreach);
@@ -276,7 +276,7 @@ function ValidationPlan({ plan }: { plan: Validation }) {
           {copied ? "Copied" : "Copy"}
         </button>
       </div>
-      <p className={s.fine}>Find them through the source links above. If 3 of 5 describe the problem without prompting, keep going.</p>
+      <p className={styles.fine}>Find them through the source links above. If 3 of 5 describe the problem without prompting, keep going.</p>
     </div>
   );
 }
