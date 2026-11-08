@@ -1,7 +1,3 @@
-/* Landing (DESIGN.md "v3"): a sky hero fading into a white page, shiny blue buttons, glass tiles, and 128px between
-   sections on desktop (96px on phones). Phone values are the base; the wide layout starts at 860px. */
-
-/* ---------- Nav: a floating, rounded bar of liquid glass (components/motion/LiquidGlass.tsx) ---------- */
 .navWrap {
   position: fixed;
   top: 12px;
@@ -25,7 +21,6 @@
     box-shadow var(--t-med) var(--ease),
     color var(--t-med) var(--ease);
 }
-/* Over the white page: frosted white glass, dark text */
 .navLight {
   color: var(--ink);
 }
@@ -77,8 +72,7 @@
 .links .linkOn:hover {
   opacity: 1;
 }
-/* The glass bubble behind the current section's link: tinted glass (never white), measured
-   from the link so it wraps the text exactly, and gliding to the next link */
+/* tinted glass, never white. measured from the link so it wraps the text */
 .bubble {
   position: absolute;
   top: 0;
@@ -161,7 +155,6 @@
   box-shadow: inset 0 0 0 1px rgba(25, 25, 29, 0.06);
 }
 
-/* Phone menu: a rounded glass sheet under the bar */
 .sheet {
   --glass-blur: 36px;
   width: 100%;
@@ -209,7 +202,6 @@
   background: rgba(255, 255, 255, 0.35);
 }
 
-/* ---------- Buttons ---------- */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -231,8 +223,6 @@
   transform: scale(0.97);
 }
 
-/* ---------- Tiles ---------- */
-/* Quiet tile: a pale blue rounded square with a line icon. Its size comes from where it sits. */
 .tile {
   display: inline-flex;
   align-items: center;
@@ -254,8 +244,6 @@
   fill: rgba(28, 56, 234, 0.12);
 }
 
-/* Floating glass tile (components/landing/GlassTile.tsx): eight stacked layers give it thickness.
-   Each placement sets its own size and perspective transform. */
 .g3 {
   display: inline-flex;
   align-items: center;
@@ -317,7 +305,6 @@
 .g3.line svg {
   fill: none;
 }
-/* Deep blue */
 .g3.b1 i {
   background: rgba(35, 75, 235, 0.42);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
@@ -332,7 +319,6 @@
     inset 0 1px 1px rgba(255, 255, 255, 0.65),
     inset 0 0 0 1px rgba(255, 255, 255, 0.2);
 }
-/* Light blue */
 .g3.b2 i {
   background: rgba(70, 120, 245, 0.12);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
@@ -347,7 +333,6 @@
     inset 0 1px 1px rgba(255, 255, 255, 0.7),
     inset 0 0 0 1px rgba(255, 255, 255, 0.24);
 }
-/* For pale backgrounds */
 .g3.gb i {
   background: rgba(45, 92, 242, 0.09);
   box-shadow: inset 0 0 0 1px rgba(45, 92, 242, 0.18);
@@ -375,7 +360,6 @@
   height: 88px;
 }
 
-/* ---------- Hero: the sky ---------- */
 .hero {
   position: relative;
   padding: 140px 20px 64px;
@@ -385,7 +369,6 @@
     linear-gradient(180deg, #2c6ad6 0%, #4a8ae2 20%, #84b8ef 44%, #bfdcf6 62%, #e9f3fc 80%, #ffffff 100%);
   overflow: hidden;
 }
-/* A soft cloud bank on the horizon */
 .clouds {
   position: absolute;
   left: 0;
@@ -414,7 +397,6 @@
   line-height: 1.1;
   text-wrap: balance;
 }
-/* The shiny lightbulb tile that sits inside the headline */
 .ideaTile {
   display: inline-flex;
   align-items: center;
@@ -448,7 +430,7 @@
   margin-top: 32px;
 }
 
-/* Floating tiles beside the headline: wide screens only. Below that, a static row of three. */
+/* wide screens only, below that a static row of three */
 .floats {
   display: none;
   position: absolute;
@@ -529,7 +511,6 @@
   transform: perspective(360px) rotateY(-28deg) rotateX(14deg) rotateZ(8deg);
 }
 
-/* The example answer: one real card, floating on the sky */
 .card {
   position: relative;
   box-sizing: border-box;
@@ -597,7 +578,6 @@
   text-decoration: underline;
 }
 
-/* ---------- Sections ---------- */
 .section {
   max-width: 960px;
   margin: 0 auto;
@@ -613,7 +593,6 @@
   text-wrap: balance;
 }
 
-/* Where Unmet looks: phones show the first three */
 .sourcesSection {
   padding-top: 16px;
 }
@@ -644,7 +623,6 @@
   margin: 6px 0 0;
 }
 
-/* Latest problems we found */
 .problemsSection {
   padding-top: 88px;
 }
@@ -692,7 +670,6 @@
   text-decoration: underline;
 }
 
-/* How it works: three picture panels */
 .steps {
   list-style: none;
   margin: 20px 0 0;
@@ -899,7 +876,6 @@
   color: var(--muted);
 }
 
-/* ---------- Closing: the sky again, fading up from white ---------- */
 .closing {
   padding: 96px 20px 32px;
   text-align: center;
@@ -957,7 +933,6 @@
   min-height: 44px;
 }
 
-/* ---------- Wider screens ---------- */
 @media (min-width: 860px) {
   .navWrap {
     top: 20px;
@@ -1208,7 +1183,7 @@
   }
 }
 
-/* Wide enough for the floating tiles; below this the static row of three shows instead */
+/* wide enough for the floating tiles */
 @media (min-width: 1121px) {
   .floats {
     display: block;

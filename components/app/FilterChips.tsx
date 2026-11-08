@@ -44,7 +44,6 @@ export default function FilterChips({ active, source, kinds = [] }: { active: Fe
   );
 }
 
-/** Where the evidence comes from: one compact menu, so the feed keeps its height for the cards. */
 function SourceMenu({ active, source, kinds }: { active: FeedFilter; source?: string; kinds: string[] }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -59,7 +58,7 @@ function SourceMenu({ active, source, kinds }: { active: FeedFilter; source?: st
       document.removeEventListener("keydown", onKey);
     };
   }, [open]);
-  // Evidence kinds need a friendly name; product sources like "TrustMRR" already are one.
+  // evidence kinds need a friendly name, product sources already have one
   const label = (k: string) => (SOURCE_KINDS.includes(k as SourceKind) ? kindBadge({ kind: k } as Source) : k);
   return (
     <div className={s.sourceMenu} ref={ref}>

@@ -5,8 +5,7 @@ import { listStartups, trustmrrConfigured, type Startup } from "@/lib/trustmrr";
 import type { Card, Competitor } from "@/lib/types";
 import { kindOf } from "./quality";
 
-// High mode: for the top problems, look for products that already solve them, on the web
-// and among TrustMRR's revenue-verified startups. Competition then becomes a checked number.
+// high mode: look for products that already solve the top problems, on the web and in trustmrr
 
 const LISTICLE = /\b\d+\s+(best|top)\b|alternatives|\bvs\.?\s|review|guide|how to|%|\bwhy\b|\bstop\b|template|lessons/i;
 const STOP = new Set(["their", "about", "which", "there", "would", "could", "people", "every", "after", "before", "without"]);
@@ -18,7 +17,7 @@ const keywords = (s: string) =>
       .filter((w) => w.length > 4 && !STOP.has(w)),
   );
 
-// A product page is a homepage or a shallow page (example.com/ or example.com/features), not an article.
+// product page = homepage or shallow page, not an article
 const isProductPage = (url: string) => {
   try {
     return new URL(url).pathname.split("/").filter(Boolean).length <= 1;
@@ -27,7 +26,7 @@ const isProductPage = (url: string) => {
   }
 };
 
-// Use the short brand part of the title; fall back to the domain name when the title reads like a sentence.
+// brand part of the title, domain name when the title reads like a sentence
 export function productName(title: string, site: string) {
   const parts = title
     .split(/\s[|–—-]\s|:\s/)
@@ -39,7 +38,7 @@ export function productName(title: string, site: string) {
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
-/** Rejects when the web search fails, so a failed search can't pass for "no competitors". */
+// rejects on search failure so it can't pass for "no competitors"
 export async function findCompetitors(card: Card, startups: Startup[], signal?: AbortSignal): Promise<Competitor[]> {
   const since = new Date(Date.now() - 3 * 365 * 86400_000).toISOString();
   const pages = await searchProducts(`${card.headline}. Software or app for ${card.who}`, since, signal);
@@ -53,7 +52,6 @@ export async function findCompetitors(card: Card, startups: Startup[], signal?: 
     if (web.length >= 4) break;
   }
 
-  // Revenue-verified startups whose description overlaps with the problem.
   const words = keywords(`${card.headline} ${card.summary}`);
   const verified: Competitor[] = startups
     .map((s) => ({ s, overlap: [...keywords(s.description)].filter((w) => words.has(w)).length }))
@@ -70,7 +68,6 @@ export async function startupsFor(category: string) {
   return listStartups({ category, sort: "revenue-desc", pages: 3 }).catch(() => []);
 }
 
-/** Competition score from what was actually found. */
 export function competitionFrom(found: Competitor[]) {
   const verified = found.filter((c) => c.mrr);
   const top = verified.reduce((m, c) => Math.max(m, c.mrr ?? 0), 0);

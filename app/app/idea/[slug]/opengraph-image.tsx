@@ -11,7 +11,6 @@ export default async function Image({ params }: { params: Promise<{ slug: string
   const { slug } = await params;
   const card = await getCard(slug);
 
-  // Unknown idea: the same image as the landing page.
   if (!card) {
     return new ImageResponse(
       <OgFrame>

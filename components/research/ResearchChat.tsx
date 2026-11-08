@@ -27,13 +27,9 @@ export default function ResearchChat({
   about,
 }: {
   configured: boolean;
-  /** The conversation to show; empty for a new research. */
   threadId?: string;
-  /** Starts a research right away (from Home, a card's "Dig deeper", or the Mind page). */
   initialQuery?: string;
-  /** Depth chosen on Home. */
   initialDepth?: Depth;
-  /** The idea a "Dig deeper" research is about, sent to the AI as context. */
   about?: Context;
 }) {
   const router = useRouter();
@@ -42,8 +38,8 @@ export default function ResearchChat({
   const messages = thread?.messages ?? [];
   const [input, setInput] = useState("");
   const [depth, setDepth] = useState<Depth>(initialDepth ?? "medium");
-  const lowOnly = useLowOnly(); // guests research on Low only
-  // Both are undefined until the session and guest flag are read; until then lowOnly isn't final.
+  const lowOnly = useLowOnly(); // guests get low only
+  // undefined until session and guest flag are read, lowOnly isnt final before that
   const user = useUser();
   const guest = useGuest();
   const authKnown = user !== undefined && guest !== undefined;
@@ -56,7 +52,6 @@ export default function ResearchChat({
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages.length, lastSteps]);
 
-  // Close the side panel with Escape.
   useEffect(() => {
     if (!openCard) return;
     const onKey = (e: globalThis.KeyboardEvent) => e.key === "Escape" && setOpenCard(null);
@@ -64,23 +59,21 @@ export default function ResearchChat({
     return () => window.removeEventListener("keydown", onKey);
   }, [openCard]);
 
-  // Arriving with ?q= (Home, Dig deeper, Mind): start that research once, after we know who's
-  // signed in, so an account's ?depth=high doesn't run as a guest's Low.
+  // start the ?q= research once auth is known so ?depth=high doesnt run as a guests low
   const started = useRef(false);
   useEffect(() => {
     if (started.current || !initialQuery || threadId || !authKnown) return;
     started.current = true;
     if (configured) void send(initialQuery);
     else router.replace("/app/research", { scroll: false });
-    // Runs once on arrival, as soon as the account is known.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authKnown]);
 
   async function send(text: string) {
     const message = text.trim();
-    if (!message || busy || !configured || !authKnown) return; // before auth is known, lowOnly would submit a Low-depth run
+    if (!message || busy || !configured || !authKnown) return; // lowOnly would submit a low run before auth is known
 
-    // A new research gets its own thread and URL; the stream keeps writing to it by id.
+    // new research gets its own thread and url, the stream writes to it by id
     let tid = threadId;
     if (!tid) {
       tid = createThread(message);
@@ -128,7 +121,7 @@ export default function ResearchChat({
             try {
               event = JSON.parse(line) as ResearchEvent;
             } catch {
-              continue; // one bad line shouldn't discard the rest of the stream
+              continue; // one bad line shouldnt kill the stream
             }
             if (event.type === "step") patch(reply.id, (m) => ({ steps: [...(m.steps ?? []), event.label] }));
             else if (event.type === "result")
@@ -147,7 +140,6 @@ export default function ResearchChat({
         void reader.cancel().catch(() => {});
         throw err;
       }
-      // Stream ended without a result (for example a timeout).
       patch(reply.id, (m) => (m.pending ? { text: "The research took too long. Please try again.", error: true, pending: false } : {}));
     } catch {
       patch(reply.id, () => ({ text: "Couldn’t reach Unmet. Check your connection and try again.", error: true, pending: false }));
@@ -314,7 +306,7 @@ function Reply({
 }: {
   m: ChatMessage;
   isLast: boolean;
-  lastQuery: string; // the question this reply answers
+  lastQuery: string;
   onAsk: (q: string) => void;
   onOpen: (card: Card) => void;
   openSlug?: string;
@@ -328,7 +320,6 @@ function Reply({
   const popular = cards.filter((c) => c.signal !== "niche");
   const both = niche.length > 0 && popular.length > 0;
   const suggestions = m.suggestions ?? [];
-  // The button shows `label`; tapping it sends `query`.
   const followUps = [
     ...(lastQuery ? [{ label: "Find more niche problems", query: `Find more niche problems: ${lastQuery}` }] : []),
     ...(cards.length > 1 ? [{ label: "Which is easiest to build?", query: "Which is easiest to build?" }] : []),
@@ -350,7 +341,6 @@ function Reply({
     <div className={s.reply}>
       {steps.length > 0 && m.pending && <StepList steps={steps} pending />}
       {steps.length > 0 && !m.pending && m.mix && (
-        // Once done, the steps fold into one line; the detail is a tap away.
         <details className={s.stepsFold}>
           <summary>
             <Check size={14} aria-hidden="true" />
@@ -384,7 +374,6 @@ function Reply({
             {allSaved ? "On your board" : cards.length > 1 ? `Add all ${cards.length} to board` : "Add to board"}
           </button>
           {followUps.map((f, i) => (
-            // The first follow-up is the main next step: the one glossy button.
             <button key={f.label} type="button" className={i === 0 ? `glossy ${s.nextStep}` : s.example} onClick={() => onAsk(f.query)}>
               {f.label}
             </button>
@@ -395,7 +384,6 @@ function Reply({
   );
 }
 
-/** Under the composer on a new research: what you researched before (newest first), or examples to try. */
 function PastResearch({ onTry }: { onTry: (q: string) => void }) {
   const threads = useThreads().filter((t) => t.messages.length > 0);
   if (!threads.length) {

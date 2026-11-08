@@ -24,12 +24,10 @@ const KIND_BADGE: Record<SourceKind, string> = {
   blog: "Blog",
 };
 
-/** Short label for what kind of place a source is ("Forum", "Q&A", "Review"…). */
 export function kindBadge(src: Card["sources"][number]) {
   return src.kind ? KIND_BADGE[src.kind] : null;
 }
 
-/** "indiehackers.com · Oct 22, 2026 · 3 votes · 417 views" */
 export function sourceMeta(src: Card["sources"][number]) {
   return [
     src.kind === "hn" || src.kind === "app-review" ? "" : src.site,
@@ -68,7 +66,6 @@ export function TrendBadge({ trend }: { trend: Trend }) {
   );
 }
 
-// Highlights the repeated phrase inside a short quote.
 export function Quote({ text, highlight, className }: { text: string; highlight: string; className?: string }) {
   const at = highlight ? text.toLowerCase().indexOf(highlight.toLowerCase()) : -1;
   return (

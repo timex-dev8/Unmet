@@ -2,9 +2,7 @@ import { revalidateTag } from "next/cache";
 import { runFeed } from "@/lib/feed";
 import { runProducts } from "@/lib/products";
 
-// The daily feed job. Vercel Cron calls this three times a day: morning, midday and evening
-// (vercel.json); each run researches about a third of FEED_DAILY_TOPICS niches. The evening run first refreshes "what's working" products
-// (or any run with ?products=1). Vercel sends "Authorization: Bearer $CRON_SECRET".
+// ~a third of FEED_DAILY_TOPICS per run, evening run refreshes products first (or ?products=1)
 export const maxDuration = 300;
 
 export async function GET(request: Request) {
@@ -16,13 +14,13 @@ export async function GET(request: Request) {
   const started = Date.now();
   const result: Record<string, unknown> = {};
   let changed = false;
-  // Stops AI calls in time for the run to save what it has and answer before Vercel's limit.
+  // leaves time to save and answer before vercels limit
   const feedSignal = AbortSignal.timeout(270_000);
 
   try {
     if (params.get("slot") === "evening" || params.get("products") === "1") {
       try {
-        // No new AI batch after 2 minutes, so the niches below still get their turn.
+        // no new batch after 2 min so niches still get a turn
         const products = await runProducts({ deadline: started + 120_000, signal: AbortSignal.timeout(140_000) });
         result.products = products;
         changed ||= products.added + products.refreshed > 0;
@@ -37,8 +35,7 @@ export async function GET(request: Request) {
     const max = Math.ceil(perDay / 3);
     if (max && params.get("products") !== "1") {
       try {
-        // No new niche after 150s: a Medium research can take a couple of minutes, and it must end
-        // inside Vercel's 5-minute limit.
+        // no new niche after 150s, medium can take minutes and must end inside the 5 min limit
         const report = await runFeed({ max, deadline: started + 150_000, signal: feedSignal });
         const added = report.reduce((n, r) => n + r.added, 0);
         changed ||= added > 0;
@@ -52,6 +49,6 @@ export async function GET(request: Request) {
     }
     return Response.json(result);
   } finally {
-    if (changed) revalidateTag("feed", "max"); // show the new cards on the next visit, even after a failure
+    if (changed) revalidateTag("feed", "max"); // new cards on next visit, even after a failure
   }
 }

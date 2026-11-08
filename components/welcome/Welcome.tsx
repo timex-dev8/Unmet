@@ -12,24 +12,19 @@ import { safeNext } from "@/lib/links";
 import { useSyncStatus } from "@/lib/sync";
 import s from "./welcome.module.css";
 
-// The way into Unmet: sign in (password or email link), or continue as a guest. Guests can use
-// everything except deeper research. Once someone is in, they go to onboarding the first time and
-// straight to where they were heading after that. Guests skip onboarding.
 export default function Welcome({ next, failed }: { next: string; failed: boolean }) {
   const router = useRouter();
   const user = useUser();
   const guest = useGuest();
   const sync = useSyncStatus();
   const { interests } = useInterests();
-  // A signed-in account's interests arrive with the first sync; decide once that's done.
   const ready = guest === true || (user && (sync === "synced" || sync === "error"));
 
   useEffect(() => {
     if (!ready) return;
-    // Guests from before the guest cookie have only the localStorage flag; set the cookie too, or
-    // proxy.ts would send them straight back here.
+    // guests from before the guest cookie only have the localStorage flag, set the cookie or proxy.ts bounces them back
     if (guest === true) continueAsGuest();
-    const to = safeNext(next); // checked again here: router.replace("/\\evil.com") would leave the site
+    const to = safeNext(next); // recheck, router.replace("/\\evil.com") would leave the site
     router.replace(interests.onboarded || !user ? to : `/welcome/start?next=${encodeURIComponent(to)}`);
   }, [ready, guest, user, interests.onboarded, next, router]);
 

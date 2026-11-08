@@ -10,7 +10,6 @@ const SIGNALS: [Signal, string][] = [
   ["workaround", "built a workaround"],
 ];
 
-// "Is this worth building?": the verdict and its reasons all come from the evidence (lib/research/build.ts).
 export default function WorthBuilding({ report }: { report: Report }) {
   const v = VERDICT[report.verdict];
   return (

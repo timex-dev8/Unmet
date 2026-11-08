@@ -4,12 +4,9 @@ import { takeDailyPool, takeHourlySlot } from "@/lib/rate-limit";
 import { finishIdeas, IdeasSchema, ideasPrompt } from "@/lib/research/ideas";
 import { REMIX_SYSTEM, VALIDATE_SYSTEM } from "@/lib/research/prompts";
 
-// On-demand help for one idea card, AI only (no searches, so no search cost):
-// - remix: new ideas for the same problem with a twist ("make it B2B", "cheaper", "AI-first", "more like this")
-// - validate: landing page copy, interview questions and an outreach message, in the customers' own words
-// The only evidence used is the verified quotes already on the card.
+// remix and validate for one card, ai only. evidence is just the cards verified quotes
 
-// The card is AI-written: long text is cut to size rather than refused.
+// ai written text is cut, not refused
 const cut = (n: number) => z.string().transform((s) => s.slice(0, n));
 
 const Body = z.object({
@@ -42,9 +39,7 @@ const ValidateSchema = z.object({
   outreach: z.string(),
 });
 
-// Light per-visitor limit; these calls are free-tier Gemini only (lib/rate-limit.ts).
 const PER_HOUR = 30;
-// All visitors together per day, so one IP can't drain the shared free Gemini quota (IDEAS_DAILY_CAP).
 const DAILY_POOL = Number(process.env.IDEAS_DAILY_CAP ?? 300);
 
 export async function POST(request: Request) {
@@ -85,7 +80,7 @@ export async function POST(request: Request) {
       temperature: 0.8,
       prompt: `${base}\n\nTwist the founder asked for: ${twist}${idea ? `\nStarting from this idea: ${idea.title}. ${idea.pitch}` : ""}`,
     });
-    // Remixed ideas need only one cited quote: the card carries a few quotes, not every complaint.
+    // remixes need only one cited quote
     const ideas = finishIdeas(out.ideas, complaints, { report }, 1).map((d) => d.idea);
     return Response.json({ ideas });
   } catch (err) {

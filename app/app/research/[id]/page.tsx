@@ -6,7 +6,6 @@ import s from "@/components/research/research.module.css";
 
 export const metadata: Metadata = { title: "Research" };
 
-// Threads live in the browser for now, so this page only passes the id along.
 export const instant = false;
 
 export default async function ResearchThreadPage({ params }: PageProps<"/app/research/[id]">) {

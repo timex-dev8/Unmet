@@ -63,7 +63,6 @@ const CritiqueSchema = z.object({
   ),
 });
 
-/** High mode: a second, strict pass that drops generic problems, merges duplicates and sharpens headlines. */
 export async function critique(
   problems: DraftProblem[],
   complaints: Complaint[],

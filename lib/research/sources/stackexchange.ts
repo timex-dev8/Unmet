@@ -3,8 +3,7 @@ import { plain } from "@/lib/hn";
 import type { ResearchSource } from "@/lib/research-types";
 import { hostOf } from "@/lib/url";
 
-// Stack Exchange API: questions people ask, with votes and views. Free: 300 requests/day per IP,
-// 10,000 with STACKEXCHANGE_KEY. Only questions from the research window are kept.
+// free: 300 req/day per ip, 10k with STACKEXCHANGE_KEY
 
 type Item = {
   title: string;

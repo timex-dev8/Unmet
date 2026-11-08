@@ -4,7 +4,6 @@ import { ideaHref } from "@/lib/links";
 import GlassTile from "./GlassTile";
 import s from "./landing.module.css";
 
-/** What the hero's example card shows. Missing parts are left out, never made up. */
 export type HeroExample = {
   query: string;
   quote: string | null;
@@ -12,7 +11,6 @@ export type HeroExample = {
   proof: { slug: string; count: number } | null;
 };
 
-// The sky hero: serif headline, one button, floating glass tiles, and a real answer below.
 export default function Hero({ example }: { example: HeroExample }) {
   return (
     <header className={s.hero}>

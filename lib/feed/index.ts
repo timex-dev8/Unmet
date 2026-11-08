@@ -12,29 +12,22 @@ import type { Card } from "@/lib/types";
 import { passesFeedBar } from "./bar";
 import { SEED_TOPICS } from "./topics";
 
-// The live feed: a daily job researches the most overdue niches (High depth) and keeps only
-// problems that pass the feed bar. Research anyone runs can add to it too (cards hold only public
-// sources, never who asked). Repeats are merged, so evidence grows instead of duplicating.
+// daily job researches the most overdue niches (High) and keeps problems that pass the feed bar. cards only hold public sources, never who asked. repeats merge
 
 const STALE_DAYS = 30;
 const DedupeSchema = z.object({ cards: z.array(z.object({ index: z.number().int().min(0).max(999), duplicateOf: z.string() })) });
 
 const warn = (what: string, err: unknown) => console.warn(`[feed] ${what}:`, err instanceof Error ? err.message : err);
 
-/** Same problem: keep the old slug (shared links keep working) and pool the sources. */
 function pool(card: Card, old: Card, now: string): Card {
   const base = card.sources.length >= old.sources.length ? card : old;
-  // The base card's sources go first, so the cut can't drop the one behind the quote it shows.
+  // base card's sources first so the cut can't drop the one behind its quote
   const other = base === card ? old : card;
   const sources = [...new Map([...base.sources, ...other.sources].map((s) => [s.url, s])).values()].slice(0, 14);
   return { ...base, slug: old.slug, sources, evidence: { ...base.evidence, threads: sources.length, updatedAt: now } };
 }
 
-/**
- * Adds the cards that pass the bar; merges each into an existing card when it's the same problem.
- * `topic` is stored publicly, so it must never be someone's own question. Cards lose `query` (what
- * was searched) unless `keepQuery` says it's one of Unmet's own niches.
- */
+// topic is stored publicly so never someone's own question. query is dropped unless keepQuery (an Unmet niche)
 export async function addToFeed(
   cards: Card[],
   topic: string,
@@ -70,15 +63,14 @@ export async function addToFeed(
         .map((c) => `${c.slug} | <card>${fence(`${c.headline} | ${c.who}`)}</card>`)
         .join("\n")}`,
     }).catch((err) => {
-      if (opts.signal?.aborted) throw err; // out of time: saving unchecked cards would add repeats
+      if (opts.signal?.aborted) throw err; // out of time, saving unchecked cards would add repeats
       warn("dedupe", err);
       return { cards: [] };
     });
     dupes = new Map(out.cards.filter((d) => known.has(d.duplicateOf)).map((d) => [d.index, d.duplicateOf]));
   }
 
-  // Group by the slug each card lands on: two new cards can be the same existing problem, and one
-  // upsert can't write the same slug twice.
+  // group by landing slug, two new cards can be one existing problem and one upsert can't write a slug twice
   const now = new Date().toISOString();
   const bySlug = new Map<string, Card>();
   fresh.forEach((card, i) => {
@@ -91,7 +83,7 @@ export async function addToFeed(
     card: opts.keepQuery ? card : publicCard(card),
     topic,
     category: card.category,
-    score: card.scores.demand.value - (card.signal === "early" ? 30 : 0), // early signals rank below proven problems
+    score: card.scores.demand.value - (card.signal === "early" ? 30 : 0), // early signals rank below proven ones
     updated_at: now,
   }));
   const { error: upsertError } = await db().from("feed_cards").upsert(rows);
@@ -102,7 +94,6 @@ export async function addToFeed(
   return rows.length;
 }
 
-/** The niches researched least recently (seed list + niches people watch). */
 async function pickTopics(n: number) {
   await db()
     .from("feed_topics")
@@ -126,16 +117,12 @@ async function researchTopic(topic: string, seed: boolean, signal?: AbortSignal)
     false,
     true,
   );
-  // A niche someone watches is that person's own topic, so only Unmet's seed niches are stored by name.
+  // a watched niche is that person's topic, only seed niches are stored by name
   const stored = seed ? topic : (cards[0]?.category || "research").slice(0, 80);
   return addToFeed(cards, stored, { keepQuery: seed, light: true, signal });
 }
 
-/**
- * One feed run: researches up to `max` niches one at a time (two at once overloads the free AI
- * tier), and stops starting new ones near the time limit. `signal` cuts off the niche in progress so the run ends in time.
- * Then drops cards with no new evidence in 30 days.
- */
+// niches one at a time (two at once overloads the free tier), stop starting new ones near the time limit, signal cuts the current one. then drops cards with no new evidence in 30 days
 export async function runFeed({ max, deadline, signal }: { max: number; deadline: number; signal?: AbortSignal }) {
   if (!supabaseConfigured()) throw new Error("Supabase isn't connected.");
   const topics = await pickTopics(max);
@@ -145,7 +132,7 @@ export async function runFeed({ max, deadline, signal }: { max: number; deadline
     let added = 0;
     try {
       added = await researchTopic(topic, seed, signal).catch(async (err) => {
-        // The AI was busy: wait a little and try this niche once more, if there's time
+        // ai busy, wait and retry once if there is time
         const busy = (err instanceof LlmError && err.code === "rate_limited") || /busy/i.test(String(err));
         if (!busy || Date.now() + 90_000 > deadline) throw err;
         await new Promise((r) => setTimeout(r, 20_000));
@@ -155,10 +142,9 @@ export async function runFeed({ max, deadline, signal }: { max: number; deadline
     } catch (err) {
       report.push({ topic, added: 0, error: err instanceof Error ? err.message : String(err) });
     }
-    // Marked as run even when it failed, so a broken niche waits its turn instead of going first every run.
+    // marked as run even on failure so a broken niche doesn't go first every run
     await db().from("feed_topics").update({ last_run: new Date().toISOString(), cards_found: added }).eq("topic", topic);
   }
-  // A run where everything failed proves nothing is stale.
   if (report.some((r) => !r.error)) {
     const cutoff = new Date(Date.now() - STALE_DAYS * 86400_000).toISOString();
     await db().from("feed_cards").delete().lt("updated_at", cutoff);
@@ -166,13 +152,13 @@ export async function runFeed({ max, deadline, signal }: { max: number; deadline
   return report;
 }
 
-/** Ranking: demand, minus points per day since new evidence, so fresh cards reach the top instead of the same strong card staying there. */
+// demand minus points per day since new evidence, so fresh cards reach the top
 function freshScore(row: { score: number; updated_at: string }, now: number) {
   const days = Math.max(0, now - new Date(row.updated_at).getTime()) / 86400_000;
   return row.score - Math.min(60, days * 12);
 }
 
-/** Older cards collected Hacker News sources on non-developer topics; hide them (new research no longer adds any). */
+// older cards collected HN sources on non-developer topics, hide them
 function withoutOffTopicHn(card: Card): Card {
   if (card.category === "Dev tools") return card;
   const sources = card.sources.filter((x) => x.kind !== "hn");
@@ -184,7 +170,6 @@ function withoutOffTopicHn(card: Card): Card {
   return { ...card, sources, report, evidence: { ...card.evidence, threads: sources.length } };
 }
 
-/** Live feed cards, best first. Cached for days (tag "feed"; the feed job revalidates it). */
 export async function readFeed(opts: { category?: string; rising?: boolean; limit?: number } = {}): Promise<Card[]> {
   "use cache";
   cacheLife("days");

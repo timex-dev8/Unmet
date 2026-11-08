@@ -3,10 +3,8 @@ import { formatMrr } from "@/lib/text";
 import { listStartups } from "@/lib/trustmrr";
 import type { RawProduct } from "./types";
 
-// TrustMRR: startups whose revenue is verified (Stripe, App Store…). The strongest proof we have.
-
-// Revenue first: the dedupe keeps the first entry, so a startup on both lists stays revenue-ranked.
-// Growth over 1000% is usually a tiny base or a data glitch, so it's neither shown nor counted.
+// revenue first, the dedupe keeps the first entry
+// growth over 1000% is a tiny base or a glitch, not shown or counted
 const believable = (g: number | null): g is number => g !== null && g > 0 && g < 1000;
 
 export async function trustMrr(): Promise<RawProduct[]> {
@@ -27,7 +25,7 @@ export async function trustMrr(): Promise<RawProduct[]> {
         ],
         rising: growth >= 10,
         source: "TrustMRR" as const,
-        // $5k MRR ≈ 83, $100k ≈ 95; believable growth adds up to 10
+        // $5k MRR ~ 83, $100k ~ 95, believable growth adds up to 10
         weight: 50 + Math.min(45, Math.log10(Math.max(1, s.mrr / 100)) * 9) + Math.min(10, growth / 10),
       };
     });

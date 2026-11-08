@@ -12,8 +12,6 @@ const sections = [
   { id: "pricing", label: "Pricing" },
 ];
 
-// A floating, rounded bar of liquid glass: clear over the sky, frosted white once the page scrolls.
-// A glass bubble sits behind the section you're reading; on phones the links open in a glass sheet.
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [current, setCurrent] = useState<string | null>(null);
@@ -22,8 +20,7 @@ export default function Nav() {
   const [bubble, setBubble] = useState<{ x: number; w: number } | null>(null);
 
   useEffect(() => {
-    // Clear glass while the bar is over the deep part of the sky; frosted white once it reaches the
-    // pale part, so the text always has contrast. Near the top no section is "current".
+    // clear glass over the deep sky, frosted white over the pale part so text keeps contrast
     const onScroll = () => {
       const hero = document.querySelector("header");
       const deep = hero ? hero.offsetHeight * 0.4 : 300;
@@ -35,7 +32,6 @@ export default function Nav() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // The section crossing the upper part of the screen is the current one
   useEffect(() => {
     const els = sections.map((x) => document.getElementById(x.id)).filter((el): el is HTMLElement => !!el);
     const io = new IntersectionObserver(
@@ -49,8 +45,7 @@ export default function Nav() {
     return () => io.disconnect();
   }, []);
 
-  // The bubble is measured from the current link itself, so it always wraps the text exactly
-  // (a shared-layout animation drifts inside the fixed bar while the page scrolls).
+  // measure the bubble from the link itself, shared layout drifts inside the fixed bar while scrolling
   useLayoutEffect(() => {
     const measure = () => {
       const a = current ? links.current?.querySelector<HTMLElement>(`a[href="#${current}"]`) : null;

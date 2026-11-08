@@ -3,9 +3,6 @@
 import { useSyncExternalStore } from "react";
 import type { Syncable } from "./sync-types";
 
-// Where each saved idea sits on the board, plus your notes. Saved ideas start as "Spotted".
-// Kept in this browser, and in the account when signed in (lib/sync.ts).
-
 export const STAGES = [
   { id: "spotted", label: "Spotted", hint: "Saved from the feed or research" },
   { id: "researching", label: "Researching", hint: "Digging into the evidence" },
@@ -14,7 +11,7 @@ export const STAGES = [
 ] as const;
 
 export type Stage = (typeof STAGES)[number]["id"];
-export type BoardEntry = { stage: Stage; note: string; movedAt: number };
+type BoardEntry = { stage: Stage; note: string; movedAt: number };
 type BoardState = Record<string, BoardEntry>;
 
 const KEY = "unmet:board:v1";
@@ -35,15 +32,12 @@ function write(next: BoardState) {
   cache = next;
   try {
     localStorage.setItem(KEY, JSON.stringify(next));
-  } catch {
-    // storage blocked: keep it for this visit
-  }
+  } catch {}
   listeners.forEach((l) => l());
 }
 
 const getSnapshot = () => (cache ??= read());
 
-// Another tab changed the stored value: drop the in-memory copy and re-read.
 function subscribe(l: () => void) {
   const onStorage = (e: StorageEvent) => {
     if (e.key === KEY) {
@@ -77,7 +71,6 @@ export function setNote(slug: string, note: string) {
   write({ ...cur, [slug]: { ...entryFor(cur, slug), note: note.slice(0, 1000) } });
 }
 
-/** Drops a card's board entry (stage and note) when it is removed from the board. */
 export function removeEntry(slug: string) {
   const cur = getSnapshot();
   if (!(slug in cur)) return;
@@ -100,7 +93,7 @@ export const boardSync: Syncable<BoardState> = {
   kind: "board",
   get: getSnapshot,
   replace: (state) => write(state),
-  // Per idea, keep whichever side moved it last.
+  // per idea, whichever side moved it last wins
   merge: (local, remote) => {
     const out = { ...remote };
     for (const [slug, e] of Object.entries(local)) if (!out[slug] || e.movedAt > out[slug].movedAt) out[slug] = e;

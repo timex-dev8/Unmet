@@ -22,7 +22,6 @@
   color: var(--link);
 }
 
-/* Filter chips */
 .chips {
   display: flex;
   gap: 8px;
@@ -60,7 +59,6 @@
   background: transparent;
   color: var(--white);
 }
-/* the blue active chip, gliding between filters (components/motion/Highlight.tsx) */
 .chipPill {
   background: var(--primary);
 }
@@ -78,7 +76,6 @@
   }
 }
 
-/* Feed filters: topics scroll, the source menu stays put at the end of the row */
 .filters {
   display: flex;
   align-items: flex-start;

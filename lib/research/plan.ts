@@ -32,7 +32,7 @@ const PlanSchema = z.object({
   suggestions: z.array(z.string()).max(3).describe("Searches to try next; empty only for mode 'answer'"),
 });
 
-// Ordinary groups for a mixed search; a few are picked at random each time so results don't repeat.
+// a few picked at random each time so results don't repeat
 const DISCOVER_GROUPS = [
   "dental hygienists",
   "wedding photographers",
@@ -56,9 +56,9 @@ const DISCOVER_GROUPS = [
   "small-town pharmacists",
 ];
 
-export type Plan = z.infer<typeof PlanSchema>;
+type Plan = z.infer<typeof PlanSchema>;
 
-// Search operators don't help Exa's plain-language search; strip any the model adds.
+// operators don't help exa, strip any the model adds
 const plain = (q: string) =>
   q
     .replace(/\bsite:\S+/gi, "")
@@ -92,7 +92,6 @@ export async function makePlan(req: ResearchRequest, signal?: AbortSignal): Prom
 
   const plan = await generateJson(PlanSchema, { system: PLAN_SYSTEM, prompt, timeoutMs: 20_000, signal, light: true });
 
-  // Keep only allowed values and clean every query.
   return {
     ...plan,
     angles: plan.angles.map((a) => ({ ...a, query: plain(a.query) })).filter((a) => a.query.length > 3),

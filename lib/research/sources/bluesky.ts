@@ -1,8 +1,7 @@
 import "server-only";
 import type { ResearchSource } from "@/lib/research-types";
 
-// Bluesky's public search (api.bsky.app, no key): short first-hand posts from real people.
-// It matches keywords, so queries should be 2–4 words. Only posts inside the window are kept.
+// matches keywords so 2-4 words. only posts in the window
 
 type Post = {
   uri: string;

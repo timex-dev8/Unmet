@@ -1,6 +1,3 @@
-/* Account button + sign-in sheet (DESIGN.md: ink on white, black primary pill, soft surfaces) */
-
-/* Sidebar row, pinned to the bottom */
 .side {
   margin-top: auto;
   display: flex;
@@ -42,7 +39,6 @@
   color: var(--muted);
 }
 
-/* Phone top bar */
 .icon {
   width: 44px;
   height: 44px;
@@ -80,7 +76,6 @@
   font-size: 22px;
 }
 
-/* Sheet: centered card, slides up on phones */
 .dialog {
   width: min(400px, calc(100% - 24px));
   margin: auto;
@@ -247,7 +242,7 @@
   border-radius: 12px;
   background: #f5f6fa;
   font: inherit;
-  font-size: 16px; /* 16px+ so iOS doesn't zoom in */
+  font-size: 16px; /* 16px+ so ios doesnt zoom in */
   color: var(--ink);
   outline: 0;
   transition: box-shadow var(--t-fast) var(--ease);
@@ -300,7 +295,6 @@
   cursor: pointer;
 }
 
-/* Password / Email link switch (the white pill glides, components/motion/Highlight.tsx) */
 .modes {
   width: 100%;
   display: grid;

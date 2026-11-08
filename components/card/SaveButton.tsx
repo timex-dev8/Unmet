@@ -7,7 +7,7 @@ import s from "./card.module.css";
 
 type Props = { label?: string; small?: boolean; quiet?: boolean } & (
   | { card: Card; load?: undefined }
-  // A slim copy of the card: the full one is fetched when it's saved (Saved and Board need all of it)
+  // slim copy of the card, the full one is fetched on save
   | { card: Pick<Card, "slug">; load: (slug: string) => Promise<Card | null> }
 );
 
@@ -26,7 +26,7 @@ export default function SaveButton({ card, load, label = "Save", small = false, 
       aria-pressed={saved}
       className={`${s.act} ${saved ? s.actSaved : quiet ? s.actQuiet : "glossy"} ${small ? s.actSmall : ""} ${quiet ? s.actCompact : ""}`}
     >
-      {/* keyed so the icon and label re-enter (pop / fade) each time the state flips */}
+      {/* keyed so icon and label re-enter on each flip */}
       {saved ? (
         <BookmarkCheck key="on" size={small ? 15 : 17} className={s.iconPop} aria-hidden="true" />
       ) : (

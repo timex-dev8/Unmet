@@ -3,8 +3,7 @@ import type { ProductProof } from "@/lib/types";
 import { hostOf } from "@/lib/url";
 import { headers } from "./types";
 
-// Traffic, from Cloudflare Radar's domain ranking (free token). Google Analytics only covers your
-// own site, so this is the stand-in. Only runs with CLOUDFLARE_RADAR_TOKEN.
+// stand-in for traffic, GA only covers your own site. needs CLOUDFLARE_RADAR_TOKEN
 const BUCKETS = [200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000, 1000000];
 
 export function radarConfigured() {

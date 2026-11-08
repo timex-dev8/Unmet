@@ -7,7 +7,7 @@ import { MIND_SYSTEM } from "@/lib/research/prompts";
 
 export const maxDuration = 60;
 
-// Ideas come from earlier AI answers: cut to size rather than refused. The notes are the person's own.
+// ideas are cut, notes are the persons own
 const cut = (n: number) => z.string().transform((s) => s.slice(0, n));
 
 const Body = z.object({
@@ -38,15 +38,13 @@ export async function POST(request: Request) {
   const parsed = Body.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "Write a note about your idea first." }, { status: 400 });
 
-  // Per-visitor limit to protect the free AI tier (lib/rate-limit.ts).
   if (!(await takeHourlySlot(request, "mind", 10)))
     return Response.json({ error: "That's 10 updates this hour. Try again a bit later." }, { status: 429 });
-  // All visitors together per day, to protect the shared free Gemini quota.
   if (!(await takeDailyPool("mind", Number(process.env.MIND_DAILY_CAP ?? 200))))
     return Response.json({ error: "Shape is very busy today. Please try again tomorrow." }, { status: 429 });
 
   const { thoughts } = parsed.data;
-  // The person's own saved/researched ideas plus the feed's ideas: the only problems the brief may link to.
+  // only these may be linked from the brief
   const feed = (await getAllCards()).map(({ slug, headline, summary }) => ({ slug, headline, summary }));
   const ideas = [...parsed.data.ideas, ...feed].filter((c, i, all) => all.findIndex((x) => x.slug === c.slug) === i);
 
@@ -59,7 +57,6 @@ export async function POST(request: Request) {
         .join("\n")}`,
     });
 
-    // Keep only a slug that really exists.
     const match = ideas.find((c) => c.slug === out.matchSlug);
     const clean = (list: string[]) => list.map((x) => x.trim()).filter(Boolean);
     const result: MindBrief = {

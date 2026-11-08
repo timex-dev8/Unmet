@@ -8,8 +8,6 @@ import s from "./depthSlider.module.css";
 const SPRING = { type: "spring", stiffness: 520, damping: 40 } as const;
 const LAST = DEPTHS.length - 1;
 
-// Low / Medium / High as a track with three stops. The knob follows a drag and springs to the
-// nearest stop on release. A native range input (visually hidden) handles keyboard and screen readers.
 export default function DepthSlider({
   value,
   onChange,
@@ -19,19 +17,18 @@ export default function DepthSlider({
   value: Depth;
   onChange: (d: Depth) => void;
   disabled?: boolean;
-  /** Also show what the level searches ("Web, forums, reviews…"). */
   detail?: boolean;
 }) {
   const index = DEPTHS.findIndex((d) => d.id === value);
   const level = DEPTHS[index];
   const railRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
-  const target = useRef(0); // where the pointer is, 0..1 (the knob may still be springing toward it)
+  const target = useRef(0); // pointer position 0..1, the knob may still be springing to it
   const [active, setActive] = useState(false);
-  const pos = useMotionValue(index / LAST); // 0..1 along the rail
+  const pos = useMotionValue(index / LAST);
   const left = useTransform(pos, (v) => `${v * 100}%`);
 
-  // Spring to the stop whenever the value changes from outside a drag (keys, label taps, props).
+  // spring to the stop when value changes outside a drag
   useEffect(() => {
     if (!dragging.current) animate(pos, index / LAST, SPRING);
   }, [index, pos]);

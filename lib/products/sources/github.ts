@@ -2,7 +2,6 @@ import "server-only";
 import type { RawProduct } from "./types";
 import { headers } from "./types";
 
-// New open-source projects (last 90 days) people are starring fast, that have a product site.
 type Repo = {
   full_name: string;
   html_url: string;

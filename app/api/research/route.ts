@@ -9,11 +9,10 @@ import { takeMemorySlot, takeResearchSlot, type SlotRequest } from "@/lib/resear
 import { accountsConfigured, requestUser } from "@/lib/supabase/server";
 import type { Depth, ResearchEvent } from "@/lib/research-types";
 
-// High mode runs several AI steps and searches; Vercel Hobby with Fluid compute allows up to 300s.
+// hobby with fluid compute caps at 300s
 export const maxDuration = 300;
 
-// AI-written text (card headlines and summaries from earlier answers) is cut to size rather than
-// refused, so a long one never breaks a follow-up. The person's own message is still checked.
+// ai text is cut, not refused, so a long one never breaks a follow up
 const cut = (n: number) => z.string().transform((s) => s.slice(0, n));
 
 const Body = z.object({
@@ -29,12 +28,9 @@ const Body = z.object({
   depth: z.enum(["low", "medium", "high"]).default("medium"),
 });
 
-// High mode costs about three normal researches, so it counts as three.
 const COST = { low: 1, medium: 1, high: 3 } as const;
 
-// Limits that protect the free tiers, counted in Supabase (take_research_slot in supabase/schema.sql).
-// Guests: 6 per hour each (accounts 12), and RESEARCH_DAILY_CAP for all guests together per day.
-// Accounts: their own bucket, so guests can't use up the day for them.
+// guests 6/hr (accounts 12) plus a daily cap for all guests, accounts get their own bucket
 const PER_HOUR = 6;
 const USER_HOUR = 12;
 const GUEST_DAY = 15;
@@ -52,7 +48,7 @@ async function limited(visitor: string, isUser: boolean, depth: Depth) {
   };
   let ok = await takeResearchSlot(slot);
   if (ok === null) {
-    // The limit couldn't be checked: never open the costly depths; Low only within this server's own count.
+    // cant check the limit: no costly depths
     if (depth !== "low") return "Deeper research is paused for a moment. Try Quick, or again in a minute.";
     ok = takeMemorySlot(slot);
   }
@@ -71,14 +67,13 @@ export async function POST(request: Request) {
   if (!parsed.success) return Response.json({ error: "Please type a question between 2 and 800 characters." }, { status: 400 });
   const { depth } = parsed.data;
 
-  // Guests (no account) can use everything except deeper research: Medium and High need an account.
-  // When accounts exist but the token can't be verified (no service key, auth down), they stay closed.
+  // medium and high need an account, stay closed if the token cant be verified
   const user = await requestUser(request);
   if (depth !== "low" && accountsConfigured() && !user) {
     return Response.json({ error: "Deep and Deepest research need a free account. Sign in, or use Quick." }, { status: 403 });
   }
 
-  // Saved answers cost no search or AI call, so they don't use up a research slot.
+  // saved answers dont cost a slot
   const saved = await peekCached(parsed.data).catch(() => null);
   if (saved)
     return new Response(JSON.stringify({ ...saved, cached: true }) + "\n", {
@@ -88,7 +83,6 @@ export async function POST(request: Request) {
   const blocked = await limited(user ? `u:${user.id}` : visitorId(clientIp(request)), Boolean(user), depth);
   if (blocked) return Response.json({ error: blocked }, { status: 429 });
 
-  // Closing the tab cancels the stream; the research stops instead of spending on an answer nobody reads.
   const abort = new AbortController();
   request.signal.addEventListener("abort", () => abort.abort(), { once: true });
 
@@ -103,8 +97,7 @@ export async function POST(request: Request) {
       };
       try {
         await runResearch(parsed.data, emit, abort.signal);
-        // Problems strong enough for everyone's feed are added after the answer is sent. Cards hold
-        // only public sources; the feed gets the category as topic, never anything derived from the person's message.
+        // feed gets the category as topic, never anything from the persons message
         const cards = found.flatMap((e) => (e.type === "result" ? e.cards : []));
         const topic = (cards[0]?.category || "research").slice(0, 80);
         if (cards.length) after(() => addToFeed(cards, topic).catch(() => 0));
@@ -121,7 +114,7 @@ export async function POST(request: Request) {
         try {
           controller.close();
         } catch {
-          // already cancelled by the browser
+          // browser already cancelled
         }
       }
     },

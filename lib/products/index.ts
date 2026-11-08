@@ -16,12 +16,8 @@ import { radarConfigured, trafficRank } from "./sources/radar";
 import { trustMrr } from "./sources/trustmrr";
 import type { RawProduct } from "./sources/types";
 
-// "What's working": real products with proof (verified revenue, top-grossing charts, upvotes,
-// stars, traffic), mixed into the feed for inspiration. A daily job collects them from official
-// APIs and feeds, merges repeats, has the AI write each card in its own words, and stores them.
-
 const STALE_DAYS = 21;
-const MAX_NEW = 60; // new cards written per run (one AI call per 20)
+const MAX_NEW = 60; // one ai call per 20
 const RADAR_AT_ONCE = 5;
 const CardsSchema = z.object({
   products: z.array(
@@ -50,8 +46,7 @@ function isStorePage(url: string) {
   }
 }
 
-// A product's stable identity: its web page. The path counts too, since one company can host
-// several products (example.com/apps/a, example.com/apps/b), and every store page is its own product.
+// identity is the page; path counts since one company can host several products
 export function keyOf(p: { url: string; name: string }) {
   try {
     const u = new URL(p.url);
@@ -63,8 +58,7 @@ export function keyOf(p: { url: string; name: string }) {
 
 type Merged = RawProduct & { keys: string[] }; // every page it was found under
 
-// The same product from two sources: the same web page, or the same name when one side is a store
-// page (its App Store / GitHub / Product Hunt listing). Two websites with one name are two companies.
+// same web page, or same name when one side is a store page. two sites with one name are two companies
 function merge(all: RawProduct[]) {
   const byKey = new Map<string, Merged>();
   const byName = new Map<string, Merged>();
@@ -84,9 +78,9 @@ function merge(all: RawProduct[]) {
     }
     if (!old.keys.includes(k)) old.keys.push(k);
     byKey.set(k, old);
-    // Prefer the product's own website over a store page, and pool the proof
+    // prefer the product's own site over a store page, pool the proof
     if (isStorePage(old.url) && !isStorePage(p.url)) old.url = p.url;
-    // One piece of proof per kind and site: keep the first (strongest) one
+    // one proof per kind and site, keep the first (strongest)
     old.proof.push(...p.proof.filter((x) => !old.proof.some((y) => y.kind === x.kind && y.site === x.site)));
     old.weight += p.weight;
     old.rising ||= p.rising;
@@ -96,8 +90,8 @@ function merge(all: RawProduct[]) {
   return out.sort((a, b) => b.weight - a.weight);
 }
 
-/** Takes new products from each source in turn, so one big source (the App Store) can't crowd out the rest. */
-export function roundRobin(list: RawProduct[], n: number) {
+// round-robin so one big source (app store) can't crowd out the rest
+function roundRobin(list: RawProduct[], n: number) {
   const bySource = new Map<ProductSource, RawProduct[]>();
   for (const p of list) bySource.set(p.source, [...(bySource.get(p.source) ?? []), p]);
   const queues = [...bySource.values()];
@@ -106,8 +100,7 @@ export function roundRobin(list: RawProduct[], n: number) {
   return out;
 }
 
-/** Collects from every source; a source that fails or has no key just adds nothing. */
-export async function collectProducts() {
+async function collectProducts() {
   const names = ["TrustMRR", "App Store", "GitHub", "Product Hunt"];
   const results = await Promise.allSettled([trustMrr(), appStoreGrossing(), githubRising(), productHunt()]);
   const counts: Record<string, number> = {};
@@ -120,8 +113,7 @@ export async function collectProducts() {
   return { products: merge(all), counts };
 }
 
-/** Writes cards for new products (in the AI's own words) and drops the ones it flags. No new batch starts after `deadline`. */
-export async function writeCards(raw: RawProduct[], deadline = Infinity, signal?: AbortSignal): Promise<Product[]> {
+async function writeCards(raw: RawProduct[], deadline = Infinity, signal?: AbortSignal): Promise<Product[]> {
   const now = new Date().toISOString();
   const out: Product[] = [];
   for (let start = 0; start < raw.length; start += 20) {
@@ -151,7 +143,7 @@ export async function writeCards(raw: RawProduct[], deadline = Infinity, signal?
       const key = keyOf(p);
       out.push({
         kind: "product",
-        // Names in other scripts slugify to nothing: a short hash of the key keeps the slug unique
+        // names in other scripts slugify to nothing, a hash of the key keeps the slug unique
         slug: slugify(c.name || p.name) || `product-${shortHash(key)}`,
         key,
         name: c.name || p.name,
@@ -172,17 +164,12 @@ export async function writeCards(raw: RawProduct[], deadline = Infinity, signal?
   return out;
 }
 
-/**
- * The daily product run: collect, merge, refresh proof on products we already have, write cards
- * for new ones, add traffic rank when a Radar token is set, then drop products not seen in 3 weeks.
- */
 export async function runProducts({ deadline = Infinity, signal }: { deadline?: number; signal?: AbortSignal } = {}) {
   if (!supabaseConfigured()) throw new Error("Supabase isn't connected.");
   const { products: raw, counts } = await collectProducts();
   const scoreOf = new Map(raw.map((p) => [keyOf(p), p.weight]));
 
-  // Stored products by their key (rows saved before `key` existed: from their stored URL), and
-  // which key owns each slug, so a new product never silently overwrites another one.
+  // stored products by key (old rows: from stored url) and which key owns each slug, so a new one never overwrites another
   const { data: known, error } = await db().from("feed_products").select("slug, product");
   if (error) throw error;
   const byKey = new Map<string, Product>();
@@ -209,7 +196,7 @@ export async function runProducts({ deadline = Infinity, signal }: { deadline?: 
         proof: p.proof.slice(0, 4),
         rising: p.rising,
         image: p.image ?? old.image,
-        // Keep the source a card was first found on; older rows saved before `source` existed take the fresh one
+        // keep the first source, old rows without one take the fresh one
         source: old.source ?? p.source,
         updatedAt: now,
       });
@@ -246,11 +233,10 @@ export async function runProducts({ deadline = Infinity, signal }: { deadline?: 
   if (rows.length) {
     const { error: upsertError } = await db().from("feed_products").upsert(rows);
     if (upsertError) throw upsertError;
-    // Only after a run that saved something: when every source fails, nothing is stale.
+    // only after a run that saved something, all sources failing means nothing is stale
     const cutoff = new Date(Date.now() - STALE_DAYS * 86400_000).toISOString();
     await db().from("feed_products").delete().lt("updated_at", cutoff);
   }
-  // Show HN is no longer collected; clear the cards it left behind.
   await db().from("feed_products").delete().eq("product->>source", "Hacker News");
   return {
     counts,
@@ -263,13 +249,11 @@ export async function runProducts({ deadline = Infinity, signal }: { deadline?: 
 
 const SOURCES: ProductSource[] = ["TrustMRR", "Product Hunt", "App Store", "Hacker News", "GitHub"];
 
-/** The source for a stored product that has none, from the site of its first proof. */
 function sourceFromSite(site?: string): ProductSource {
   if (site === "Show HN") return "Hacker News";
   return SOURCES.find((s) => s === site) ?? "Hacker News";
 }
 
-/** Products for the feed, strongest proof first. Cached like the feed (tag "feed"). */
 export async function readProducts(opts: { category?: string; rising?: boolean } = {}): Promise<Product[]> {
   "use cache";
   cacheLife("days");
@@ -282,14 +266,13 @@ export async function readProducts(opts: { category?: string; rising?: boolean }
     warn("read", error);
     return [];
   }
-  // Rows saved before `source` existed get it from their first piece of proof
   const list = data
     .map((r) => {
       const p = r.product as Product;
       return { ...p, source: p.source ?? sourceFromSite(p.proof[0]?.site) };
     })
     .filter((p) => p.source !== "Hacker News" && !/^anonymous/i.test(p.name));
-  // Proof like "upvotes this week" goes out of date; show only what the last runs confirmed, unless that's nothing.
+  // proof like "upvotes this week" goes stale, show only what recent runs confirmed unless that is nothing
   const cutoff = Date.now() - 3 * 86400_000;
   const current = list.filter((p) => Date.parse(p.updatedAt) >= cutoff);
   const shown = current.length ? current : list;

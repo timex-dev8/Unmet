@@ -1,17 +1,13 @@
 import type { ResearchSource } from "@/lib/research-types";
 import type { SourceKind } from "@/lib/types";
 
-// Judges sources before any AI reads them: what kind of place it is, whether it's fresh,
-// and whether it's the kind of page that re-packages other people's complaints.
-
 const DAY = 86400_000;
 
-// Social networks, video, and "we analyzed Reddit for you" aggregators: not first-hand evidence.
-// (Reddit itself is kept: its posts are first-hand.)
+// social, video and "we analyzed reddit for you" aggregators aren't first-hand (reddit itself is kept)
 const DROP_DOMAIN =
   /(^|\.)(linkedin\.com|facebook\.com|instagram\.com|tiktok\.com|pinterest\.com|youtube\.com|x\.com|twitter\.com|gummysearch\.com|painonsocial\.com|ideabrowser\.com|explodingtopics\.com|redditinsights\.\w+)$/;
 
-// Listicles, comparisons and vendor buying guides re-package problems instead of reporting them.
+// listicles, comparisons and buying guides repackage problems
 const LISTICLE =
   /\b\d+\s+(best|top|common|biggest|ways|tips|tools|apps|alternatives|mistakes|reasons|challenges|problems|pain\s*points|examples)\b|ultimate guide|complete guide|how to choose|buyer'?s guide|\bvs\.?\s|pricing|found on reddit/i;
 
@@ -35,7 +31,6 @@ export function kindOf(site: string, url: string): SourceKind {
   return "blog";
 }
 
-// How much a kind of source counts as first-hand evidence.
 const KIND_WEIGHT: Record<SourceKind, number> = {
   forum: 1,
   qa: 1,
@@ -48,7 +43,7 @@ const KIND_WEIGHT: Record<SourceKind, number> = {
   news: 0.4,
 };
 
-export type QualityReport = { kept: ResearchSource[]; rejected: { old: number; untrusted: number; thin: number; duplicate: number } };
+type QualityReport = { kept: ResearchSource[]; rejected: { old: number; untrusted: number; thin: number; duplicate: number } };
 
 export function filterSources(sources: Omit<ResearchSource, "id">[], windowDays: number): QualityReport {
   const now = Date.now();
@@ -90,7 +85,7 @@ export function filterSources(sources: Omit<ResearchSource, "id">[], windowDays:
   return { kept, rejected };
 }
 
-// No single service may crowd out the rest (App Store reviews can flood a business topic).
+// no service may crowd out the rest (app store reviews can flood a business topic)
 const ORIGIN_CAP: Partial<Record<ResearchSource["origin"], number>> = {
   reddit: 14,
   appstore: 8,
@@ -101,11 +96,10 @@ const ORIGIN_CAP: Partial<Record<ResearchSource["origin"], number>> = {
   discourse: 8,
 };
 
-/** Picks the best sources while keeping every service represented (round-robin by origin). */
 export function pickDiverse(sources: ResearchSource[], max: number): ResearchSource[] {
   const byOrigin = new Map<string, ResearchSource[]>();
   for (const s of [...sources].sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0))) {
-    const key = s.group ?? s.origin; // discover-mode sources are balanced by group; a group key has no cap
+    const key = s.group ?? s.origin; // discover-mode sources balance by group, a group key has no cap
     const list = byOrigin.get(key) ?? [];
     if (list.length < (s.group ? Infinity : (ORIGIN_CAP[s.origin] ?? Infinity))) list.push(s);
     byOrigin.set(key, list);

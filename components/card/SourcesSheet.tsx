@@ -7,7 +7,6 @@ import { kindBadge, sourceMeta, windowLabel } from "./parts";
 import s from "./card.module.css";
 import sheet from "./sheet.module.css";
 
-// Bottom sheet listing the original posts. Uses <dialog> for focus trapping and Esc to close.
 export default function SourcesSheet({ card, link }: { card: Card; link?: boolean }) {
   const ref = useRef<HTMLDialogElement>(null);
   const count = card.sources.length;
@@ -29,7 +28,7 @@ export default function SourcesSheet({ card, link }: { card: Card; link?: boolea
         className={sheet.sheet}
         aria-labelledby={`sources-${card.slug}`}
         onClick={(e) => {
-          if (e.target === ref.current) ref.current.close(); // tap outside closes
+          if (e.target === ref.current) ref.current.close(); // backdrop tap
         }}
       >
         <div className={sheet.inner}>

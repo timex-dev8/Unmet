@@ -5,10 +5,8 @@ import { missingFunction } from "@/lib/rate-limit";
 import { db, supabaseConfigured } from "@/lib/supabase/server";
 import type { Card } from "@/lib/types";
 
-// What research keeps between requests: the result cache, rate-limit hits and shared ideas.
-// Supabase when it's connected (survives restarts, shared by every server); in memory otherwise.
-// A database error never breaks a research: it logs and falls back to "no cache". The limit check
-// is the exception: when it can't be read, deeper research is refused (see takeResearchSlot).
+// result cache, rate-limit hits and shared ideas. supabase if connected, memory otherwise
+// db errors log and fall back to no cache, except the limit check: unreadable means deeper research is refused (takeResearchSlot)
 
 type Result = Extract<ResearchEvent, { type: "result" }>;
 const CACHE_MS = 6 * 3600 * 1000;
@@ -41,22 +39,17 @@ export async function setCached(key: string, value: Result) {
 }
 
 export type SlotRequest = {
-  visitor: string; // hashed IP for guests, "u:<user id>" for accounts
+  visitor: string; // hashed ip for guests, "u:<id>" for accounts
   isUser: boolean;
   cost: number;
   hourLimit: number;
-  dayLimit: number; // this visitor, per UTC day
-  globalDayLimit: number; // everyone of the same kind (guests, or accounts) together; 0 = none
+  dayLimit: number;
+  globalDayLimit: number; // everyone of the same kind together, 0 = none
 };
 
-let rpcMissingUntil = 0; // checked again every 10 minutes, so running the SQL takes effect without a deploy
+let rpcMissingUntil = 0; // retried every 10 minutes so running the sql works without a deploy
 
-/**
- * Takes a research slot: true = go ahead (and it's counted), false = over a limit, null = the limit
- * couldn't be checked (the caller decides; deeper research stays closed then).
- * take_research_slot (supabase/schema.sql) checks and records in one locked step, so parallel
- * requests can't all pass the same check.
- */
+// true = go, false = over a limit, null = couldn't check (deeper research stays closed). take_research_slot checks and records in one locked step
 export async function takeResearchSlot(r: SlotRequest): Promise<boolean | null> {
   if (!supabaseConfigured()) return takeMemorySlot(r);
   if (Date.now() > rpcMissingUntil) {
@@ -79,7 +72,6 @@ export async function takeResearchSlot(r: SlotRequest): Promise<boolean | null> 
   return legacySlot(r);
 }
 
-/** The pre-function check: read the hits, then record one (not atomic, but better than nothing). */
 async function legacySlot(r: SlotRequest): Promise<boolean | null> {
   const hourAgo = Date.now() - HOUR;
   const dayStart = new Date().setUTCHours(0, 0, 0, 0);
@@ -107,7 +99,7 @@ async function legacySlot(r: SlotRequest): Promise<boolean | null> {
   return true;
 }
 
-/** This server's own count: used without Supabase, and for Low when the database can't be checked. */
+// this server's own count, used without supabase and for Low when the db can't be checked
 export function takeMemorySlot(r: SlotRequest) {
   const now = Date.now();
   const hourAgo = now - HOUR;
@@ -123,10 +115,8 @@ export function takeMemorySlot(r: SlotRequest) {
   return true;
 }
 
-/** The copy of a card anyone can read: without `query`, the topic the person typed. */
 export const publicCard = (card: Card): Card => ({ ...card, query: undefined });
 
-/** Saves research ideas so their share links open for anyone (public copies: no `query`). */
 export async function saveIdeas(cards: Card[]) {
   if (!supabaseConfigured() || !cards.length) return;
   const { error } = await db()
@@ -136,14 +126,12 @@ export async function saveIdeas(cards: Card[]) {
   else
     for (const card of cards) {
       try {
-        revalidateTag(`idea:${card.slug}`, { expire: 0 }); // a cached "not found" for this slug must not outlive the save
-      } catch {
-        // Not inside a request (scripts): nothing is cached there.
-      }
+        revalidateTag(`idea:${card.slug}`, { expire: 0 }); // a cached "not found" must not outlive the save
+      } catch {}
     }
 }
 
-/** A shared idea by slug. Cached for days (tags "feed" and "idea:<slug>"): the stored card is public and rarely changes. */
+// cached for days (tags "feed", "idea:<slug>")
 export async function getIdea(slug: string): Promise<Card | null> {
   "use cache";
   cacheLife("days");

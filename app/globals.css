@@ -1,23 +1,21 @@
-/* Design tokens: see DESIGN.md ("Unmet editorial"). */
 :root {
-  --ink: #19191d; /* text */
+  --ink: #19191d;
   --ink-2: #3f3f4a;
   --muted: #6b6b7b;
-  --line: #e9e9ef; /* hairline */
-  --gray: #f2f4f8; /* quiet buttons and chips */
+  --line: #e9e9ef;
+  --gray: #f2f4f8;
   --white: #ffffff;
-  --paper: #ffffff; /* page background */
-  --side: #f8f9fc; /* Studio sidebar */
-  --sand: #dfe3ec; /* quiet borders */
-  --slate: #6b7280; /* small labels */
-  --primary: #1c38ea; /* the one main action per screen (glossy blue) */
+  --paper: #ffffff;
+  --side: #f8f9fc;
+  --sand: #dfe3ec;
+  --slate: #6b7280;
+  --primary: #1c38ea;
 
-  --blue: #1c38ea; /* buttons, bars */
-  --link: #1c38ea; /* text links */
-  --navy: #1c38ea; /* brand blue: "Strong", selected */
-  --tint: #eef1fb; /* highlight marker, selected chips */
+  --blue: #1c38ea;
+  --link: #1c38ea;
+  --navy: #1c38ea;
+  --tint: #eef1fb;
 
-  /* The sky (DESIGN.md "v3"): deep blue fading to pale and white, a warm sun glow */
   --sky-deep: #2c6ad6;
   --sky-wash: linear-gradient(180deg, #cfe3f8 0%, #e6f1fc 40%, #ffffff 100%);
   --mist: linear-gradient(180deg, #eef1f8 0%, #f6f7fb 100%);
@@ -25,7 +23,6 @@
   --blue-card: radial-gradient(120% 120% at 20% 0%, #6f92f7 0%, #5b7ff0 45%, #8aa6f6 100%);
   --fade-text: linear-gradient(to right, #19191d 0%, #626275 100%);
 
-  /* The shiny blue button: a soft highlight on top, a pale glow at the bottom right */
   --glossy:
     radial-gradient(120% 90% at 28% 0%, rgba(255, 255, 255, 0.38) 0, rgba(255, 255, 255, 0) 52%),
     radial-gradient(90% 80% at 80% 110%, rgba(140, 190, 255, 0.45) 0, rgba(140, 190, 255, 0) 60%), linear-gradient(180deg, #2d5cf2 0%, #1c38ea 100%);
@@ -33,25 +30,21 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.45), inset -2px -2px 4px rgba(191, 229, 251, 0.35), inset 2px 2px 3px rgba(19, 26, 228, 0.12),
     0 10px 22px -10px rgba(28, 56, 234, 0.65);
 
-  /* Studio (see DESIGN.md): calm surfaces, one ink, one soft accent. */
   --studio-bg: var(--paper);
   --surface: #ffffff;
   --text-3: #9a9aab;
   --early-tint: #fdf3cf;
   --early-ink: #6b5200;
 
-  /* Board stages: a gray-to-black ramp, always shown with the stage name */
   --stage-spotted: #c9ccd3;
   --stage-researching: #9396a0;
   --stage-validating: #5c5f68;
   --stage-building: #19191d;
 
-  /* Motion (DESIGN.md): transform + opacity only, one easing, three speeds */
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --t-fast: 150ms;
   --t-med: 250ms;
 
-  /* Floating surfaces: two soft shadow layers (nav, sheets, panels, cards) */
   --shadow-float: 0 1px 2px rgba(25, 25, 29, 0.05), 0 24px 50px -24px rgba(70, 110, 220, 0.35);
 
   --font: var(--font-geist), -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
@@ -99,7 +92,6 @@ summary:focus-visible {
   outline-offset: 3px;
 }
 
-/* Shared pill buttons */
 .pill {
   display: inline-flex;
   align-items: center;
@@ -134,7 +126,6 @@ summary:focus-visible {
   box-shadow: var(--glossy-shadow);
   color: var(--white);
 }
-/* A spinning icon (LoaderCircle) */
 .spin {
   animation: spin 0.9s linear infinite;
 }
@@ -143,7 +134,6 @@ summary:focus-visible {
     transform: rotate(360deg);
   }
 }
-/* Section titles fade from ink to gray, left to right */
 .fade-text {
   background: var(--fade-text);
   -webkit-background-clip: text;
@@ -160,7 +150,7 @@ summary:focus-visible {
   box-decoration-break: clone;
 }
 
-/* Entrance: fade + rise. Set --i on list items for a 40ms stagger. */
+/* set --i on list items for a 40ms stagger */
 .rise {
   animation: rise 0.42s var(--ease) backwards;
   animation-delay: calc(min(var(--i, 0), 6) * 40ms);
@@ -172,7 +162,7 @@ summary:focus-visible {
   }
 }
 
-/* Page switch: opacity only, so fixed and sticky children never shift while it runs. */
+/* opacity only, so fixed and sticky children dont shift */
 .fade-in {
   animation: fade-in 0.3s var(--ease) both;
 }
@@ -203,7 +193,7 @@ summary:focus-visible {
   }
 }
 
-/* The landing page opens and closes on deep sky, so the overscroll "bounce" shows sky, not white. */
+/* overscroll bounce shows sky, not white */
 html:has([data-landing]) {
   background: var(--sky-deep);
 }

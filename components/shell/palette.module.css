@@ -9,7 +9,6 @@
   color: var(--ink);
   box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.35);
   overflow: hidden;
-  /* fades and settles in on open, reverses on close */
   opacity: 0;
   transform: scale(0.98);
   transition:

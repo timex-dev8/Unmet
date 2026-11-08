@@ -1,6 +1,4 @@
-/* Liquid glass (components/motion/LiquidGlass.tsx). Tint and text color come from the parent. */
-/* The page behind: bent at the rim (Chromium, --glass-bend is the SVG filter), blurred and saturated.
-   It sits on the glass itself: the rim's blend modes would cut a child layer off from the page. */
+/* backdrop bent at the rim (chromium only, --glass-bend is the svg filter), blurred and saturated. lives on the glass itself because rim blend modes would cut off a child layer */
 .glass {
   position: relative;
   isolation: isolate;
@@ -11,7 +9,6 @@
   position: absolute;
   pointer-events: none;
 }
-/* A 1.5px rim of light; its brightest part turns toward the cursor */
 .rim {
   position: absolute;
   inset: 0;

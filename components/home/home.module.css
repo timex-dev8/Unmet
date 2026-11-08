@@ -1,4 +1,3 @@
-/* Home (DESIGN.md "v3"): the question on a sky wash, white cards with hairline rings, blue and mist tiles. */
 .home {
   max-width: 1080px;
   margin: 0 auto;
@@ -22,7 +21,6 @@
   margin-bottom: 16px;
 }
 
-/* Hero */
 .hero {
   display: flex;
   flex-direction: column;
@@ -100,7 +98,6 @@
   cursor: default;
 }
 
-/* For you cards */
 .cards {
   display: flex;
   gap: 12px;
@@ -311,7 +308,6 @@
   font-weight: 500;
 }
 
-/* Phones: the question gets the whole first line; depth and send sit on a row below */
 @media (max-width: 899px) {
   .composer {
     flex-wrap: wrap;
@@ -323,7 +319,6 @@
   }
 }
 
-/* The one product in "For you" */
 .metaWorking {
   background: var(--blue-card);
   color: var(--white);
@@ -335,7 +330,6 @@
   color: var(--muted);
 }
 
-/* Trending products: a phone scroll row, four across on desktop */
 .trending {
   display: flex;
   gap: 12px;
@@ -349,7 +343,7 @@
 .trending::-webkit-scrollbar {
   display: none;
 }
-/* "See all in Feed →" drops "in Feed" on narrow phones so the title stays on one line */
+/* drops "in Feed" on narrow phones to keep the title on one line */
 .moreFeed {
   display: none;
 }

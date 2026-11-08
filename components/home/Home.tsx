@@ -28,10 +28,10 @@ export default function Home({ cards, products = [] }: { cards: HomeIdea[]; prod
   const lowOnly = useLowOnly();
 
   const picks = forYou(cards, { picked: interests.picked, skipped: interests.skipped, saved, keywords: profileKeywords(interests) });
-  // "For you" mixes in one real product that's working, for inspiration (lib/products)
+  // "For you" gets one working product for inspiration
   const product = products[0];
   const shown = product ? picks.slice(0, 2) : picks;
-  // "Trending products" skips the one already shown above
+  // trending skips the one shown above
   const trending = trendingPicks(products.slice(1));
 
   function start(e: FormEvent) {
@@ -107,7 +107,6 @@ export default function Home({ cards, products = [] }: { cards: HomeIdea[]; prod
   );
 }
 
-/** Delay for the shared `.rise` entrance (40ms per step, see globals.css). */
 const stagger = (i: number) => ({ "--i": i }) as CSSProperties;
 
 function HomeCard({ card, i }: { card: HomeIdea; i: number }) {

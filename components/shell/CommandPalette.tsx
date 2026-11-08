@@ -24,7 +24,6 @@ const matches = (text: string, words: string[]) => {
   return words.every((w) => t.includes(w));
 };
 
-/** Search saved ideas, research and actions from anywhere (the feed and samples are searched on the server: /app/search). Loaded on first open by TopBar. */
 export default function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const router = useRouter();
   const ref = useRef<HTMLDialogElement>(null);
@@ -103,7 +102,7 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
       aria-label="Search and commands"
       onClose={onClose}
       onClick={(e) => {
-        if (e.target === ref.current) onClose(); // click outside
+        if (e.target === ref.current) onClose(); // backdrop click
       }}
     >
       <div className={s.box}>

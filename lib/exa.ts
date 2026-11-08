@@ -3,9 +3,7 @@ import Exa from "exa-js";
 import type { ResearchSource } from "./research-types";
 import { hostOf } from "./url";
 
-// Exa web search, following the build-with-exa skill: /search, `objective` because a model
-// writes the query, and a hard 12-month window because stale evidence is unacceptable here.
-// Reddit is searched through Exa's index (its own job in lib/research/index.ts), never scraped directly.
+// following the build-with-exa skill: /search with objective, hard 12 month window. reddit goes through exa's index, never scraped
 
 export function exaConfigured() {
   return Boolean(process.env.EXA_API_KEY);
@@ -16,15 +14,12 @@ function exa() {
   return (client ??= new Exa(process.env.EXA_API_KEY));
 }
 
-export type WebSearchOptions = {
+type WebSearchOptions = {
   since: string;
-  /** "lite" is cheap ($4/1k); "auto" finds better pages ($7/1k). */
   type: "lite" | "auto";
-  /** User-approved list of community and review sites (see lib/research/sources/sites.ts). */
   includeDomains?: string[];
-  /** Full page text (up to ~2,500 chars) so quotes can be checked; otherwise short highlights. */
+  // ~2,500 chars of page text so quotes can be checked
   fullText?: boolean;
-  /** Which service the results count as (Reddit gets its own share of the source list). */
   origin?: "web" | "reddit";
 };
 
@@ -66,7 +61,6 @@ export async function searchWeb(query: string, objective: string, opts: WebSearc
     .filter((r) => r.text.length > 80);
 }
 
-/** Pages about existing products for a problem (competitor check). */
 export async function searchProducts(query: string, since: string, signal?: AbortSignal) {
   const res = await exa().search(
     query,

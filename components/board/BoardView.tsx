@@ -20,15 +20,14 @@ export default function BoardView() {
   const [dropTarget, setDropTarget] = useState<Stage | null>(null);
 
   const byStage = new Map<Stage, Card[]>(STAGES.map((st) => [st.id, []]));
-  // A stage this version doesn't know (synced from a newer or older one) shows as "Spotted".
+  // unknown stage (synced from another version) shows as spotted
   for (const card of saved) (byStage.get(entryFor(board, card.slug).stage) ?? byStage.get("spotted")!).push(card);
-  // Most recently moved first within each column.
   for (const list of byStage.values()) list.sort((a, b) => entryFor(board, b.slug).movedAt - entryFor(board, a.slug).movedAt);
 
   function onDrop(e: DragEvent, stage: Stage) {
     e.preventDefault();
     const slug = e.dataTransfer.getData("text/plain");
-    // Only one of these cards: any text can be dragged in from another page.
+    // only these cards, any text can be dragged in from another page
     if (saved.some((c) => c.slug === slug)) moveTo(slug, stage);
     setDropTarget(null);
   }
@@ -57,7 +56,6 @@ export default function BoardView() {
     <main className={s.page}>
       <Header count={saved.length} />
 
-      {/* Phone: one stage at a time */}
       <div className={s.tabs} role="tablist" aria-label="Stages">
         {STAGES.map((st) => (
           <button key={st.id} type="button" role="tab" aria-selected={tab === st.id} className={s.tab} onClick={() => setTab(st.id)}>
@@ -124,7 +122,7 @@ function Header({ count }: { count: number }) {
 function Item({ card, stage, note, onRemove }: { card: Card; stage: Stage; note: string; onRemove: () => void }) {
   const [editing, setEditing] = useState(false);
   const [leaving, setLeaving] = useState(false);
-  // Fade out first, then remove. A timer, not onAnimationComplete, so it also works in background tabs.
+  // timer not onAnimationComplete so it works in background tabs
   const leave = () => {
     setLeaving(true);
     setTimeout(onRemove, 220);
@@ -133,8 +131,7 @@ function Item({ card, stage, note, onRemove }: { card: Card; stage: Stage; note:
   const prev = prevStage(stage);
   const e = card.evidence;
 
-  // The wrapper carries the motion: same layoutId in every column, so a moved card glides
-  // from its old column to the new one; `layout` lets the cards around it close the gap smoothly.
+  // same layoutId in every column so a moved card glides over, layout closes the gap
   return (
     <m.div
       layout

@@ -10,9 +10,6 @@ import { useThreads } from "@/lib/research-store";
 import { useSaved } from "@/lib/saved";
 import s from "./mind.module.css";
 
-// Shape (route /app/mind): someone describes an idea in their own words, note by note, and the AI
-// turns the notes into a clear brief.
-
 const STARTERS = [
   { label: "A feature", text: "It should " },
   { label: "Who it’s for", text: "It’s for " },
@@ -28,7 +25,6 @@ const SPARKS: { icon: LucideIcon; title: string; text: string }[] = [
 
 const STEPS = ["Write rough notes", "Get a clear brief", "Know what to test first"];
 
-/** Shown before the first brief, so people know what they'll get. */
 const EXAMPLE: MindBrief = {
   idea: "A website where dog walkers take bookings, get paid and collect reviews in one place.",
   forWho: "Independent dog walkers who find clients on their own.",
@@ -41,7 +37,6 @@ const EXAMPLE: MindBrief = {
   matchHeadline: "",
 };
 
-/** Delay for the shared `.rise` entrance (40ms per step, see globals.css). */
 const stagger = (i: number) => ({ "--i": i }) as CSSProperties;
 
 export default function MindView({ configured }: { configured: boolean }) {
@@ -53,12 +48,11 @@ export default function MindView({ configured }: { configured: boolean }) {
   const [error, setError] = useState("");
   const box = useRef<HTMLTextAreaElement>(null);
 
-  // The box grows as you type; shrink it back once a note is added and the text clears.
   useEffect(() => {
     if (!input && box.current) box.current.style.height = "";
   }, [input]);
 
-  // Notes are stored newest first; show and send them in the order they were written.
+  // notes are stored newest first, send them in written order
   const notes = [...thoughts].reverse();
   const stale = Boolean(brief && (brief.count !== thoughts.length || thoughts.some((t) => t.at > brief.at)));
 
@@ -84,7 +78,6 @@ export default function MindView({ configured }: { configured: boolean }) {
     const next = input.trim() ? `${input.trimEnd()}\n${text}` : text;
     setInput(next);
     box.current?.focus();
-    // After React writes the new value, put the cursor at its end.
     requestAnimationFrame(() => box.current?.setSelectionRange(next.length, next.length));
   }
 
@@ -92,7 +85,6 @@ export default function MindView({ configured }: { configured: boolean }) {
     setLoading(true);
     setError("");
     const mark = mindMark();
-    // The person's own problems: saved ideas and ideas from their research.
     const ideas = [...saved, ...threads.flatMap((t) => t.messages.flatMap((m) => m.cards ?? []))]
       .slice(0, 40)
       .map(({ slug, headline, summary }) => ({ slug, headline, summary }));
@@ -222,7 +214,6 @@ export default function MindView({ configured }: { configured: boolean }) {
             </>
           )}
           {!brief && (
-            // The example stays folded away until asked for
             <details className={s.exampleToggle}>
               <summary>
                 See an example brief

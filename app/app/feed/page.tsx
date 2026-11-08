@@ -10,14 +10,14 @@ import s from "@/components/feed/feed.module.css";
 
 export const metadata: Metadata = { title: "Feed" };
 
-// The filter comes from the URL; render the whole page on the server before sending it.
+// must stay dynamic, reads the url
 export const instant = false;
 
 const PRODUCT_SOURCES: readonly ProductSource[] = ["TrustMRR", "Product Hunt", "App Store", "GitHub"];
 
-/** Takes turns between sources, each strongest first, so one source's high scores don't fill the feed. */
+// round robin over sources so one high scoring source doesnt fill the feed
 function mixSources(products: Product[]) {
-  // Each source starts further down its list each day, so the feed doesn't show the same top products.
+  // each source starts further down daily so top products arent always the same
   const day = Math.floor(Date.now() / 86400_000);
   const sizes = new Map<string, number>();
   for (const p of products) sizes.set(p.source, (sizes.get(p.source) ?? 0) + 1);
@@ -29,7 +29,7 @@ function mixSources(products: Product[]) {
     return { p, n: (i - ((day * 3) % size) + size) % size };
   });
   const rotated = ranked.sort((a, b) => a.n - b.n).map((x) => x.p);
-  // Products from the last few days lead (at most 8), so each run visibly changes the feed.
+  // last few days lead (max 8) so each run changes the feed
   const isNew = (p: Product) => p.addedAt && Date.now() - Date.parse(p.addedAt) < 3 * 86400_000;
   const fresh = rotated.filter(isNew).slice(0, 8);
   return [...fresh, ...rotated.filter((p) => !fresh.includes(p))];
@@ -50,14 +50,12 @@ export default async function FeedPage({ searchParams }: PageProps<"/app/feed">)
     readProducts(filter === "Trending" ? { rising: true } : filter ? { category: filter } : {}),
     query ? searchCards(query) : Promise.resolve([]),
   ]);
-  // A search looks through everything in the feed: problems and products, by every word typed.
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
   const page = query ? found : listed;
   const products = query ? listedProducts.filter((p) => matchesProduct(p, words)) : listedProducts;
   const kinds = SOURCE_KINDS.filter((k) => k !== "hn" && all.some((c) => c.sources.some((x) => x.kind === k)));
   const productSources = PRODUCT_SOURCES.filter((k) => products.some((p) => p.source === k));
   const source = [...kinds, ...productSources].find((k) => k === sourceParam);
-  // A product source shows only its products; an evidence source shows only the problems backed by it.
   const fromProducts = productSources.find((k) => k === source);
   const cards = fromProducts ? [] : source ? page.filter((c) => c.sources.some((x) => x.kind === source)) : page;
   const shownProducts = fromProducts ? products.filter((p) => p.source === fromProducts) : source ? [] : products;

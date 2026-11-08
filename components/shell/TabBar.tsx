@@ -7,8 +7,6 @@ import LiquidGlass from "@/components/motion/LiquidGlass";
 import { NAV, isActive } from "./nav";
 import s from "./shell.module.css";
 
-// Phone-only bottom navigation: a floating, rounded bar of liquid glass (hidden on desktop, never on
-// the landing page, and on idea pages, whose own action bar takes its place).
 export default function TabBar() {
   const pathname = usePathname();
   return (

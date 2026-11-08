@@ -1,19 +1,14 @@
 import type { Card, Category } from "./types";
 
-// Personal ranking for Home and the feed. Pure functions: no storage, easy to tune.
+type RankSignals = { picked: Category[]; skipped: string[]; saved: Card[]; keywords?: string[] };
 
-export type RankSignals = { picked: Category[]; skipped: string[]; saved: Card[]; keywords?: string[] };
+type RankCard = Pick<Card, "slug" | "headline" | "summary" | "who" | "category" | "trend"> & { scores: { demand: { value: number } } };
 
-/** What ranking reads from a card (Home passes a slimmer copy than the full Card). */
-export type RankCard = Pick<Card, "slug" | "headline" | "summary" | "who" | "category" | "trend"> & { scores: { demand: { value: number } } };
-
-/** Words from someone's profile and watched niches, for matching against card text. */
 export function profileKeywords(i: { profile?: { keywords: string[]; audiences: string[]; niches: string[] }; watched?: string[] }) {
   const phrases = [...(i.profile?.keywords ?? []), ...(i.profile?.audiences ?? []), ...(i.profile?.niches ?? []), ...(i.watched ?? [])];
   return [...new Set(phrases.flatMap((p) => p.toLowerCase().split(/[^a-z0-9]+/)).filter((w) => w.length > 3))];
 }
 
-/** How many of the person's words appear in the card (capped), so "nurses" finds nurse problems in any category. */
 export function textMatch(card: Pick<Card, "headline" | "summary" | "who">, keywords: string[]) {
   if (!keywords.length) return 0;
   const text = `${card.headline} ${card.summary} ${card.who}`.toLowerCase();
@@ -42,7 +37,6 @@ export function forYou<T extends RankCard>(cards: T[], { picked, skipped, saved,
     .map((x) => x.card);
 }
 
-/** Change in mentions: the last 3 periods vs the first 3, as a percentage. */
 export function growth(card: Card) {
   const w = card.evidence.weekly;
   if (w.length < 6) return 0;

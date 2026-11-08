@@ -10,13 +10,12 @@ import AccountButton from "./AccountButton";
 import FeedSearch from "./FeedSearch";
 import s from "./shell.module.css";
 
-// The palette is a separate chunk, fetched the first time it opens (this listener is all that loads up front).
+// palette loads as its own chunk on first open
 const CommandPalette = dynamic(() => import("./CommandPalette"), { ssr: false });
 
-// The search bar opens the command palette; ⌘K / Ctrl+K opens it from anywhere in the studio.
 export default function TopBar() {
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false); // stays mounted after the first open, so closing keeps its state
+  const [mounted, setMounted] = useState(false); // stays mounted after first open so closing keeps its state
   const [scrolled, setScrolled] = useState(false);
   const [feedSearchOpen, setFeedSearchOpen] = useState(false);
   const pathname = usePathname();

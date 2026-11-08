@@ -1,6 +1,5 @@
 import type { IdeaLens } from "./types";
 
-/** Plain names for the idea engine's lenses (lib/research/prompts.ts IDEAS_SYSTEM). */
 export const LENS_LABEL: Record<IdeaLens, string> = {
   automate: "Automate the workaround",
   vertical: "Made for them",

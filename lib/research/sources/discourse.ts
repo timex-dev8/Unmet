@@ -2,9 +2,8 @@ import "server-only";
 import { plain } from "@/lib/hn";
 import type { ResearchSource } from "@/lib/research-types";
 
-// Community forums that run Discourse, which offers a public JSON search (no key). People there
-// describe problems with real products in detail. Used for business and developer topics.
-export const DISCOURSE_FORUMS = [
+// discourse forums have a public json search, no key. business and developer topics
+const DISCOURSE_FORUMS = [
   "community.home-assistant.io",
   "forum.obsidian.md",
   "forum.figma.com",

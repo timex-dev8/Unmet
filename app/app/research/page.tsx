@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description: "Describe a market. Unmet searches recent posts and turns real complaints into ideas, with sources.",
 };
 
-// ?q= starts a research right away; ?about=<slug> tells the AI which idea it's digging into.
+// ?q= starts a research, ?about=<slug> says which idea
 export const instant = false;
 
 export default async function NewResearchPage({ searchParams }: PageProps<"/app/research">) {

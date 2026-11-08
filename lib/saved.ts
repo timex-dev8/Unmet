@@ -4,8 +4,7 @@ import { useCallback, useSyncExternalStore } from "react";
 import { type Syncable, unionBy } from "./sync-types";
 import type { Card } from "./types";
 
-// Saves live in this browser, and in the account when signed in (lib/sync.ts).
-// We store a snapshot of each card so /saved works even if the feed changes.
+// snapshot of each card is stored so /saved works even if the feed changes
 const KEY = "unmet:saved:v1";
 const EMPTY: Card[] = [];
 const listeners = new Set<() => void>();
@@ -25,9 +24,7 @@ function write(list: Card[]) {
   cache = list;
   try {
     localStorage.setItem(KEY, JSON.stringify(list));
-  } catch {
-    // Private mode or storage full: keep the in-memory list for this visit.
-  }
+  } catch {}
   listeners.forEach((l) => l());
 }
 
@@ -63,10 +60,7 @@ export function useSaved() {
     write(getSnapshot().filter((c) => c.slug !== slug));
   }, []);
 
-  const toggle = useCallback(
-    (card: Card) => (getSnapshot().some((c) => c.slug === card.slug) ? remove(card.slug) : save(card)),
-    [remove, save],
-  );
+  const toggle = useCallback((card: Card) => (getSnapshot().some((c) => c.slug === card.slug) ? remove(card.slug) : save(card)), [remove, save]);
 
   return { saved, isSaved, save, remove, toggle };
 }

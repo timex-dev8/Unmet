@@ -39,15 +39,12 @@ const STRUCTURED_DATA = [
   },
 ];
 
-// The hero shows one real card. The card holds neither the search that found it nor a one-line idea, so
-// those two are written by hand and used only for this card. The slug is derived from the headline with
-// slugify; live cards add a random suffix, so the card is also found by its exact headline.
+// card has no search or idea line, those are hand written. live slugs get a random suffix, so match by headline
 const PINNED_HEADLINE = "ADHD users face task paralysis from complex app setup";
 const PINNED_SLUG = slugify(PINNED_HEADLINE);
 const PINNED_TOPIC = "Apps for people who struggle with management";
 const PINNED_IDEA = "A simple task timer with no setup";
 
-// Without a real card, the sample question and idea, and no quote or count.
 const SAMPLE: HeroExample = { query: "What do people hate about Calendly?", quote: null, idea: "A flat-price scheduler", proof: null };
 
 const proofOf = (card: Card) => (card.sources.length > 0 ? { slug: card.slug, count: card.sources.length } : null);

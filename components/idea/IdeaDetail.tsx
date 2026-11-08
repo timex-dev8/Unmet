@@ -11,11 +11,9 @@ import IdeasSection from "./IdeasSection";
 import WorthBuilding from "./WorthBuilding";
 import s from "./idea.module.css";
 
-// The full idea page. Used by /app/idea/[slug] for feed cards and, in the browser,
-// for ideas found in research chat (which aren't in the database yet).
 export default function IdeaDetail({ card, backHref = "/app/feed", backLabel = "Feed" }: { card: Card; backHref?: string; backLabel?: string }) {
   return (
-    // data-hide-tabs: on phones the idea's own action bar replaces the tab bar (one bar, not two)
+    // data-hide-tabs: the idea action bar replaces the tab bar on phones
     <div className={s.page} data-hide-tabs>
       <div className={s.wrap}>
         <AppBar backHref={backHref} backLabel={backLabel} />
@@ -36,7 +34,6 @@ export default function IdeaDetail({ card, backHref = "/app/feed", backLabel = "
   );
 }
 
-/** Everything about an idea: header, evidence, sources, score reasons, AI ideas. Also used in the research side panel. */
 export function IdeaSections({ card, headingLevel = 1 }: { card: Card; headingLevel?: 1 | 2 }) {
   const Title = headingLevel === 1 ? "h1" : "h2";
   const e = card.evidence;

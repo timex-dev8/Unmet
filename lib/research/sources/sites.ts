@@ -1,6 +1,4 @@
-// Approved lists of places where people describe problems first-hand.
-
-/** Community and review sites searched through Exa (`includeDomains`). Reddit has its own search (lib/research/index.ts). */
+// reddit has its own search (research/index.ts)
 export const COMMUNITY_DOMAINS = [
   "indiehackers.com",
   "producthunt.com",
@@ -22,7 +20,6 @@ export const COMMUNITY_DOMAINS = [
   "github.com",
 ];
 
-/** Stack Exchange sites the planner may pick from (api.stackexchange.com `site` values). */
 export const STACK_SITES = [
   "stackoverflow",
   "superuser",
@@ -45,7 +42,6 @@ export const STACK_SITES = [
   "apple",
 ] as const;
 
-/** TrustMRR category values (trustmrr.com/docs/api/list-startups). */
 export const TRUSTMRR_CATEGORIES = [
   "ai",
   "saas",

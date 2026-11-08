@@ -1,5 +1,4 @@
 .page {
-  /* fills the studio between its top bar and the phone tab bar */
   min-height: calc(100dvh - var(--shell-top, 0px) - var(--shell-bottom, 0px));
   display: flex;
   flex-direction: column;
@@ -18,7 +17,6 @@
   padding-bottom: 12vh;
 }
 
-/* Empty state */
 .intro {
   padding: 24px 20px 28px;
   text-align: center;
@@ -37,7 +35,6 @@
   color: var(--muted);
 }
 
-/* Thread */
 .thread {
   flex: 1;
   padding: 12px 16px 24px;
@@ -86,7 +83,6 @@
 .stepRunning {
   color: var(--ink);
 }
-/* a step's check pops in when it finishes */
 .pop {
   animation: pop 0.32s var(--ease);
 }
@@ -108,7 +104,7 @@
   margin: 0;
   font-size: 17px;
   line-height: 1.55;
-  white-space: pre-line; /* the answer comes in paragraphs */
+  white-space: pre-line;
   max-width: 68ch;
 }
 .error {
@@ -131,7 +127,6 @@
   color: var(--muted);
 }
 
-/* Cards */
 .cards {
   display: grid;
   grid-template-columns: 1fr;
@@ -234,7 +229,6 @@
   color: var(--ink-2);
 }
 
-/* Composer */
 .composerWrap {
   position: sticky;
   bottom: var(--shell-bottom, 0px);
@@ -270,7 +264,6 @@
     0 24px 50px -24px rgba(70, 110, 220, 0.45),
     inset 0 0 0 1px #c9d3f5;
 }
-/* Phones: the text gets the whole first line; depth and send sit on a row below */
 @media (max-width: 899px) {
   .composer {
     flex-wrap: wrap;
@@ -343,7 +336,6 @@
   }
 }
 
-/* ---------- Studio additions: thread title, follow-ups, side panel ---------- */
 .layout {
   display: flex;
   flex: 1;
@@ -464,7 +456,7 @@
     flex: none;
     display: flex;
     flex-direction: column;
-    /* frosted, no divider: the page gradient shows through (DESIGN.md) */
+    /* frosted, no divider: page gradient shows through */
     background: rgba(255, 255, 255, 0.72);
     animation: panel-in 0.32s var(--ease);
   }
@@ -476,7 +468,6 @@
   }
 }
 
-/* v2: depth pill, folded steps */
 .stepsFold summary {
   display: inline-flex;
   align-items: center;
@@ -499,7 +490,7 @@
 .stepsFold[open] summary {
   margin-bottom: 10px;
 }
-/* Open and close smoothly where the browser supports it; elsewhere it simply snaps. */
+/* snaps instead of animating where unsupported */
 .stepsFold {
   interpolate-size: allow-keywords;
 }
@@ -520,7 +511,6 @@
   transition: transform var(--t-med) var(--ease);
 }
 
-/* Verdict on compact research cards ("Is this worth building?") */
 .verdictTag {
   font-size: 12px;
   font-weight: 500;
@@ -534,7 +524,6 @@
   color: var(--white);
 }
 
-/* ---------- New research: your past research under the composer ---------- */
 .past {
   width: 100%;
   padding-top: 40px;

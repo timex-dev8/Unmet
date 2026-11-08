@@ -1,10 +1,8 @@
 import { z } from "zod/v4";
 import { db, requestUser, supabaseConfigured } from "@/lib/supabase/server";
 
-// Signed-in people can add a niche they watch to the daily feed research (feed_topics, origin
-// "user", owner = who added it). Capped, so watching can't run up search costs: MAX_PER_USER niches
-// each and MAX_USER_TOPICS in all. Un-watching removes the niche again if its owner added it.
-// Until the `owner` column exists (supabase/schema.sql), only the overall cap applies.
+// capped per user and overall so watching cant run up search costs
+// without the owner column (supabase/schema.sql) only the overall cap applies
 
 const Body = z.object({ niche: z.string().trim().min(3).max(60) });
 const MAX_PER_USER = 10;
@@ -29,7 +27,7 @@ export async function POST(request: Request) {
   if (g.error) return g.error;
   const { user, niche } = g;
 
-  // Insert first, then count: parallel requests can't all slip under the cap (at worst they all back out).
+  // insert then count so parallel requests cant slip under the cap
   const add = (row: Record<string, string>) => db().from("feed_topics").upsert(row, { onConflict: "topic", ignoreDuplicates: true }).select("topic");
   let owned = true;
   let { data, error } = await add({ topic: niche, origin: "user", owner: user.id });
@@ -38,7 +36,7 @@ export async function POST(request: Request) {
     ({ data, error } = await add({ topic: niche, origin: "user" }));
   }
   if (error) return Response.json({ error: "Couldn't save that. Try again." }, { status: 500 });
-  if (!data?.length) return Response.json({ queued: true }); // already on the list
+  if (!data?.length) return Response.json({ queued: true });
 
   const topics = () => db().from("feed_topics").select("topic", { count: "exact", head: true }).eq("origin", "user");
   const [mine, all] = await Promise.all([owned ? count(topics().eq("owner", user.id)) : 0, count(topics())]);
@@ -61,7 +59,7 @@ export async function DELETE(request: Request) {
   const g = await guard(request);
   if (g.error) return g.error;
   const { error } = await db().from("feed_topics").delete().eq("topic", g.niche).eq("origin", "user").eq("owner", g.user.id);
-  if (error && missingColumn(error)) return Response.json({ removed: false }); // can't tell whose it is yet: leave it
+  if (error && missingColumn(error)) return Response.json({ removed: false }); // owner unknown yet, leave it
   if (error) return Response.json({ error: "Couldn't remove that. Try again." }, { status: 500 });
   return Response.json({ removed: true });
 }

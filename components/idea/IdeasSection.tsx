@@ -10,7 +10,6 @@ const TWISTS = ["More like this", "Make it B2B", "Make it cheaper", "Make it AI-
 
 type Validation = { headline: string; subhead: string; bullets: string[]; cta: string; questions: string[]; outreach: string };
 
-/** What the idea API needs: the card's verified quotes, never anything the AI made up. */
 function payload(card: Card) {
   const quotes = [card.quote, ...(card.ideas ?? []).flatMap((i) => i.evidence)].filter(Boolean);
   return {
@@ -31,7 +30,6 @@ async function ask(body: object) {
   return data;
 }
 
-// The idea engine's output on the idea page: idea cards, remix buttons and "validate in a day".
 export default function IdeasSection({ card }: { card: Card }) {
   const [ideas, setIdeas] = useState<Idea[]>(card.ideas ?? []);
   const [busy, setBusy] = useState("");
@@ -267,7 +265,7 @@ function ValidationPlan({ plan }: { plan: Validation }) {
             try {
               await navigator.clipboard.writeText(plan.outreach);
             } catch {
-              return; // no clipboard access (insecure page or denied): don't claim it copied
+              return; // no clipboard access, dont claim it copied
             }
             setCopied(true);
             clearTimeout(copyTimer.current);

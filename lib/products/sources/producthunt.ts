@@ -2,8 +2,7 @@ import "server-only";
 import type { RawProduct } from "./types";
 import { headers } from "./types";
 
-// Product Hunt's most-voted launches of the last week (GraphQL API v2). Only runs with
-// PRODUCT_HUNT_TOKEN, and its terms limit commercial use: check with Product Hunt before relying on it.
+// only runs with PRODUCT_HUNT_TOKEN, terms limit commercial use so check with them first
 type Node = {
   name: string;
   tagline: string;

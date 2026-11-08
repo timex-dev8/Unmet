@@ -7,7 +7,6 @@ import SaveButton from "./SaveButton";
 import SourcesSheet from "./SourcesSheet";
 import f from "./ideaCard.module.css";
 
-// The feed card: the problem, a plain verdict, one quote, quick proof, the best idea so far, and "See the idea".
 export default function IdeaCard({ card }: { card: Card }) {
   const idea = bestIdea(card.ideas);
   return (
@@ -65,7 +64,6 @@ function bestIdea(ideas: Idea[] = []) {
   return ideas.reduce<Idea | undefined>((best, i) => (!best || i.score > best.score ? i : best), undefined);
 }
 
-// "Name: pitch" title plus the first part of the price: "Idea to try: Name, pitch. $9/mo."
 function IdeaLine({ idea }: { idea: Idea }) {
   const cut = idea.title.indexOf(": ");
   const name = cut < 0 ? idea.title : idea.title.slice(0, cut);

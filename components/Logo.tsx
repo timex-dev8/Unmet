@@ -1,12 +1,11 @@
 type LogoProps = {
-  /** "light" for blue/dark backgrounds, "dark" for white backgrounds */
+  /* light for dark bg, dark for white bg */
   tone?: "light" | "dark";
   size?: number;
   withName?: boolean;
 };
 
-// Card-stack mark with a spark: a pile of ideas, one of them worth building.
-export function LogoMark({ tone = "dark", size = 26 }: Omit<LogoProps, "withName">) {
+function LogoMark({ tone = "dark", size = 26 }: Omit<LogoProps, "withName">) {
   const main = tone === "light" ? "#ffffff" : "#073a8b";
   const spark = tone === "light" ? "#83caec" : "#369adf";
   return (

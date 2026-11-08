@@ -17,7 +17,6 @@
   color: var(--muted);
 }
 
-/* Phone stage tabs */
 .tabs {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -49,13 +48,11 @@
   position: relative;
   isolation: isolate;
 }
-/* the white pill gliding between stages (components/motion/Highlight.tsx) */
 .tabPill {
   background: var(--white);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
-/* Columns */
 .columns {
   display: block;
 }
@@ -95,7 +92,6 @@
   color: var(--muted);
 }
 
-/* Items */
 .item {
   background: var(--white);
   border-radius: 16px;
@@ -238,7 +234,6 @@
   margin-top: 16px;
 }
 
-/* Desktop: four columns, drag to move */
 @media (min-width: 900px) {
   .page {
     padding: 28px 28px 40px;
@@ -283,7 +278,6 @@
   }
 }
 
-/* v2: stage and category colors (always next to their names) */
 .stageDot {
   width: 10px;
   height: 10px;

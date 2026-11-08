@@ -3,10 +3,9 @@
 import { LazyMotion, MotionConfig } from "motion/react";
 import type { ReactNode } from "react";
 
-// Motion's features (drag, layout animations) arrive in their own chunk after the page is up; `m.*` components stand in for `motion.*`.
+// motion features load in their own chunk, m.* stands in for motion.*
 const loadFeatures = () => import("@/lib/motion-features").then((mod) => mod.default);
 
-// Studio-wide motion defaults: respect "reduce motion", and use the same easing as the CSS (--ease).
 export default function MotionProvider({ children }: { children: ReactNode }) {
   return (
     <LazyMotion features={loadFeatures} strict>

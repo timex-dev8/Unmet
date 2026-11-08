@@ -3,12 +3,7 @@
 import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import s from "./liquidGlass.module.css";
 
-/**
- * Apple-style liquid glass, after rdev/liquid-glass-react (MIT): the page behind is bent at the rim
- * by an SVG displacement map (so the edge magnifies what passes under it), then blurred and saturated.
- * A thin bright rim catches the light, and its shine turns toward the cursor.
- * The bending needs Chromium; Safari and Firefox get the plain frosted glass.
- */
+// bending needs chromium, safari and firefox get plain frosted glass
 export default function LiquidGlass({
   children,
   radius,
@@ -18,14 +13,12 @@ export default function LiquidGlass({
   children: ReactNode;
   radius: number;
   className?: string;
-  /** How far the rim bends the backdrop, in px */
   bend?: number;
 }) {
   const id = useId().replace(/:/g, "");
   const ref = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<{ url: string; w: number; h: number } | null>(null);
 
-  // Draw a displacement map for the glass: first when the browser is idle, then (debounced) when it resizes
   useEffect(() => {
     const el = ref.current;
     const ua = navigator.userAgent;
@@ -42,7 +35,7 @@ export default function LiquidGlass({
     const onResize = () => {
       clearTimeout(timer);
       if (first) {
-        first = false; // the observer's first call: start drawing when idle
+        first = false; // observers first call, draw when idle
         if (typeof requestIdleCallback === "function") idle = requestIdleCallback(draw, { timeout: 500 });
         else timer = setTimeout(draw, 0);
       } else timer = setTimeout(draw, 150);
@@ -57,7 +50,7 @@ export default function LiquidGlass({
     };
   }, [radius]);
 
-  // The rim's shine leans toward the cursor. Written straight to the element (no re-render), only when it moved more than 2 degrees.
+  // written straight to the element, no re-render
   useEffect(() => {
     if (matchMedia("(prefers-reduced-motion: reduce)").matches || !matchMedia("(hover: hover)").matches) return;
     let frame = 0;
@@ -67,7 +60,7 @@ export default function LiquidGlass({
       frame = requestAnimationFrame(() => {
         const el = ref.current;
         const r = el?.getBoundingClientRect();
-        if (!el || !r || (!r.width && !r.height)) return; // hidden (display: none)
+        if (!el || !r || (!r.width && !r.height)) return; // display: none
         const dx = e.clientX - (r.left + r.width / 2);
         const dy = e.clientY - (r.top + r.height / 2);
         const angle = (Math.atan2(dy, dx) * 180) / Math.PI + 90;
@@ -104,14 +97,10 @@ export default function LiquidGlass({
   );
 }
 
-const SCALE = 4; // the map is drawn at 1/4 size; feImage stretches it to the glass (the bend is smooth, so little is lost)
+const SCALE = 4; // map drawn at 1/4 size, feImage stretches it
 const maps = new Map<string, string>();
 
-/**
- * A map that is neutral (no bend) in the middle and pushes the backdrop inward near the rim,
- * so the edge magnifies what's behind it. R = horizontal shift, B = vertical, 128 = none.
- * Cached by size, since the same glass is drawn on every page.
- */
+// R = horizontal shift, B = vertical, 128 = none. cached by size
 function displacementMap(fullW: number, fullH: number, fullRadius: number) {
   const key = `${fullW}x${fullH}r${fullRadius}`;
   const hit = maps.get(key);
@@ -124,7 +113,7 @@ function displacementMap(fullW: number, fullH: number, fullRadius: number) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return "";
   const img = ctx.createImageData(w, h);
-  const band = Math.min(16, fullH / 2.5) / SCALE; // how deep the bending reaches in from the rim
+  const band = Math.min(16, fullH / 2.5) / SCALE;
   const hw = w / 2;
   const hh = h / 2;
   const r = Math.min(fullRadius / SCALE, hw, hh);
@@ -137,7 +126,7 @@ function displacementMap(fullW: number, fullH: number, fullRadius: number) {
     for (let px = 0; px < w; px++) {
       const x = px + 0.5 - hw;
       const y = py + 0.5 - hh;
-      const d = sdf(x, y); // negative inside, 0 at the rim
+      const d = sdf(x, y);
       const t = Math.max(0, Math.min(1, 1 + d / band));
       const k = t * t * (3 - 2 * t);
       let nx = sdf(x + 1, y) - sdf(x - 1, y);

@@ -4,8 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { continueAsGuest, useGuest, useUser } from "@/lib/auth";
 
-// The fast way in from the landing page: no sign-in screen. Signed-in people go straight to research;
-// everyone else becomes a guest first (this sets the cookie proxy.ts checks, synchronously) and then goes.
+// sets the guest cookie proxy.ts checks, synchronously
 export default function Try() {
   const router = useRouter();
   const user = useUser();

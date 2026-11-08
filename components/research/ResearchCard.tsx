@@ -9,7 +9,6 @@ import { VERDICT } from "@/lib/verdict";
 import type { Card } from "@/lib/types";
 import s from "./research.module.css";
 
-// A compact problem-and-idea pair for chat answers. Scores and sources are one tap away (side panel on wide screens, idea page on phones).
 export default function ResearchCard({
   card,
   index,
@@ -23,7 +22,6 @@ export default function ResearchCard({
 }) {
   const ideas = card.ideas ?? [];
   const verdict = card.report?.verdict;
-  // One plain label at most: how thin the evidence is, else a strong or maybe verdict.
   const label =
     card.signal === "niche"
       ? "Only 1 source so far: talk to people first"

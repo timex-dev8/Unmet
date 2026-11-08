@@ -4,7 +4,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 import s from "./shell.module.css";
 
-// Searches the cards already in the feed. It never starts AI research.
 export default function FeedSearch({ open }: { open: boolean }) {
   const router = useRouter();
   const current = useSearchParams().get("q") ?? "";
@@ -22,7 +21,7 @@ export default function FeedSearch({ open }: { open: boolean }) {
       <label htmlFor="feed-search" className={s.srOnly}>
         Search the feed
       </label>
-      {/* key: the box follows the URL, so clearing the search or picking a filter empties it */}
+      {/* key so the box follows the url */}
       <input
         key={current}
         id="feed-search"

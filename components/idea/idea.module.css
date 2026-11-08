@@ -152,7 +152,6 @@
   padding-bottom: 0;
 }
 .bottomBar {
-  /* sticks above the phone tab bar; stays inside the content column on desktop */
   position: sticky;
   bottom: var(--shell-bottom, 0px);
   background: rgba(255, 255, 255, 0.86);

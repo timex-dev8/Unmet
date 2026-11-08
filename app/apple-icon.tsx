@@ -1,6 +1,5 @@
 import { ImageResponse } from "next/og";
 
-// The app/icon.svg mark on white, as the 180×180 home-screen icon.
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
 

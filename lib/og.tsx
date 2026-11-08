@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 
-// Shared look for the generated social images (app/opengraph-image.tsx, app/app/idea/[slug]/opengraph-image.tsx):
-// the landing's sky gradient, white headline, "Unmet" wordmark. Default font on purpose (no remote font fetch).
+// default font on purpose, no remote font fetch
 export const OG_SIZE = { width: 1200, height: 630 };
 export const OG_TYPE = "image/png";
 

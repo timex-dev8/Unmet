@@ -9,8 +9,6 @@ import { DEPTHS, type Depth } from "@/lib/research-types";
 import DepthSlider from "./DepthSlider";
 import s from "./depthSlider.module.css";
 
-// ChatGPT-style depth control: a small pill inside the composer shows the current level;
-// tapping it opens a popover with the slider. Closes on outside click or Escape.
 export default function DepthPicker({
   value,
   onChange,
@@ -20,19 +18,18 @@ export default function DepthPicker({
   value: Depth;
   onChange: (d: Depth) => void;
   disabled?: boolean;
-  /** Open above the pill (composer docked at the bottom) or below it. */
   placement?: "up" | "down";
 }) {
   const [open, setOpen] = useState(false);
   const [blocked, setBlocked] = useState(false);
-  // Guests (no account) research on Quick only; Deep and Deepest need a free account.
+  // guests research on quick only
   const lowOnly = useLowOnly();
   const shown = lowOnly ? "low" : value;
   const user = useUser();
   const guest = useGuest();
   const authKnown = user !== undefined && guest !== undefined;
   const pick = (d: Depth) => {
-    if (!authKnown) return; // lowOnly isn't final yet; don't overwrite the chosen depth with Low
+    if (!authKnown) return; // lowOnly isnt final yet
     if (lowOnly && d !== "low") {
       setBlocked(true);
       onChange("low");

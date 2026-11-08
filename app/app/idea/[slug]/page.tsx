@@ -6,7 +6,6 @@ import { getAllSlugs, getCard } from "@/lib/cards";
 import { ideaHref } from "@/lib/links";
 import { getIdea } from "@/lib/research/store";
 
-// Known ideas are prerendered; new ones render on the server before sending.
 export const instant = false;
 
 export async function generateStaticParams() {
@@ -16,7 +15,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps<"/app/idea/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const card = (await getCard(slug)) ?? (await getIdea(slug));
-  // Missing cards (the browser's own LocalIdea copy) and sample placeholders stay out of search.
+  // missing cards and samples stay out of search
   if (!card) return { title: "Idea", robots: { index: false, follow: true } };
   const path = ideaHref(slug);
   return {
@@ -38,7 +37,7 @@ export async function generateMetadata({ params }: PageProps<"/app/idea/[slug]">
 
 export default async function IdeaPage({ params }: PageProps<"/app/idea/[slug]">) {
   const { slug } = await params;
-  // Feed ideas, then ideas found by research (saved in Supabase), then this browser's own copy.
+  // feed ideas, then researched ones (supabase), then this browsers own copy
   const card = (await getCard(slug)) ?? (await getIdea(slug));
   if (!card) return <LocalIdea slug={slug} />;
   return (

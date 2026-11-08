@@ -6,9 +6,8 @@ import { ideaHref } from "@/lib/links";
 
 const SITE = "https://unmet-ten.vercel.app";
 
-// The landing page plus every real idea page (sample cards are placeholders and stay out).
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  await connection(); // the live feed changes daily: build the list per request, not at build time
+  await connection(); // feed changes daily, build per request
   const live = await readFeed();
   const urls: MetadataRoute.Sitemap = [{ url: SITE, changeFrequency: "weekly", priority: 1 }];
   const seen = new Set<string>();
@@ -22,7 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     });
   }
-  // Slugs that are prerendered but not in the live feed: only real (non-sample) cards belong here.
+  // prerendered slugs missing from the live feed, real cards only
   for (const slug of await getAllSlugs()) {
     if (seen.has(slug)) continue;
     const card = await getCard(slug);

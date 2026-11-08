@@ -11,15 +11,12 @@ import s from "./welcome.module.css";
 
 const EXAMPLES = ["I'm a nurse", "small coffee shops", "indie game devs", "freelance designers"];
 
-// With no specific destination, onboarding leads into a first research (on a picked niche, if any);
-// a specific `next` is always honoured.
 function afterOnboarding(next: string, niche?: string) {
   const to = safeNext(next);
   if (to !== "/app") return to;
   return niche ? researchHref(niche, "low") : "/app/research";
 }
 
-// Two steps, once: who you build for → which niches to follow. Skip is always there.
 export default function Onboarding({ next }: { next: string }) {
   const router = useRouter();
   const { interests } = useInterests();
@@ -52,12 +49,12 @@ export default function Onboarding({ next }: { next: string }) {
     setError("");
     try {
       completeOnboarding(profile, picked);
-      // Watched niches join Unmet's daily research for accounts (best effort; the app works either way).
+      // best effort, app works either way
       const auth = await authHeaders();
       const headers = { "Content-Type": "application/json", ...auth };
       if (auth.Authorization)
         await Promise.all(picked.map((niche) => fetch("/api/watch", { method: "POST", headers, body: JSON.stringify({ niche }) }).catch(() => null)));
-      router.replace(afterOnboarding(next, picked[0])); // never off-site, whatever the page was given
+      router.replace(afterOnboarding(next, picked[0])); // never off site
     } catch {
       setError("Couldn't finish setting up. Please try again.");
     } finally {
@@ -70,7 +67,6 @@ export default function Onboarding({ next }: { next: string }) {
     router.replace(afterOnboarding(next));
   }
 
-  // Same rule as afterOnboarding: only the default destination turns into a research.
   const finishLabel = safeNext(next) === "/app" && picked[0] ? `Research ${picked[0]}` : "Start exploring";
   const niches = [...new Set([...(profile?.niches ?? []), ...picked])];
 

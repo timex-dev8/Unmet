@@ -59,7 +59,7 @@ function FaqItem({ q, a, icon: Icon }: { q: string; a: string; icon: LucideIcon 
           </m.span>
         </button>
       </h3>
-      {/* Always in the page so search engines can read it; `inert` keeps a closed answer out of reach. */}
+      {/* always rendered so search engines can read it, inert keeps closed answers unreachable */}
       <m.div
         id={id}
         className={s.faqPanel}

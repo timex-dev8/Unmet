@@ -5,10 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useGuest, useUser } from "@/lib/auth";
 import { authConfigured } from "@/lib/supabase/client";
 
-// The Studio is for people who signed in or chose guest mode on /welcome. proxy.ts does the real
-// check on the server (session or guest cookie), so the page renders straight away. This is only the
-// fallback for when the cookie said yes but the browser disagrees (an expired session, say).
-// Shared idea links stay open to everyone, so a link someone posts always works.
+// proxy.ts does the real check on the server, this is only for when the cookie says yes but the browser disagrees
 export default function AppGate({ children }: { children: ReactNode }) {
   const user = useUser();
   const guest = useGuest();

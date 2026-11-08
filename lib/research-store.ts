@@ -4,9 +4,6 @@ import { useSyncExternalStore } from "react";
 import { type Syncable, unionBy } from "./sync-types";
 import type { Card } from "./types";
 
-// Research conversations ("threads"), kept in this browser so a reload doesn't lose them,
-// and synced to the account when signed in (lib/sync.ts).
-
 export type ChatMessage = {
   id: string;
   role: "user" | "assistant";
@@ -20,7 +17,7 @@ export type ChatMessage = {
   pending?: boolean;
 };
 
-export type Thread = { id: string; title: string; createdAt: number; updatedAt: number; messages: ChatMessage[] };
+type Thread = { id: string; title: string; createdAt: number; updatedAt: number; messages: ChatMessage[] };
 
 const KEY = "unmet:research:v2";
 const OLD_KEY = "unmet:research:v1";
@@ -38,7 +35,7 @@ function read(): Thread[] {
       const parsed = JSON.parse(raw);
       return Array.isArray(parsed) ? parsed : [];
     }
-    // One-time move of the single chat from the first version.
+    // one-time move of the single chat from v1
     const old = JSON.parse(localStorage.getItem(OLD_KEY) ?? "[]") as ChatMessage[];
     const messages = Array.isArray(old) ? old.filter((m) => !m.pending) : [];
     if (!messages.length) return [];
@@ -50,21 +47,19 @@ function read(): Thread[] {
   }
 }
 
-// A reload mid-answer can't resume the stream, so pending replies aren't stored (or synced).
+// pending replies aren't stored or synced, a reload can't resume the stream
 const storable = (list: Thread[]) => list.slice(0, MAX_THREADS).map((t) => ({ ...t, messages: t.messages.filter((m) => !m.pending).slice(-40) }));
 
 function write(list: Thread[]) {
   cache = list;
   try {
     localStorage.setItem(KEY, JSON.stringify(storable(list)));
-  } catch {
-    // storage full or blocked: keep it in memory for this visit
-  }
+  } catch {}
   listeners.forEach((l) => l());
 }
 
 const getSnapshot = () => (cache ??= read());
-// Another tab changed the stored threads: re-read, keeping this tab's mid-answer chats (they aren't stored).
+// other tab changed it, re-read but keep this tab's mid-answer chats
 const subscribe = (l: () => void) => {
   const onStorage = (e: StorageEvent) => {
     if (e.key !== KEY) return;
@@ -84,7 +79,6 @@ const subscribe = (l: () => void) => {
   };
 };
 
-/** All threads, most recently active first. */
 export function useThreads() {
   const threads = useSyncExternalStore(subscribe, getSnapshot, () => EMPTY);
   return [...threads].sort((a, b) => b.updatedAt - a.updatedAt);
@@ -95,7 +89,6 @@ export function useThread(id: string | undefined) {
   return id ? threads.find((t) => t.id === id) : undefined;
 }
 
-/** True once the browser store is readable (avoids a "not found" flash while hydrating). */
 export function useStoreReady() {
   return useSyncExternalStore(
     subscribe,
@@ -115,7 +108,6 @@ export function updateThread(id: string, fn: (messages: ChatMessage[]) => ChatMe
   write(getSnapshot().map((t) => (t.id === id ? { ...t, messages: fn(t.messages), updatedAt: Date.now() } : t)));
 }
 
-/** Finds an idea card from past research in this browser (for /app/idea/[slug]). */
 export function findResearchCard(slug: string): Card | undefined {
   for (const t of getSnapshot()) {
     for (const m of t.messages) {
@@ -129,7 +121,6 @@ export function findResearchCard(slug: string): Card | undefined {
 export const threadsSync: Syncable<Thread[]> = {
   kind: "threads",
   get: () => storable(getSnapshot()),
-  // A chat that's mid-answer here keeps its local copy, so the running research isn't lost.
   replace: (list) => {
     const busy = new Map(
       getSnapshot()
@@ -138,7 +129,6 @@ export const threadsSync: Syncable<Thread[]> = {
     );
     write(list.map((t) => busy.get(t.id) ?? t));
   },
-  // Same thread on both sides: keep the one touched last.
   merge: (local, remote) =>
     unionBy(
       local,

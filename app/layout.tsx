@@ -3,7 +3,6 @@ import { EB_Garamond, Geist } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 
-// Two typefaces (DESIGN.md): EB Garamond for big headlines only, Geist for everything else.
 const display = EB_Garamond({ variable: "--font-display", subsets: ["latin"], weight: ["500"] });
 const geist = Geist({ variable: "--font-geist", subsets: ["latin"] });
 
@@ -30,7 +29,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${display.variable} ${geist.variable}`} data-scroll-behavior="smooth">
       <body>
         {children}
-        {/* Page views for Unmet itself (Vercel Web Analytics: no cookies, free on Hobby) */}
         <Analytics />
       </body>
     </html>

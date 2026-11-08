@@ -8,7 +8,7 @@ import s from "./search.module.css";
 
 export const metadata: Metadata = { title: "Search" };
 
-// The query comes from the URL; render the whole page on the server before sending it.
+// must stay dynamic, reads the url
 export const instant = false;
 
 const suggestions = ["invoices", "tests", "receipts", "tabs", "meetings"];
@@ -82,7 +82,6 @@ export default async function SearchPage({ searchParams }: PageProps<"/app/searc
           <div className={s.empty} aria-live="polite">
             <p className={s.emptyTitle}>Nothing on “{query}” yet.</p>
             <p className={s.emptyText}>We only show problems backed by real posts. Pulling fresh posts for any topic arrives in the next update.</p>
-            {/* Stage 2: searches Hacker News + the web and builds cards on demand. */}
             <button type="button" className="pill glossy" disabled aria-disabled="true">
               <Sparkles size={16} aria-hidden="true" />
               Pull fresh posts

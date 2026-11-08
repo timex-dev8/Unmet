@@ -7,11 +7,10 @@ import { toggleWatch, useInterests } from "@/lib/interests";
 import { researchHref } from "@/lib/links";
 import s from "./home.module.css";
 
-/** Watching a niche ranks it first here and adds it to Unmet's daily research (app/api/watch). */
-export function useWatch() {
+function useWatch() {
   return async (niche: string, watching: boolean) => {
     toggleWatch(niche);
-    // Signed in only (guests just rank locally). Un-watching takes it off the research list again.
+    // guests only rank locally
     const auth = await authHeaders();
     if (!auth.Authorization) return;
     const headers = { "Content-Type": "application/json", ...auth };
@@ -19,7 +18,6 @@ export function useWatch() {
   };
 }
 
-/** The niches someone follows (from onboarding), each with Watch and a research link, plus Edit. */
 export function Niches() {
   const { interests } = useInterests();
   const watch = useWatch();

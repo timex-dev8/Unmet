@@ -3,88 +3,83 @@ export type Category = (typeof CATEGORIES)[number];
 
 export type Trend = "rising" | "steady" | "falling";
 
-/** What kind of place a source is; first-hand places (forum, Q&A, review, issue) weigh most. */
 export type SourceKind = "forum" | "qa" | "review" | "app-review" | "issue" | "social" | "hn" | "news" | "blog";
 export const SOURCE_KINDS: readonly SourceKind[] = ["forum", "qa", "review", "app-review", "issue", "social", "hn", "news", "blog"];
 
 export type Source = {
   title: string;
   url: string;
-  site: string; // e.g. "Hacker News"
+  site: string;
   kind?: SourceKind;
   points?: number;
   comments?: number;
-  engagement?: string; // e.g. "3 votes · 417 views", "1★ review"
-  postedAt?: string; // ISO date
+  engagement?: string;
+  postedAt?: string;
 };
 
-/** An existing product that already addresses the problem (found by the competitor check). */
 export type Competitor = { name: string; url: string; note?: string; mrr?: number };
 
 export type Score = {
-  value: number; // 0–100
+  value: number;
   label: "Low" | "Medium" | "High";
-  basis: "data" | "ai"; // hard signals vs AI estimate
+  basis: "data" | "ai";
   reason: string;
 };
 
-/** What a complaint reveals beyond the pain itself; these signals drive the "worth building?" verdict. */
 export type Signal = "pays" | "switching" | "price" | "workaround";
 
-/** "Is this worth building?": a verdict computed from the evidence, never from the AI's opinion. */
+// computed from the evidence, never the AI's opinion
 export type Report = {
   verdict: "strong" | "maybe" | "weak";
   reasons: string[];
-  signals: Record<Signal, number>; // how many complaints show each signal
-  today?: string; // what people use now and what they dislike about it (AI summary of the complaints)
-  workarounds: string[]; // manual hacks people describe (from complaints)
+  signals: Record<Signal, number>;
+  today?: string;
+  workarounds: string[];
 };
 
-/** The pattern an idea follows (see IDEAS_SYSTEM in lib/research/prompts.ts). */
 export type IdeaLens = "automate" | "vertical" | "unbundle" | "service" | "wedge" | "connector" | "shovels";
 
-/** A product idea generated from a validated problem. Every idea cites the complaints it answers. */
 export type Idea = {
   lens: IdeaLens;
   title: string;
-  pitch: string; // one line
-  // The founder's reasoning; missing on ideas saved before it existed.
+  pitch: string;
+  // reasoning, missing on ideas saved before it existed
   form?: "product" | "feature";
-  norm?: string; // what most existing products do
-  flaw?: string; // why that fails these people
-  shift?: string; // the different approach
+  norm?: string;
+  flaw?: string;
+  shift?: string;
   twists?: { name: string; how: string }[];
   whyLove?: string;
   competitorCheck?: string; // only from the products we found
-  unproven?: string; // what the complaints don't prove yet
+  unproven?: string;
   whoPays: string;
-  price: string; // rough, from comparable products
-  wedge: string; // why someone would switch to it
-  mvp: string; // a first version you could build in a weekend or two
-  firstUsers: string; // where the first 10 users are
+  price: string;
+  wedge: string;
+  mvp: string;
+  firstUsers: string;
   risks: string;
-  evidence: string[]; // quotes it answers (verified complaints)
-  similar?: Competitor; // closest existing product, if the "already built?" check found one
-  score: number; // 0–100
+  evidence: string[];
+  similar?: Competitor;
+  score: number;
 };
 
 export type Card = {
   slug: string;
   headline: string;
-  summary: string; // two sentences, our own words
+  summary: string; // our own words
   who: string;
   category: Category;
   trend: Trend;
   quote: string; // under 15 words
-  highlight: string; // the repeated phrase inside quote
-  query?: string; // what we searched the source for
+  highlight: string;
+  query?: string;
   evidence: {
-    posts: number; // posts + comments mentioning the problem in the window
+    posts: number; // posts + comments in the window
     threads: number;
     days: number;
-    weekly: number[]; // mentions per week, oldest first (sparkline)
+    weekly: number[]; // oldest first
     site: string;
-    updatedAt?: string; // ISO date the numbers were pulled
+    updatedAt?: string;
   };
   scores: { demand: Score; competition: Score; difficulty: Score };
   aiSuggestions: { title: string; text: string }[];
@@ -92,37 +87,35 @@ export type Card = {
   competitors?: Competitor[];
   report?: Report;
   ideas?: Idea[];
-  thoughts?: string; // founder notes on the problem
-  sample?: boolean; // placeholder content, shown with a "Sample" tag
-  signal?: "early" | "niche"; // early: only 2 sources, or one site. niche: a single source, worth a conversation but unproven
-  fresh?: boolean; // built on demand from a search
+  thoughts?: string;
+  sample?: boolean;
+  signal?: "early" | "niche"; // early: 2 sources or one site. niche: a single source
+  fresh?: boolean;
 };
 
-/** One piece of proof that a product is working, with the page it comes from. */
 export type ProductProof = {
   kind: "mrr" | "growth" | "grossing" | "votes" | "stars" | "traffic";
-  label: string; // e.g. "$12k MRR, verified", "#7 top-grossing in Finance (US)"
+  label: string;
   url: string;
-  site: string; // e.g. "TrustMRR", "App Store"
+  site: string;
 };
 
-/** A real product that's working, shown in the feed for inspiration next to the problems. */
 export type Product = {
   kind: "product";
   slug: string;
-  key?: string; // stable identity from its web page (lib/products keyOf), to find it again next run
+  key?: string; // stable id from its page (products keyOf), to find it next run
   name: string;
-  url: string; // the product's own site or store page
-  oneLine: string; // what it is, in our own words
+  url: string;
+  oneLine: string;
   forWho: string;
   category: Category;
-  why: string; // why it's working, from the proof only
+  why: string;
   proof: ProductProof[];
-  rising?: boolean; // grew in the last 30 days
-  image?: string; // the product's icon or thumbnail (Product Hunt, App Store), when the source has one
-  source: ProductSource; // where we first found it, so Home can pick by source
-  updatedAt: string; // ISO date the proof was pulled
-  addedAt?: string; // ISO date it first reached the feed; missing on older rows
+  rising?: boolean;
+  image?: string;
+  source: ProductSource; // first source that found it, Home picks by it
+  updatedAt: string;
+  addedAt?: string; // missing on older rows
 };
 
 export type ProductSource = "TrustMRR" | "Product Hunt" | "App Store" | "Hacker News" | "GitHub";

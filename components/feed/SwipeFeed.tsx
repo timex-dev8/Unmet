@@ -12,7 +12,7 @@ import { useSaved } from "@/lib/saved";
 import type { Card, Product } from "@/lib/types";
 import s from "./feed.module.css";
 
-// Swipe directions: 1 = next (up), -1 = back (down), 2 = saved (right).
+// 1 = next, -1 = back, 2 = saved
 type Dir = 1 | -1 | 2;
 
 const SWIPE_DISTANCE = 100;
@@ -23,12 +23,9 @@ type Item = Card | Product;
 const isProduct = (x: Item | undefined): x is Product => (x as Product | undefined)?.kind === "product";
 const keyOf = (x: Item) => (isProduct(x) ? `product-${x.slug}` : x.slug);
 
-// The feed is for inspiration: problems people complain about, and every third card a real product
-// that's working (lib/products).
 export default function SwipeFeed({ cards: input, products = [] }: { cards: Card[]; products?: Product[] }) {
-  // Problems matching what this person told Unmet (and the niches they watch) come first.
   const { interests: liveInterests } = useInterests();
-  // Freeze the ranking inputs once they've loaded, so interests syncing in later don't reshuffle cards mid-swipe.
+  // freeze ranking inputs once loaded so late interests dont reshuffle mid swipe
   const hydrated = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -40,7 +37,7 @@ export default function SwipeFeed({ cards: input, products = [] }: { cards: Card
   const cards = useMemo(() => {
     const keywords = interests ? profileKeywords(interests) : [];
     const matched = keywords.length ? [...input].sort((a, b) => textMatch(b, keywords) - textMatch(a, keywords)) : input;
-    // Cards this person hasn't passed yet come first, so a return visit opens on something new.
+    // unpassed cards first so a return visit opens on something new
     const problems = [...matched].sort((a, b) => Number(seen.includes(a.slug)) - Number(seen.includes(b.slug)));
     const out: Item[] = [];
     let p = 0;
@@ -71,7 +68,6 @@ export default function SwipeFeed({ cards: input, products = [] }: { cards: Card
   const go = useCallback(
     (d: Dir) => {
       markHintSeen();
-      // Moving on without saving tells the ranking this card wasn't interesting.
       const current = cards[index];
       if (d === 1 && current && !isProduct(current)) markSkipped(current.slug);
       setDir(d);
@@ -83,14 +79,14 @@ export default function SwipeFeed({ cards: input, products = [] }: { cards: Card
   const saveAndNext = useCallback(() => {
     const current = cards[index];
     if (!current) return;
-    // Products aren't saved (the board holds problems); a right swipe just moves on
+    // products arent saved, a right swipe just moves on
     if (isProduct(current)) return go(1);
     save(current);
     flash("Saved");
     go(2);
   }, [cards, index, save, flash, go]);
 
-  // Keyboard: ↓ / ↑ to move, S to save. Ignored while typing or when a sheet is open.
+  // keys: down/up move, S saves. ignored while typing or with a sheet open
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -165,7 +161,6 @@ export default function SwipeFeed({ cards: input, products = [] }: { cards: Card
           )}
         </AnimatePresence>
 
-        {/* Desktop: plain previous / next buttons beside the card */}
         {card && (
           <div className={s.sideNav}>
             <button type="button" onClick={() => go(-1)} disabled={index === 0} aria-label="Previous idea">
@@ -248,7 +243,6 @@ function SwipeCard({
   );
 }
 
-// The "swipe up" hint shows until the first swipe, remembered in this browser.
 const hintListeners = new Set<() => void>();
 function useHintSeen() {
   return useSyncExternalStore(

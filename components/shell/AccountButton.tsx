@@ -18,22 +18,19 @@ import { authConfigured } from "@/lib/supabase/client";
 import { useSyncStatus } from "@/lib/sync";
 import s from "./account.module.css";
 
-// Google sign-in is built but hidden until it's switched on in Supabase (Authentication → Providers → Google).
-// Flip to true then.
+// google sign-in is built but hidden until its on in supabase, flip to true then
 const GOOGLE_ENABLED = false;
 
 const STATUS_LABEL = { off: "", syncing: "Syncing…", synced: "Synced", error: "Sync paused, will retry" } as const;
 
-// Did this page load come back from a failed Google or email-link sign-in (?signin=failed)?
-// Read once, so removing the parameter from the address bar doesn't hide the message.
+// did we land from a failed sign-in (?signin=failed)? read once so removing the param keeps the message
 let failedAtLoad: boolean | undefined;
 const signinFailed = () => (failedAtLoad ??= new URL(window.location.href).searchParams.get("signin") === "failed");
-// Same for arriving from a "reset your password" email (?reset=1).
+// same for ?reset=1 from a reset email
 let resetAtLoad: boolean | undefined;
 const resetLink = () => (resetAtLoad ??= new URL(window.location.href).searchParams.get("reset") === "1");
 const noop = () => () => {};
 
-// Sign in / account. `variant="side"` is the sidebar row; "icon" is the phone top bar button.
 export default function AccountButton({ variant }: { variant: "side" | "icon" }) {
   const user = useUser();
   const guest = useGuest();
@@ -42,19 +39,18 @@ export default function AccountButton({ variant }: { variant: "side" | "icon" })
   const failed = useSyncExternalStore(noop, signinFailed, () => false);
   const reset = useSyncExternalStore(noop, resetLink, () => false);
   const [resetDone, setResetDone] = useState(false);
-  const [shown, setShown] = useState(false); // the dialog's contents exist only while it's open
+  const [shown, setShown] = useState(false); // dialog contents only exist while open
   const hideTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  // Coming back from a failed sign-in or a password-reset email: open the sheet, tidy the address bar.
   useEffect(() => {
     if (!(failed || reset)) return;
-    // Both variants are mounted but one is hidden by CSS at 900px; only the visible one opens the sheet.
+    // both variants mount, css hides one at 900px, only the visible one opens
     if (window.matchMedia("(min-width: 900px)").matches !== (variant === "side")) return;
     const url = new URL(window.location.href);
     url.searchParams.delete("signin");
     url.searchParams.delete("reset");
     window.history.replaceState(null, "", url);
-    ref.current?.showModal(); // onToggle below mounts the contents
+    ref.current?.showModal(); // onToggle mounts the contents
   }, [variant, failed, reset]);
 
   if (!authConfigured) return null;
@@ -94,11 +90,11 @@ export default function AccountButton({ variant }: { variant: "side" | "icon" })
           }
         }}
         onClose={() => {
-          // let the 0.25s fade-out finish before the contents go
+          // let the 0.25s fade-out finish first
           hideTimer.current = setTimeout(() => setShown(false), 300);
         }}
         onClick={(e) => {
-          if (e.target === ref.current) ref.current.close(); // tap outside closes
+          if (e.target === ref.current) ref.current.close(); // backdrop tap
         }}
       >
         {shown && (
@@ -129,10 +125,9 @@ export default function AccountButton({ variant }: { variant: "side" | "icon" })
 type Mode = "password" | "link";
 type Sent = { title: string; text: string } | null;
 
-/** `bare` drops the title and notes, for the welcome card where the page already says them. */
 export function SignInForm({ id, failed, bare = false }: { id: string; failed: boolean; bare?: boolean }) {
   const [mode, setMode] = useState<Mode>("password");
-  const [creating, setCreating] = useState(false); // password mode: sign in vs create account
+  const [creating, setCreating] = useState(false); // password mode: sign in vs create
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState<"" | "google" | "submit" | "reset">("");
@@ -163,7 +158,7 @@ export function SignInForm({ id, failed, bare = false }: { id: string; failed: b
         if (mustConfirm)
           setSent({ title: "Confirm your email", text: `We sent a link to ${address}. Open it on this device, and your account is ready.` });
       } else {
-        await signInWithPassword(address, password); // the sheet switches to "signed in" by itself
+        await signInWithPassword(address, password); // sheet flips to signed in by itself
       }
     });
   };
@@ -302,7 +297,6 @@ export function SignInForm({ id, failed, bare = false }: { id: string; failed: b
   );
 }
 
-/** Opened from the "reset your password" email (lands on /app?reset=1, already signed in). */
 function NewPassword({ id, onDone }: { id: string; onDone: () => void }) {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);

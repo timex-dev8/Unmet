@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
-  // The app now lives under /app (the studio); old links keep working.
+  // app lives under /app now, old links keep working
   async redirects() {
     return [
       { source: "/feed", destination: "/app/feed", permanent: true },

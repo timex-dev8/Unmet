@@ -1,9 +1,7 @@
 import { runResearch } from "@/lib/research";
 import { EXAMPLE_SEARCHES } from "@/lib/research-types";
 
-// Runs the example searches 4 times a day (vercel.json), one at a time, so a first-time visitor's tap opens instantly.
-// Vercel cron only uses UTC: that is midnight, 6am, noon and 6pm in Toronto during standard time, one hour later in daylight time.
-// Vercel sends "Authorization: Bearer $CRON_SECRET".
+// UTC only: midnight, 6am, noon, 6pm Toronto in standard time, an hour later in dst
 export const maxDuration = 300;
 
 export async function GET(request: Request) {

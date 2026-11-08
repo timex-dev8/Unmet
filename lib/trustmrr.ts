@@ -1,7 +1,6 @@
 import "server-only";
 
-// TrustMRR: startups with revenue verified through Stripe, App Store and others
-// (trustmrr.com/docs/api). Used as market proof and competitor evidence, never as complaints.
+// revenue verified startups (trustmrr.com/docs/api), market proof only, never complaints
 
 export type Startup = {
   name: string;
@@ -11,7 +10,7 @@ export type Startup = {
   category: string;
   mrr: number; // USD cents
   growth: number | null; // percent, 30 days
-  url: string; // trustmrr.com page
+  url: string;
 };
 
 type Raw = {
@@ -28,7 +27,7 @@ export function trustmrrConfigured() {
   return Boolean(process.env.TRUSTMRR_API_KEY);
 }
 
-// The docs show growth both as a decimal (0.12) and as a percent (24); normalize to percent.
+// docs show growth as a decimal (0.12) and a percent (24), normalize to percent
 const toPercent = (g: number | null | undefined) => (g == null ? null : Math.abs(g) <= 3 ? Math.round(g * 100) : Math.round(g));
 
 export async function listStartups(params: { category?: string; sort: "growth-desc" | "revenue-desc"; pages?: number }) {

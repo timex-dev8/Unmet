@@ -2,7 +2,6 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import s from "./app.module.css";
 
-// A back bar for detail screens inside the studio (the studio's own top bar handles the rest).
 export default function AppBar({ backHref, backLabel }: { backHref: string; backLabel: string }) {
   return (
     <div className={s.bar}>

@@ -2,8 +2,7 @@ import "server-only";
 import { ApiError, GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { z } from "zod/v4";
 
-// One small wrapper for every AI call. Provider and model come from env, so switching is one line.
-// Only Gemini is wired up today (free tier); add a branch here for Groq or Claude later.
+// one wrapper for every ai call, only gemini is wired up (free tier)
 
 export class LlmError extends Error {
   constructor(
@@ -30,7 +29,7 @@ function jsonSchemaFor(schema: z.ZodType, notes = true) {
   return notes ? rest : stripNotes(rest);
 }
 
-// Big schemas with field notes can be refused by the light model ("invalid argument"), so large batches send them bare.
+// big schemas with field notes get refused by the light model, so large batches send them bare
 function stripNotes(v: unknown): unknown {
   if (Array.isArray(v)) return v.map(stripNotes);
   if (!v || typeof v !== "object") return v;
@@ -41,28 +40,27 @@ function stripNotes(v: unknown): unknown {
   );
 }
 
-// Free-tier models get busy ("high demand", 503) or rate-limited (429). When that happens,
-// a call is too slow, or the reply comes back empty (blocked), we retry once on a lighter free model.
+// free tier gets busy (503) or rate limited (429): retry once on the lighter model
 const FALLBACK_MODEL = process.env.LLM_FALLBACK_MODEL || "gemini-3.5-flash-lite";
 
-// A demand spike (503) passes quickly; a daily quota doesn't, and a per-minute limit is in between.
+// 503 spikes pass fast, a daily quota doesn't, per-minute is in between
 const cooldownMs = (msg: string) => (/per ?day/i.test(msg) ? 5 * 60_000 : /\b429\b|RESOURCE_EXHAUSTED/.test(msg) ? 60_000 : 20_000);
 const busyUntil = new Map<string, number>();
 
 const isBusy = (msg: string) => /\b(429|503)\b|RESOURCE_EXHAUSTED|UNAVAILABLE|high demand|quota|overloaded/i.test(msg);
-// Only real overload puts a model on cooldown; one slow or empty answer doesn't.
+// only real overload puts a model on cooldown
 const isOverloaded = (msg: string) => /\b(429|503)\b|RESOURCE_EXHAUSTED|UNAVAILABLE/i.test(msg);
 const isTimeout = (err: unknown) => err instanceof Error && /abort|timeout/i.test(`${err.name} ${err.message}`);
-// One model can refuse a request the other accepts (usually the schema), so a 400 moves on to the other model.
+// a 400 (usually the schema) moves on to the other model
 const isBadRequest = (err: unknown, msg: string) => (err instanceof ApiError && err.status === 400) || /INVALID_ARGUMENT/.test(msg);
 
-// The free tier allows few requests a minute, so this server sends only a few at a time and the rest wait their turn.
+// free tier allows few requests a minute, so only a few go at once
 const MAX_RUNNING = 3;
 let running = 0;
 const waiting: (() => void)[] = [];
 async function takeTurn() {
   if (running < MAX_RUNNING) running++;
-  else await new Promise<void>((go) => waiting.push(go)); // the finishing call hands over its turn
+  else await new Promise<void>((go) => waiting.push(go));
   return () => {
     const next = waiting.shift();
     if (next) next();
@@ -71,7 +69,7 @@ async function takeTurn() {
 }
 
 const MAX_WAIT_MS = 35_000; // a per-minute limit clears within this
-/** How long to wait before trying the same model again. Null when waiting won't help: a daily quota, or a wait too long for someone watching. */
+// null = waiting won't help (daily quota or too long)
 function retryWait(msg: string) {
   if (!isOverloaded(msg) || /per ?day/i.test(msg)) return null;
   const asked = msg.match(/retry\w*[^0-9]{0,12}(\d+(?:\.\d+)?)\s*s/i);
@@ -95,7 +93,6 @@ function parseReply<T>(schema: z.ZodType<T>, text: string): { data: T } | { prob
   return parsed.success ? { data: parsed.data } : { problem: "The AI's answer didn't match the expected shape." };
 }
 
-/** Asks the model for JSON matching `schema`; the reply is validated before it is returned. */
 export async function generateJson<T>(
   schema: z.ZodType<T>,
   opts: { system: string; prompt: string; timeoutMs?: number; signal?: AbortSignal; light?: boolean; temperature?: number; schemaNotes?: boolean },
@@ -103,13 +100,13 @@ export async function generateJson<T>(
   const provider = process.env.LLM_PROVIDER ?? "gemini";
   if (provider !== "gemini") throw new LlmError(`LLM_PROVIDER "${provider}" is not supported yet`, "not_configured");
 
-  // The main model allows very few free requests a day, so `light` calls (reading, planning, ideas) start on the lighter one.
+  // main model gets very few free requests a day, so light calls start on the lighter one
   const all = [...new Set(opts.light ? [FALLBACK_MODEL, process.env.LLM_MODEL!] : [process.env.LLM_MODEL!, FALLBACK_MODEL])];
-  // Skip a model that was busy in the last few minutes, unless it's the only one left.
+  // skip a model that was busy recently unless it's the only one left
   const models = all.filter((m) => (busyUntil.get(m) ?? 0) < Date.now());
   if (models.length === 0) models.push(all[all.length - 1]);
   let reply: { data: T } | undefined;
-  let failure: LlmError | undefined; // why the last model gave nothing usable; none means it was busy or slow
+  let failure: LlmError | undefined; // why the last model gave nothing usable, none = busy or slow
   let lastError = "";
   const stopped = () => new LlmError("The research was stopped.", "failed");
 
@@ -131,7 +128,7 @@ export async function generateJson<T>(
             responseMimeType: "application/json",
             responseJsonSchema: jsonSchemaFor(schema, opts.schemaNotes !== false),
             temperature: opts.temperature ?? 0.3,
-            // Thinking makes answers slow; these are extraction tasks, so keep it light.
+            // thinking makes answers slow, these are extraction tasks
             thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
             abortSignal: opts.signal ? AbortSignal.any([timeout, opts.signal]) : timeout,
           },
@@ -139,7 +136,7 @@ export async function generateJson<T>(
         const used = res.usageMetadata;
         console.log(`[llm] ${model}: ${used?.promptTokenCount ?? "?"} in, ${used?.totalTokenCount ?? "?"} total`);
         if (!res.text?.trim()) {
-          // Blocked by a safety filter or simply empty: the other model may still answer.
+          // safety block or empty, the other model may answer
           failure = new LlmError("The AI returned an empty answer. Try rewording, or try again.", "bad_output");
           console.warn(`[llm] ${model} returned no text`);
           break;
@@ -168,8 +165,8 @@ export async function generateJson<T>(
         done();
       }
       if (reply) break;
-      if (wait === null) break; // on to the other model
-      await sleep(wait, opts.signal); // outside our turn, so other calls keep moving
+      if (wait === null) break;
+      await sleep(wait, opts.signal); // outside our turn so other calls keep moving
     }
     if (reply) break;
   }

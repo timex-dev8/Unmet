@@ -1,9 +1,6 @@
 import "server-only";
 import type { ResearchSource } from "@/lib/research-types";
 
-// App Store reviews via Apple's free iTunes APIs: find apps for a search term, then read their
-// most recent 1–2★ reviews. No key needed.
-
 type App = { trackId: number; trackName: string; trackViewUrl: string; userRatingCount?: number };
 type Entry = {
   id: { label: string };

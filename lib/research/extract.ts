@@ -6,9 +6,6 @@ import type { Signal } from "@/lib/types";
 import { EXTRACT_SYSTEM } from "./prompts";
 import { findQuote } from "./verify";
 
-// Reads sources in parallel batches and keeps only first-hand, on-topic complaints whose
-// quotes are really in the text (stored as the source wrote them, not as the AI retyped them).
-
 const ExtractSchema = z.object({
   sources: z.array(
     z.object({
@@ -31,9 +28,8 @@ const ExtractSchema = z.object({
 });
 
 export type Complaint = { id: string; sourceId: number; quote: string; pain: string; who: string; signal?: Signal };
-export type ExtractReport = { complaints: Complaint[]; offTopic: number; secondHand: number; unverified: number; failedBatches: number };
+type ExtractReport = { complaints: Complaint[]; offTopic: number; secondHand: number; unverified: number; failedBatches: number };
 
-/** Runs async jobs with at most `limit` in flight (keeps the free AI tier from rate-limiting us). */
 async function pool<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<PromiseSettledResult<R>[]> {
   const results: PromiseSettledResult<R>[] = new Array(items.length);
   let next = 0;
@@ -62,7 +58,7 @@ export async function extractComplaints(
 
   let done = 0;
   const results = await pool(batches, 3, async (batch) => {
-    opts.signal?.throwIfAborted(); // the visitor left: don't start more batches
+    opts.signal?.throwIfAborted(); // visitor left, don't start more batches
     const out = await generateJson(ExtractSchema, {
       system: EXTRACT_SYSTEM,
       light: true,
@@ -121,5 +117,4 @@ export async function extractComplaints(
   return report;
 }
 
-/** Stops web text from closing or opening our tags. */
 export const fence = (t: string) => t.replace(/<\/?\s*(source|complaint|quote|product|competitor|card|message)\b/gi, "‹");

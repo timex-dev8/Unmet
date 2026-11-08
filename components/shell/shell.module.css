@@ -1,15 +1,10 @@
-/* Studio shell: phone = top bar + bottom tabs; desktop = sidebar + top bar.
-   Pages size themselves with --shell-top and --shell-bottom. */
 .shell {
   --shell-top: 56px;
-  --shell-bottom: calc(84px + env(safe-area-inset-bottom)); /* the floating tab bar and its gap */
-  /* Studio palette (DESIGN.md "v3"): a white page with a sky wash under the title, a pale sidebar,
-     and the shiny blue for the one main action. */
+  --shell-bottom: calc(84px + env(safe-area-inset-bottom));
   min-height: 100dvh;
   background: var(--paper);
   color: var(--ink);
 }
-/* Page titles are set in the display serif; everything else stays in Geist. */
 .shell h1 {
   font-family: var(--font-serif);
   font-weight: 500;
@@ -18,7 +13,6 @@
 .main {
   min-width: 0;
 }
-/* Pages marked data-wash (Home) get the sky: pale blue under the top bar, fading to white */
 .main:has([data-wash]) {
   background:
     radial-gradient(40% 420px at 70% 0%, rgba(255, 244, 222, 0.7) 0%, rgba(255, 255, 255, 0) 70%),
@@ -27,7 +21,6 @@
 .content {
   padding-bottom: var(--shell-bottom);
 }
-/* Idea pages bring their own action bar: no tab bar under it on phones */
 .shell:has([data-hide-tabs]) {
   --shell-bottom: 0px;
 }
@@ -35,7 +28,6 @@
   display: none;
 }
 
-/* ---------- Top bar ---------- */
 .top {
   position: sticky;
   top: 0;
@@ -46,7 +38,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 0 8px 0 16px;
-  /* Clear at the top of the page; frosted paper with a hairline once the content scrolls under it */
+  /* clear at the top, frosted with a hairline once content scrolls under */
   background: transparent;
   box-shadow: 0 1px 0 transparent;
   transition:
@@ -67,7 +59,6 @@
 .searchField {
   display: none;
 }
-/* phone: the feed search opens from the icon */
 .searchFieldOpen {
   display: flex;
   flex: 1;
@@ -79,7 +70,6 @@
   border-radius: 12px;
   background: var(--gray);
 }
-/* phone: search and account icons sit together on the right */
 .topActions {
   display: flex;
   align-items: center;
@@ -93,8 +83,6 @@
   align-items: center;
   justify-content: center;
 }
-/* ---------- Tab bar (phone) ---------- */
-/* Floats 10px above the bottom edge (and the home indicator), inset 12px from the sides */
 .tabsWrap {
   position: fixed;
   left: 12px;
@@ -142,7 +130,6 @@
   background: var(--tint);
 }
 
-/* ---------- Sidebar (desktop) ---------- */
 .side {
   display: none;
 }
@@ -188,7 +175,6 @@
   background: none;
   color: var(--ink);
 }
-/* the sliding white pill behind the active item (components/motion/Highlight.tsx) */
 .navPill {
   background: var(--white);
   border-radius: 10px;
@@ -196,7 +182,6 @@
     0 1px 2px rgba(25, 25, 29, 0.06),
     0 6px 16px -10px rgba(40, 60, 140, 0.25);
 }
-/* keyed on the number, so it bumps whenever it changes */
 .count {
   animation: count-bump 0.35s var(--ease);
   margin-left: auto;
@@ -239,7 +224,6 @@
     display: flex;
     flex-direction: column;
     padding: 20px 16px;
-    /* a pale blue-gray frame with a hairline, quieter than the white content */
     background: var(--side);
     box-shadow: 1px 0 0 #eceef4;
   }
@@ -287,7 +271,6 @@
 .navWithin {
   color: var(--ink);
 }
-/* both are buttons that open the command palette */
 .searchField,
 .searchIcon {
   font: inherit;

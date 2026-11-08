@@ -1,5 +1,3 @@
-/* Shape (DESIGN.md "v3"): a white page, a serif title, one writing box, the brief in a mist card.
-   Phone: box → notes → brief. Desktop: two columns, the brief sticky on the right. */
 .page {
   max-width: 1120px;
   margin: 0 auto;
@@ -33,7 +31,6 @@
   min-width: 0;
 }
 
-/* The writing box */
 .composer {
   background: var(--white);
   border-radius: 18px;
@@ -141,7 +138,6 @@
   color: var(--muted);
 }
 
-/* Small uppercase labels */
 .label {
   margin: 0 0 8px;
   font-size: 12px;
@@ -154,7 +150,6 @@
   margin: 28px 0 4px;
 }
 
-/* Notes */
 .notes {
   list-style: none;
   margin: 0;
@@ -206,7 +201,6 @@
   }
 }
 
-/* Main action */
 .action {
   display: flex;
   flex-direction: column;
@@ -231,7 +225,6 @@
   font-size: 14px;
 }
 
-/* "See an example brief": a quiet button with an arrow that unfolds the example */
 .exampleToggle {
   margin-top: 24px;
 }
@@ -273,7 +266,6 @@
   }
 }
 
-/* The brief */
 .brief {
   padding: 24px 20px;
   border-radius: 20px;
@@ -392,7 +384,6 @@
   }
 }
 
-/* Empty state: centred, calm, inspiring */
 .in {
   animation: empty-in 0.35s var(--ease) backwards;
   animation-delay: calc(var(--i, 0) * 80ms);

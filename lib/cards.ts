@@ -2,12 +2,11 @@ import sampleCards from "@/data/sample-cards.json";
 import { readFeed, readFeedCard } from "./feed";
 import { CATEGORIES, type Card, type Category } from "./types";
 
-// Feed cards: the live feed from Supabase (lib/feed, refreshed daily), topped up with the sample
-// cards until there are enough real ones. The screens only use these functions.
+// live feed from supabase, topped up with sample cards until there are enough real ones
 const samples = sampleCards as Card[];
 const ENOUGH_LIVE = 30;
 
-export const PAGE_SIZE = 30;
+const PAGE_SIZE = 30;
 
 async function allCards(opts: { category?: string; rising?: boolean } = {}) {
   const live = await readFeed(opts);
@@ -39,19 +38,15 @@ export async function getCard(slug: string) {
   return samples.find((c) => c.slug === slug) ?? (await readFeedCard(slug));
 }
 
-/** Prerendered idea pages: the sample cards (live ones render on request). */
 export async function getAllSlugs() {
   return samples.map((c) => c.slug);
 }
 
-// Keyword search: every word must appear somewhere in the card's text.
 export async function searchCards(query: string) {
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
   if (!words.length) return [];
   return (await allCards()).filter((c) => {
-    const text = [c.headline, c.summary, c.who, c.category, c.quote, ...c.aiSuggestions.map((s) => s.text)]
-      .join(" ")
-      .toLowerCase();
+    const text = [c.headline, c.summary, c.who, c.category, c.quote, ...c.aiSuggestions.map((s) => s.text)].join(" ").toLowerCase();
     return words.every((w) => text.includes(w));
   });
 }

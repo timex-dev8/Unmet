@@ -1,4 +1,3 @@
-/* Depth slider: a thin rail, three stops, a white knob that springs between them. */
 .root {
   position: relative;
   width: 100%;
@@ -23,7 +22,7 @@
   white-space: nowrap;
 }
 
-/* The real control: hidden, but focusable for keyboard and screen readers */
+/* real input, hidden but focusable */
 .input {
   position: absolute;
   width: 1px;
@@ -32,7 +31,7 @@
   pointer-events: none;
 }
 
-/* 12px side inset so the knob's edge lines up with the text at Low and High */
+/* 12px inset so the knob lines up with the text at low and high */
 .track {
   height: 36px;
   padding: 0 12px;
@@ -125,12 +124,11 @@
   color: var(--muted);
 }
 
-/* ChatGPT-style picker: a pill in the composer that opens the slider in a popover */
 .picker {
   position: relative;
   flex: none;
   align-self: flex-end;
-  margin-bottom: 4px; /* centers the 36px pill against the 44px send button */
+  margin-bottom: 4px; /* centers the 36px pill on the 44px send button */
 }
 .pill {
   display: inline-flex;
@@ -202,7 +200,7 @@
 .pop .head {
   margin-bottom: 4px;
 }
-/* Phones: anchor the popover to the whole composer (position: relative there) so it never leaves the screen */
+/* phones: popover anchors to the whole composer so it stays on screen */
 @media (max-width: 600px) {
   .picker {
     position: static;
@@ -214,7 +212,7 @@
   }
 }
 
-/* Guests: Medium and High are locked (a free account unlocks them) */
+/* locked for guests */
 .lock {
   margin: 10px 0 0;
   padding-top: 10px;

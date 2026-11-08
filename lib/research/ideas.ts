@@ -9,15 +9,12 @@ import { IDEAS_BATCH_SYSTEM, IDEAS_SYSTEM } from "./prompts";
 import { productName } from "./competitors";
 import { kindOf } from "./quality";
 
-// The idea engine: turns a validated problem into product ideas through fixed lenses
-// (automate the workaround, vertical version, unbundle, service as software, cheaper wedge,
-// connector, picks and shovels). Every idea must cite verified complaints; then each is checked
-// against existing products so copies drop and real gaps are labeled.
+// fixed lenses, each idea cites verified complaints, then gets checked against existing products so copies drop
 
 const LENSES = ["automate", "vertical", "unbundle", "service", "wedge", "connector", "shovels"] as const;
 
-export const IdeaDraft = z.object({
-  // Reasoning comes first, so the model works past the obvious fix before it names anything.
+const IdeaDraft = z.object({
+  // reasoning first so the model gets past the obvious fix
   norm: z.string().describe("One sentence: what most products here do.").default(""),
   flaw: z.string().describe("One sentence: why that fails these people, tied to the complaints.").default(""),
   obvious: z.string().describe("The first fix anyone would suggest. The idea must go beyond it.").default(""),
@@ -84,9 +81,8 @@ export function ideasPrompt(
     .join("\n");
 }
 
-export type Drafted = { idea: Idea; query: string };
+type Drafted = { idea: Idea; query: string };
 
-/** Turns drafts into ideas: keeps only those citing at least `minCited` real complaints, attaches their quotes, scores them. */
 export function finishIdeas(
   drafts: Draft[],
   complaints: { id: string; quote: string; signal?: string }[],
@@ -136,8 +132,8 @@ const isProductPage = (url: string) => {
   }
 };
 
-/** "Is it already built?": the closest existing product page for an idea, if any. Lowers the score a little. */
-export async function checkBuilt({ idea, query }: Drafted, signal?: AbortSignal) {
+// closest existing product page for an idea, lowers the score a little
+async function checkBuilt({ idea, query }: Drafted, signal?: AbortSignal) {
   const since = new Date(Date.now() - 3 * 365 * 86400_000).toISOString();
   const pages = await searchProducts(query || idea.pitch, since, signal).catch(() => []);
   const hit = pages.find((p) => kindOf(p.site, p.url) === "blog" && isProductPage(p.url));
@@ -146,7 +142,6 @@ export async function checkBuilt({ idea, query }: Drafted, signal?: AbortSignal)
   idea.score = Math.max(10, idea.score - 10);
 }
 
-/** Ideas for one card. `check` runs the existing-product search (one Exa search per idea). */
 export async function generateIdeas(
   card: Card,
   complaints: Complaint[],
@@ -155,20 +150,20 @@ export async function generateIdeas(
   best = false,
   signal?: AbortSignal,
 ): Promise<Idea[]> {
-  // Gap mode: the complaints are about one product, so aim the ideas at winning its unhappy users.
+  // gap mode: aim ideas at winning the product's unhappy users
   const focus = product
     ? `\n\nThese complaints are from users of ${product}. Prefer ideas that win them over: a wedge, an unbundled part done better, or a version made for a group ${product} serves badly. Name ${product} in the wedge.`
     : "";
   const out = await generateJson(IdeasSchema, {
     system: IDEAS_SYSTEM,
-    light: !best, // creative work is where the better model pays off, but its free quota is small
+    light: !best, // better model is worth it for creative work but its quota is small
     signal,
     timeoutMs: 60_000,
     temperature: 0.8,
     prompt: ideasPrompt(card, complaints) + focus,
   });
   if (out.thoughts) card.thoughts = out.thoughts;
-  // Prefer ideas backed by two complaints; a thin card still gets its best one-complaint idea.
+  // prefer two-complaint ideas, a thin card still gets its best single one
   const backed = finishIdeas(out.ideas, complaints, card);
   const drafted = (backed.length ? backed : finishIdeas(out.ideas, complaints, card, 1)).slice(0, 3);
   if (check) await Promise.all(drafted.map((d) => checkBuilt(d, signal)));
@@ -177,7 +172,7 @@ export async function generateIdeas(
 
 const BatchSchema = z.object({ ideas: z.array(IdeaDraft.extend({ problem: z.string() })) });
 
-/** One idea each for the remaining cards, in a single AI call so a search doesn't use up the free model's rate limit. Sets `card.ideas`. */
+// one ai call for the remaining cards so a search doesn't burn the free rate limit
 export async function generateOneIdeaEach(cards: Card[], complaintsOf: (card: Card) => Complaint[], signal?: AbortSignal) {
   if (!cards.length) return;
   const out = await generateJson(BatchSchema, {
@@ -190,7 +185,7 @@ export async function generateOneIdeaEach(cards: Card[], complaintsOf: (card: Ca
     prompt: cards.map((card, i) => `## Problem P${i + 1}\n${ideasPrompt(card, complaintsOf(card))}`).join("\n\n"),
   });
   cards.forEach((card, i) => {
-    // Checked against this card's own complaints, so an idea can't land on the wrong problem.
+    // checked against this card's own complaints so an idea can't land on the wrong problem
     const drafts = out.ideas.filter((d) => d.problem === `P${i + 1}`);
     const best = finishIdeas(drafts, complaintsOf(card), card, 1)[0];
     if (best) card.ideas = [best.idea];

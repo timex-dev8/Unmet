@@ -5,9 +5,6 @@ import type { User } from "@supabase/supabase-js";
 import { authConfigured, supabase } from "./supabase/client";
 import { flushSync } from "./sync";
 
-// Who is signed in, as a tiny external store fed by Supabase's auth events.
-// undefined = still checking, null = signed out.
-
 let current: User | null | undefined = undefined;
 const listeners = new Set<() => void>();
 let started = false;
@@ -19,11 +16,11 @@ function start() {
     (client) =>
       client.auth.onAuthStateChange((_event, session) => {
         current = session?.user ?? null;
-        if (current) setGuest(false); // signing in ends guest mode (the guest's data merges into the account)
+        if (current) setGuest(false); // guest data merges into the account
         listeners.forEach((l) => l());
       }),
     (err) => {
-      started = false; // try again on the next subscriber
+      started = false; // retry on the next subscriber
       console.warn("[auth] couldn't load sign-in:", err instanceof Error ? err.message : err);
     },
   );
@@ -43,11 +40,7 @@ export function useUser() {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Guest mode: chosen on /welcome, remembered in this browser. Guests can use everything except
-// deeper research (Medium and High), which app/api/research refuses without an account.
-// The flag lives in localStorage, mirrored into the `unmet_guest` cookie so proxy.ts can let guests
-// into /app on the server (it sends visitors with neither that cookie nor a session to /welcome).
+// guest flag lives in localStorage, mirrored to the unmet_guest cookie so proxy.ts lets guests into /app
 
 const GUEST_KEY = "unmet:guest";
 const GUEST_COOKIE = "unmet_guest"; // read by proxy.ts
@@ -64,19 +57,17 @@ function setGuest(on: boolean) {
     if (on) localStorage.setItem(GUEST_KEY, "1");
     else localStorage.removeItem(GUEST_KEY);
   } catch {
-    // storage blocked: guest mode lasts for this visit
+    // storage blocked, guest mode lasts this visit
   }
-  // Signing in clears it too: from then on the session cookie is what lets this browser into /app.
+  // signing in clears it too, the session cookie takes over
   document.cookie = on
     ? `${GUEST_COOKIE}=1; Path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax`
     : `${GUEST_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
   guestListeners.forEach((l) => l());
 }
 
-/** Also run for guests from before the cookie existed, so the server lets them into /app again. */
 export const continueAsGuest = () => setGuest(true);
 
-/** undefined while the page is still hydrating. */
 export function useGuest() {
   return useSyncExternalStore(
     (l) => {
@@ -88,21 +79,18 @@ export function useGuest() {
   );
 }
 
-/** Guests (no account) research on Low only; Medium and High need a free account. */
 export function useLowOnly() {
   const user = useUser();
   const guest = useGuest();
   return authConfigured && !user && guest !== false;
 }
 
-/** Headers for our own API routes: the access token tells the server this is a full account. */
 export async function authHeaders(): Promise<Record<string, string>> {
   if (!authConfigured) return {};
   const token = await accessToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-/** Where to come back to after Google or the email link. */
 function callbackUrl() {
   const next = window.location.pathname + window.location.search;
   return `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
@@ -118,22 +106,20 @@ export async function sendEmailLink(email: string) {
   if (error) throw error;
 }
 
-/** Password sign-in. Friendly messages for the common failures. */
 export async function signInWithPassword(email: string, password: string) {
   const { error } = await (await supabase()).auth.signInWithPassword({ email, password });
   if (error) throw new Error(friendly(error.message));
 }
 
-/** New account with a password. Returns true when Supabase wants the email confirmed first. */
+// true when supabase wants the email confirmed first
 export async function signUpWithPassword(email: string, password: string) {
   const { data, error } = await (await supabase()).auth.signUp({ email, password, options: { emailRedirectTo: callbackUrl() } });
   if (error) throw new Error(friendly(error.message));
-  // An existing confirmed email comes back without identities (Supabase hides whether it exists).
+  // an existing confirmed email comes back without identities
   if (data.user && data.user.identities?.length === 0) throw new Error("That email already has an account. Sign in instead.");
   return !data.session;
 }
 
-/** Emails a link that opens Unmet with "set a new password". */
 export async function sendPasswordReset(email: string) {
   const back = `${window.location.origin}/auth/callback?next=${encodeURIComponent("/app?reset=1")}`;
   const { error } = await (await supabase()).auth.resetPasswordForEmail(email, { redirectTo: back });
@@ -154,15 +140,13 @@ function friendly(message: string) {
   return message;
 }
 
-/** The signed-in person's access token, for our own API routes that act on their behalf. */
-export async function accessToken() {
+async function accessToken() {
   const { data } = await (await supabase()).auth.getSession();
   return data.session?.access_token ?? null;
 }
 
 export async function signOut() {
-  // Upload the last changes while the session still works. Local scope: the default ("global")
-  // would also sign out every other device, before their unsaved changes upload.
+  // upload last changes while the session still works. local scope, global would sign out other devices before their changes upload
   await flushSync();
   await (await supabase()).auth.signOut({ scope: "local" });
 }

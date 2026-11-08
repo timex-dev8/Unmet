@@ -29,7 +29,6 @@
     opacity: 0.55;
   }
 }
-/* globals.css already stops animations for reduced motion; this keeps the skeleton still too */
 @media (prefers-reduced-motion: reduce) {
   .title,
   .block {

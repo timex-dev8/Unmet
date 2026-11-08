@@ -44,7 +44,6 @@
   line-height: 1.08;
   text-wrap: balance;
 }
-/* Shared with ProductCard */
 .summary {
   margin: 0;
   font-size: 16px;
@@ -128,7 +127,6 @@
   color: var(--white);
 }
 
-/* Short phones: keep every action visible */
 @media (max-height: 760px) and (max-width: 899px) {
   .body {
     gap: 12px;
@@ -152,7 +150,6 @@
     display: none;
   }
 }
-/* The smallest phones: just the verdict, proof and actions */
 @media (max-height: 620px) and (max-width: 899px) {
   .quote,
   .reason {
@@ -160,7 +157,6 @@
   }
 }
 
-/* Desktop: a roomy card that sizes to its content. */
 @media (min-width: 900px) {
   .card {
     height: auto;

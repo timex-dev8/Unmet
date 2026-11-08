@@ -8,6 +8,6 @@ export const metadata: Metadata = { title: "Home" };
 
 export default async function StudioHome() {
   const [cards, products] = await Promise.all([getAllCards(), readProducts().catch(() => [])]);
-  // Home ranks and shows a few; send it only what it reads (lib/home.ts), not every full card
+  // send only what home reads (lib/home.ts), not full cards
   return <Home cards={cards.map(homeIdea)} products={homeProducts(products)} />;
 }

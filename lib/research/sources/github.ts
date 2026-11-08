@@ -1,8 +1,7 @@
 import "server-only";
 import type { ResearchSource } from "@/lib/research-types";
 
-// GitHub issues: bug reports and feature requests. Free search API (10 requests/min without
-// GITHUB_TOKEN, 30 with). The phrase is matched exactly to keep results on topic.
+// free search api, 10 req/min without GITHUB_TOKEN, 30 with. phrase matched exactly
 
 type Issue = {
   html_url: string;

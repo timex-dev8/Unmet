@@ -2,7 +2,6 @@ import "server-only";
 import type { RawProduct } from "./types";
 import { headers } from "./types";
 
-// Apple's free top-grossing charts (US), per genre: apps people pay for, right now. No key needed.
 const GENRES: [number, string][] = [
   [6000, "Business"],
   [6007, "Productivity"],
@@ -20,8 +19,7 @@ type Entry = {
   "im:image"?: { label: string; attributes?: { height?: string } }[];
 };
 
-// Apple lists the icon at several sizes; take the largest.
-// The feed's largest icon is 100px; Apple serves any size from the same URL, so ask for 256px (sharp on retina)
+// apple serves any size from the same URL, ask for 256px (sharp on retina)
 const iconOf = (e: Entry) =>
   [...(e["im:image"] ?? [])]
     .sort((a, b) => Number(b.attributes?.height ?? 0) - Number(a.attributes?.height ?? 0))[0]

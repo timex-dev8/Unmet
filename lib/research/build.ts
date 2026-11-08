@@ -5,9 +5,6 @@ import type { Complaint } from "./extract";
 import type { DraftProblem } from "./group";
 import { MAX_QUOTE_WORDS } from "./verify";
 
-// Turns a grouped problem into a card. Every number here is computed from the sources,
-// never taken from the AI.
-
 const DAY = 86400;
 export const WINDOW_DAYS = 365;
 
@@ -22,7 +19,6 @@ function trendOf(dates: number[], now: number, windowDays: number): Trend {
   return recent > older * 1.5 ? "rising" : older > recent * 1.5 ? "falling" : "steady";
 }
 
-/** Mentions over the window in 12 equal buckets, oldest first. */
 function monthly(dates: number[], now: number, windowDays: number) {
   const buckets = Array(12).fill(0);
   for (const d of dates) {
@@ -32,7 +28,7 @@ function monthly(dates: number[], now: number, windowDays: number) {
   return buckets;
 }
 
-export const KIND_LABEL: Record<SourceKind, [string, string]> = {
+const KIND_LABEL: Record<SourceKind, [string, string]> = {
   forum: ["forum post", "forum posts"],
   qa: ["Q&A question", "Q&A questions"],
   review: ["review", "reviews"],
@@ -53,16 +49,11 @@ export function kindMix(sources: ResearchSource[]) {
     .join(", ");
 }
 
-/**
- * "Is this worth building?" from the evidence alone: how many independent people, on how many
- * sites, whether they pay or switch or hack around it, and whether it's growing.
- */
-export function reportFor(own: Complaint[], used: ResearchSource[], sites: number, trend: Trend, today: string): Report {
+function reportFor(own: Complaint[], used: ResearchSource[], sites: number, trend: Trend, today: string): Report {
   const signals: Record<Signal, number> = { pays: 0, switching: 0, price: 0, workaround: 0 };
   for (const c of own) if (c.signal) signals[c.signal]++;
   const money = signals.pays + signals.switching + signals.price;
 
-  // Each passed check adds points and a reason the founder can read.
   let points = 0;
   const reasons: string[] = [];
   const add = (n: number, reason: string) => {
@@ -99,14 +90,12 @@ export function buildCard(
   used.sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0));
   const dates = used.map((s) => (s.postedAt ? Date.parse(s.postedAt) / 1000 : NaN)).filter((d) => !Number.isNaN(d));
 
-  // The quote the grouping step picked as clearest; otherwise one from the strongest source.
+  // grouping step's clearest quote, else one from the strongest source
   const showable = own.filter((c) => c.quote.split(/\s+/).length <= MAX_QUOTE_WORDS);
   const quoteFrom =
     showable.find((c) => c.id === p.quoteId) ??
     [...showable].sort((a, b) => (sById.get(b.sourceId)?.weight ?? 0) - (sById.get(a.sourceId)?.weight ?? 0))[0];
 
-  // Demand from real signals: how many independent sources, how many different sites,
-  // how much engagement they got, and how fresh they are.
   const engagement = used.reduce((sum, s) => sum + (s.engagement?.score ?? 0), 0);
   const recent = dates.filter((d) => d > opts.now - 180 * DAY).length;
   const demand = clamp(
@@ -146,7 +135,7 @@ export function buildCard(
       competition: { value: p.competition.value, label: label(p.competition.value), basis: "ai", reason: p.competition.reason },
       difficulty: { value: p.difficulty.value, label: label(p.difficulty.value), basis: "ai", reason: p.difficulty.reason },
     },
-    aiSuggestions: [], // Only older saved cards have these; ideas now come from generateIdeas, tied to the card's own complaints.
+    aiSuggestions: [], // only older saved cards have these, ideas now come from generateIdeas
     sources: used.map((s) => ({ title: s.title, url: s.url, site: s.site, kind: s.kind, engagement: s.engagement?.label, postedAt: s.postedAt })),
     report: reportFor(own, used, sites.size, trend, p.today),
     fresh: true,

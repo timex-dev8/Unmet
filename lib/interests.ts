@@ -4,10 +4,8 @@ import { useCallback, useSyncExternalStore } from "react";
 import type { Syncable } from "./sync-types";
 import type { Category } from "./types";
 
-// What this visitor cares about, kept in the browser and synced to the account when signed in.
-// `picked` comes from the interest chips; `skipped` from swiping past cards in the feed.
+// picked = interest chips, skipped = swiped past in the feed
 
-/** What someone told Unmet in their own words, expanded by Gemini (app/api/interests). */
 export type Profile = { text: string; audiences: string[]; keywords: string[]; niches: string[]; category?: Category };
 
 export type Interests = { picked: Category[]; skipped: string[]; onboarded: boolean; profile?: Profile; watched?: string[] };
@@ -30,15 +28,12 @@ function write(next: Interests) {
   cache = next;
   try {
     localStorage.setItem(KEY, JSON.stringify(next));
-  } catch {
-    // storage blocked: keep it for this visit
-  }
+  } catch {}
   listeners.forEach((l) => l());
 }
 
 const getSnapshot = () => (cache ??= read());
 
-// Another tab changed the stored value: drop the in-memory copy and re-read.
 function subscribe(l: () => void) {
   const onStorage = (e: StorageEvent) => {
     if (e.key === KEY) {
@@ -54,7 +49,7 @@ function subscribe(l: () => void) {
   };
 }
 
-// Cards passed on earlier visits, frozen at page load so the order doesn't shift while someone swipes.
+// frozen at page load so the order doesn't shift mid-swipe
 let seenAtLoad: string[] | null = null;
 const NOTHING_SEEN: string[] = [];
 
@@ -86,21 +81,18 @@ export function setProfile(profile: Profile) {
   write({ ...cur, profile, picked, onboarded: true });
 }
 
-/** Niches this person follows: they rank first, and (signed in) join the daily feed research. */
 export function toggleWatch(niche: string) {
   const cur = getSnapshot();
   const watched = cur.watched ?? [];
   write({ ...cur, watched: watched.includes(niche) ? watched.filter((n) => n !== niche) : [...watched, niche].slice(-10) });
 }
 
-/** Onboarding: save the profile, the niches picked to follow, and mark onboarding done. */
 export function completeOnboarding(profile: Profile | null, watched: string[]) {
   const cur = getSnapshot();
   const picked = profile?.category && !cur.picked.includes(profile.category) ? [...cur.picked, profile.category] : cur.picked;
   write({ ...cur, profile: profile ?? cur.profile, watched: [...new Set(watched)].slice(-10), picked, onboarded: true });
 }
 
-/** Called by the feed when someone swipes past a card without saving it. */
 export function markSkipped(slug: string) {
   const cur = getSnapshot();
   if (cur.skipped.includes(slug)) return;
@@ -111,7 +103,7 @@ export const interestsSync: Syncable<Interests> = {
   kind: "interests",
   get: getSnapshot,
   replace: (state) => write(state),
-  // The account's picks win once it has made any; skips are combined.
+  // account's picks win once it has any, skips combine
   merge: (local, remote) => ({
     picked: remote.onboarded ? remote.picked : local.picked,
     skipped: [...new Set([...remote.skipped, ...local.skipped])].slice(-200),

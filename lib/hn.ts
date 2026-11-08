@@ -1,7 +1,7 @@
 import "server-only";
 import type { ResearchSource } from "./research-types";
 
-// Hacker News via the free Algolia API (no key). Same source as scripts/refresh-evidence.mjs.
+// free algolia api, no key. same source as scripts/refresh-evidence.mjs
 const API = "https://hn.algolia.com/api/v1";
 
 type Hit = {

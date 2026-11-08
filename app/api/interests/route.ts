@@ -19,10 +19,8 @@ export async function POST(request: Request) {
   const parsed = Body.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "Tell Unmet a little more, in a sentence or two." }, { status: 400 });
 
-  // Per-visitor limit to protect the free AI tier (lib/rate-limit.ts).
   if (!(await takeHourlySlot(request, "interests", 20)))
     return Response.json({ error: "Too many changes this hour. Try again later." }, { status: 429 });
-  // All visitors together per day, to protect the shared free Gemini quota.
   if (!(await takeDailyPool("interests", Number(process.env.INTERESTS_DAILY_CAP ?? 300))))
     return Response.json({ error: "Interest setup is very busy today. Please try again tomorrow." }, { status: 429 });
 

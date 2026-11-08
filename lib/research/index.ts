@@ -22,19 +22,15 @@ import { searchDiscourse } from "./sources/discourse";
 import { searchGithubIssues } from "./sources/github";
 import { searchStackExchange } from "./sources/stackexchange";
 
-// Research pipeline: plan → gather from several services → quality filter → read sources for
-// first-hand complaints (quotes checked) → group into problems → score from real signals
-// → (High) competitor check + strict review. Every search ends with problems and ideas, or with searches to try next.
-
 const DAY = 86400;
-/** In gap mode the search for the product itself looks back this far (24 months). */
+// gap mode, the product's own search looks back this far (24 months)
 const PRODUCT_WINDOW_DAYS = 730;
 const EXAMPLE_CACHE_MS = 30 * 3600 * 1000;
 
 type Config = {
   openAngles: number;
   communityAngles: number;
-  /** Exa searches restricted to reddit.com. Off (0) for now: Exa returns no Reddit text, so these came back empty. */
+  // off (0) for now, exa returns no reddit text so these came back empty
   reddit: number;
   fullText: boolean;
   stack: boolean;
@@ -103,7 +99,6 @@ const NAMES: Record<ResearchSource["origin"], string> = {
   discourse: "community forums",
 };
 
-// The searches that go through Exa; the other services are small extras that fail quietly.
 const FORUMS = "forums & review sites";
 const EXA_JOBS = new Set<string>([NAMES.web, NAMES.reddit, FORUMS]);
 
@@ -118,20 +113,18 @@ const cacheKey = (req: ResearchRequest) => `v8:${req.depth}:${req.message.toLowe
 const isExampleSearch = (req: ResearchRequest) =>
   req.depth === "low" && EXAMPLE_SEARCHES.some((e) => e.toLowerCase() === req.message.trim().toLowerCase());
 
-/** A saved answer for this first question, so the route can serve it without using up a research slot. */
 export async function peekCached(req: ResearchRequest) {
   if (req.history.length > 0) return null;
   return getCached(cacheKey(req), isExampleSearch(req) ? EXAMPLE_CACHE_MS : undefined);
 }
 
-/** `signal` aborts when the visitor leaves: the pipeline stops between steps (and inside AI calls). */
 export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent) => void, signal?: AbortSignal, fresh = false, background = fresh) {
   const base = DEPTH[req.depth];
   const check = () => signal?.throwIfAborted();
   const isFirst = req.history.length === 0;
   const key = cacheKey(req);
-  // Same first question at the same depth in the last 6 hours: answer from the cache (lib/research/store.ts).
-  // The example searches are refreshed by a daily job, so they keep longer. `fresh` is that job, skipping the cache.
+  // same first question + depth within 6h comes from the cache (research/store.ts)
+  // example searches keep longer, fresh = the daily job, skips the cache
   const isExample = isExampleSearch(req);
   const hit = isFirst && !fresh ? await getCached(key, isExample ? EXAMPLE_CACHE_MS : undefined) : null;
   if (hit) {
@@ -139,7 +132,6 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     return;
   }
 
-  // 1. Plan
   emit({ type: "step", label: "Planning the research" });
   const plan = await makePlan(req, signal);
   check();
@@ -148,7 +140,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     return;
   }
 
-  // First message with no audience named: ask who to look at instead of searching.
+  // first message with no audience: ask who instead of searching
   if ((plan.mode === "clarify" || plan.mode === "discover") && isFirst) {
     const result = {
       type: "result" as const,
@@ -162,20 +154,19 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     return;
   }
 
-  // Discover mode casts a wide net, one search per group of people. A later "clarify" turn is treated as "discover".
+  // discover casts a wide net, one search per group. a later "clarify" turn counts as discover
   const discover = plan.mode === "discover" || plan.mode === "clarify";
   const cfg: Config = discover ? { ...base, openAngles: Math.max(base.openAngles, 4) } : base;
 
   const now = Math.floor(Date.now() / 1000);
   const since = now - WINDOW_DAYS * DAY;
   const sinceIso = new Date(since * 1000).toISOString();
-  // A product's own name gets a wider net: any site, last 24 months (launch threads, reviews and changelog complaints).
+  // a product's own name gets any site, last 24 months
   const wideSinceIso = new Date((now - PRODUCT_WINDOW_DAYS * DAY) * 1000).toISOString();
   const productDomain = plan.product
     ? req.message.match(/\b(?:[a-z0-9-]+\.)+(?:com|io|co|app|ai|dev|net|org|so|xyz|tech|me|sh)\b/i)?.[0].toLowerCase()
     : undefined;
 
-  // 2. Gather from every service that fits this topic, in parallel.
   const open = plan.angles.slice(0, cfg.openAngles);
   const community = cfg.communityAngles
     ? [plan.communityQuery, ...plan.angles.filter((a) => a.type === "review" || a.type === "wish").map((a) => a.query)].slice(0, cfg.communityAngles)
@@ -183,7 +174,6 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   const reddit = [...new Set([plan.communityQuery, ...plan.angles.map((a) => a.query)])].filter(Boolean).slice(0, cfg.reddit);
   const useApps = cfg.apps && plan.segment !== "developer" && plan.appTerms.length > 0;
   const useStack = cfg.stack && plan.stackSites.length > 0 && plan.stackQuery.length > 0;
-  // Discourse forums are about products and tools, so they fit business and developer topics.
   const useDiscourse = cfg.stack && plan.segment !== "consumer";
   const useGithub = cfg.github && plan.segment !== "consumer" && plan.githubPhrase.length > 0;
 
@@ -232,9 +222,9 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
               },
             ),
           })),
-          // Hacker News leans technical, so it only runs on developer topics.
+          // hacker news leans technical, developer topics only
           ...(plan.segment === "developer" ? [{ name: NAMES.hn, run: searchHN(plan.hnQuery, since, cfg.high ? 15 : 10) }] : []),
-          // Bluesky on every level: free, fast, real people. It matches keywords, so use short queries.
+          // bluesky on every level, free and fast. keyword match so short queries
           { name: NAMES.bluesky, run: searchBluesky([plan.hnQuery, plan.communityQuery.split(" ").slice(0, 4).join(" ")], sinceIso) },
           ...(useDiscourse ? [{ name: NAMES.discourse, run: searchDiscourse(plan.hnQuery, sinceIso) }] : []),
           ...(useStack ? [{ name: NAMES.stackexchange, run: searchStackExchange(plan.stackQuery, plan.stackSites, since) }] : []),
@@ -251,7 +241,6 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   const raw = settled.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
   if (settled.every((r) => r.status === "rejected")) throw new Error("Search failed. Check the EXA_API_KEY and try again.");
 
-  // What each service returned ("Reddit 8, Hacker News 10, App Store reviews failed"), so a quiet failure shows.
   const perService = new Map<string, { n: number; failed: boolean }>();
   settled.forEach((r, i) => {
     const e = perService.get(jobs[i].name) ?? { n: 0, failed: false };
@@ -264,7 +253,6 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   });
   const serviceLine = [...perService].map(([name, e]) => (e.failed && !e.n ? `${name} failed` : `${name} ${e.n}`)).join(", ");
 
-  // 3. Quality filter
   const windowDays = plan.product ? PRODUCT_WINDOW_DAYS : WINDOW_DAYS;
   const quality = filterSources(raw, windowDays);
   const sources = pickDiverse(quality.kept, cfg.maxSources);
@@ -274,7 +262,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     label: `Found ${raw.length} sources (${serviceLine}), kept ${sources.length} after quality checks${rejectedCount ? ` (${quality.rejected.old} too old, ${quality.rejected.untrusted} vendor pages or listicles, ${quality.rejected.duplicate + quality.rejected.thin} duplicates or too thin)` : ""}`,
   });
   if (sources.length === 0) {
-    // An outage isn't the same as nobody complaining. Bluesky and friends swallow their own errors, so look at Exa alone.
+    // an outage isn't nobody complaining. bluesky etc swallow errors so look at exa alone
     const exaResults = settled.filter((_, i) => EXA_JOBS.has(jobs[i].name));
     if (exaResults.length && exaResults.every((r) => r.status === "rejected")) throw new Error("Search failed. Check the EXA_API_KEY and try again.");
     emit({
@@ -287,7 +275,6 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     return;
   }
 
-  // 4. Read sources for first-hand complaints
   emit({ type: "step", label: `Reading ${sources.length} sources for first-hand complaints` });
   const extracted = await extractComplaints(sources, {
     topic: plan.topic,
@@ -303,7 +290,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     label: `${extracted.complaints.length} verified complaints from ${withComplaints.size} sources (${extracted.offTopic} off-topic, ${extracted.secondHand} not first-hand, ${extracted.unverified} quotes failed the check)`,
   });
   if (extracted.complaints.length < 1) {
-    // Unread batches may have held the complaints, so this isn't evidence that nobody complains.
+    // unread batches may have held complaints, no proof nobody complains
     if (extracted.failedBatches) throw new LlmError("The AI was too busy to read the sources. Try again in a minute.", "rate_limited");
     emit({
       type: "result",
@@ -316,7 +303,6 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     return;
   }
 
-  // 5. Group into problems (+ strict review in High)
   check();
   emit({ type: "step", label: `Grouping ${extracted.complaints.length} complaints into problems` });
   const grouped = await groupComplaints(extracted.complaints, sources, {
@@ -333,13 +319,13 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   }
   check();
 
-  // 6. Build cards with scores from real signals, in three tiers: strong (meets the depth's bar), early (2 sources or one
-  // site) and niche (a single source). Each problem gets the strongest tier it qualifies for, and weaker ones are tagged.
+  // three tiers: strong (meets the depth's bar), early (2 sources or one site), niche (single source)
+  // each problem gets the best tier it fits, weaker ones are tagged
   const opts = { topic: plan.topic, now, minSources: cfg.minSources, minSites: cfg.minSites, windowDays };
   const strong: Card[] = [];
   const early: Card[] = [];
   const niche: Card[] = [];
-  const complaintsOf = new Map<string, Complaint[]>(); // card slug → its verified complaints (for ideas)
+  const complaintsOf = new Map<string, Complaint[]>(); // card slug -> verified complaints (for ideas)
   const byId = new Map(extracted.complaints.map((c) => [c.id, c]));
   let topSlug = "";
   for (const p of problems) {
@@ -358,11 +344,10 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
   }
   const byDemand = (a: Card, b: Card) => b.scores.demand.value - a.scores.demand.value;
   const cards = [...strong.sort(byDemand), ...early.sort(byDemand)]
-    .sort((a, b) => Number(b.slug === topSlug) - Number(a.slug === topSlug)) // the AI's top pick leads, so the answer and first card agree
+    .sort((a, b) => Number(b.slug === topSlug) - Number(a.slug === topSlug)) // ai's top pick leads so the answer and first card agree
     .slice(0, 5)
     .concat(niche.sort(byDemand).slice(0, 3));
 
-  // 7. High: who already solves the top problems (web + TrustMRR verified revenue)
   if (cfg.high && cards.length) {
     check();
     emit({ type: "step", label: "Checking who already solves the top problems" });
@@ -370,7 +355,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     await Promise.all(
       cards.slice(0, 3).map(async (card) => {
         const found = await findCompetitors(card, startups, signal).catch(() => null);
-        if (!found) return; // the search failed: keep the AI estimate
+        if (!found) return; // search failed, keep the ai estimate
         card.competitors = found;
         const c = competitionFrom(found);
         card.scores.competition = {
@@ -379,16 +364,14 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
           basis: "data",
           reason: c.reason,
         };
-        // A competitor with verified revenue is proof people pay to solve this.
         const paid = found.filter((f) => f.mrr).sort((x, y) => (y.mrr ?? 0) - (x.mrr ?? 0))[0];
         if (paid && card.report) card.report.reasons.push(`Proven market: ${paid.name} earns ${formatMrr(paid.mrr!)}/mo`);
       }),
     );
   }
 
-  // 8. Ideas: turn the strongest problems into product ideas (each cites its complaints).
-  // Deep and Deepest give the strongest problems several ideas and check whether each already exists (one Exa search per idea).
-  // Every other card (all of them on Quick) gets one idea, from a single AI call.
+  // strong problems get several ideas on deep/deepest, checked for existing products (one exa search per idea)
+  // the rest get one idea from a single ai call
   const ideaCards = cards.filter((c) => (complaintsOf.get(c.slug)?.length ?? 0) >= 2).slice(0, cfg.high ? 4 : req.depth === "low" ? 0 : 3);
   const singleCards = cards.filter((c) => !ideaCards.includes(c));
   if (cards.length) {
@@ -400,7 +383,7 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
     };
     await Promise.all([
       ...ideaCards.map(async (card, i) => {
-        // Someone's own search gets the better model on its top problem; the scheduled jobs stay on the light one.
+        // own search gets the better model on its top problem, scheduled jobs stay light
         card.ideas = await generateIdeas(card, complaintsOf.get(card.slug)!, true, plan.product, i === 0 && !background, signal).catch(onError);
       }),
       generateOneIdeaEach(singleCards, (card) => complaintsOf.get(card.slug)!, signal).catch(onError),
@@ -423,8 +406,8 @@ export async function runResearch(req: ResearchRequest, emit: (e: ResearchEvent)
 
   check();
   const result = { type: "result" as const, answer, cards, sourceCount: sources.length, mix: mixLine(sources), suggestions: plan.suggestions };
-  // Save before answering so a share link works the moment the cards appear.
-  // A result missing ideas or sources (the AI was busy) isn't cached, so the next person asking gets a complete one.
+  // save before answering so share links work right away
+  // results missing ideas or sources (ai busy) aren't cached
   const complete = cards.every((c) => c.ideas?.length) && !extracted.failedBatches;
   await Promise.all([isFirst && complete ? setCached(key, result) : null, saveIdeas(cards)]);
   console.log(
@@ -442,7 +425,7 @@ const HunchSchema = z.object({
   hunches: z.array(z.object({ title: z.string(), why: z.string(), test: z.string() })).max(3),
 });
 
-/** No usable complaints: instead of a dead end, think with the person, clearly labelled as unproven hunches. */
+// no usable complaints: think with the person, labelled as unproven hunches
 async function hunch(topic: string, asked: string, signal?: AbortSignal) {
   const fallback = "People aren't complaining about this much online yet. These searches may find more:";
   try {

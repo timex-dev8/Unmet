@@ -9,7 +9,6 @@
   background: var(--white);
   color: var(--ink);
   box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
-  /* slides up on open and back down on close (closed state below, open state in [open]) */
   transform: translateY(40px);
   opacity: 0;
   transition:

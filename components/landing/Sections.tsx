@@ -25,7 +25,6 @@ import FaqList from "./FaqList";
 import GlassTile from "./GlassTile";
 import s from "./landing.module.css";
 
-// A quiet tile: a pale blue rounded square with a line icon. Its size is set by `className`.
 function Tile({ children, className, pearl, fill }: { children: ReactNode; className?: string; pearl?: boolean; fill?: boolean }) {
   return (
     <span className={`${s.tile} ${pearl ? s.pearl : ""} ${fill ? s.tileFill : ""} ${className ?? ""}`} aria-hidden="true">
@@ -34,7 +33,6 @@ function Tile({ children, className, pearl, fill }: { children: ReactNode; class
   );
 }
 
-// Where Unmet reads. Phones show the first three.
 const SOURCES: { name: string; icon: LucideIcon; fill?: boolean }[] = [
   { name: "Hacker News", icon: MessageSquare, fill: true },
   { name: "App Store reviews", icon: Star, fill: true },
@@ -60,7 +58,6 @@ export function SourceStrip() {
   );
 }
 
-// The picture on each step says what it does: a search, a few posts, an idea.
 export function HowItWorks() {
   return (
     <section id="how" className={s.section}>
@@ -96,7 +93,6 @@ export function HowItWorks() {
   );
 }
 
-// Each category gets a quiet icon; anything else gets the default.
 const CATEGORY_ICON: Partial<Record<string, LucideIcon>> = {
   "Dev tools": Code,
   Productivity: ListTodo,
@@ -106,7 +102,6 @@ const CATEGORY_ICON: Partial<Record<string, LucideIcon>> = {
   Home: House,
 };
 
-// A short list of real problems: gives visitors (and search engines) a way into the idea pages.
 export function RecentProblems({ cards }: { cards: Card[] }) {
   if (cards.length === 0) return null;
   return (
@@ -188,7 +183,6 @@ export function Faq() {
   );
 }
 
-// The sky comes back at the end, fading up from white.
 export function Closing() {
   return (
     <footer className={s.closing}>

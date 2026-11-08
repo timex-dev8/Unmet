@@ -4,13 +4,10 @@ import { useSyncExternalStore } from "react";
 import type { MindBrief } from "./mind-types";
 import { type Syncable, unionBy } from "./sync-types";
 
-// Your notes about an idea and the last AI brief made from them (the Shape screen), kept in this
-// browser and synced to the account when signed in (lib/sync.ts).
-
-export type Thought = { id: string; text: string; at: number };
+type Thought = { id: string; text: string; at: number };
 type MindState = { thoughts: Thought[]; conclusion: (MindBrief & { at: number; count: number }) | null };
 
-/** Conclusions saved before Shape (no `idea`) count as none, so "Make it clear" shows again. */
+// conclusions from before Shape (no idea) count as none
 function clean(state: MindState): MindState {
   return state.conclusion && typeof state.conclusion.idea === "string" ? state : { ...state, conclusion: null };
 }
@@ -33,15 +30,12 @@ function write(next: MindState) {
   cache = next;
   try {
     localStorage.setItem(KEY, JSON.stringify(next));
-  } catch {
-    // storage blocked: keep it for this visit
-  }
+  } catch {}
   listeners.forEach((l) => l());
 }
 
 const getSnapshot = () => (cache ??= read());
 
-// Another tab changed the stored value: drop the in-memory copy and re-read.
 function subscribe(l: () => void) {
   const onStorage = (e: StorageEvent) => {
     if (e.key === KEY) {
@@ -61,7 +55,7 @@ export function useMind() {
   return useSyncExternalStore(subscribe, getSnapshot, () => EMPTY);
 }
 
-/** Adds one note, newest first. A long description with line breaks stays one note. */
+// a long description with line breaks stays one note
 export function addThought(text: string) {
   const note = text.trim().slice(0, 2000);
   if (!note) return;
@@ -74,10 +68,9 @@ export function removeThought(id: string) {
   write({ ...cur, thoughts: cur.thoughts.filter((t) => t.id !== id) });
 }
 
-/** Marks the moment a brief is requested (see saveConclusion). */
 export const mindMark = () => ({ at: Date.now(), count: getSnapshot().thoughts.length });
 
-/** `at` and `count` are captured when the brief was requested, so notes added while it loaded still show as changed. */
+// at and count are from when the brief was requested, so notes added while it loaded still show as changed
 export function saveConclusion(conclusion: MindBrief, at: number = Date.now(), count?: number) {
   const cur = getSnapshot();
   write({ ...cur, conclusion: { ...conclusion, at, count: count ?? cur.thoughts.length } });

@@ -2,11 +2,7 @@
 
 import { m } from "motion/react";
 
-/**
- * The "you are here" background. Render it inside the active item only: items sharing an `id`
- * hand it over, so it glides from the old item to the new one instead of jumping.
- * The parent needs `position: relative; isolation: isolate`.
- */
+// parent needs position: relative and isolation: isolate
 export default function Highlight({ id, className }: { id: string; className?: string }) {
   return (
     <m.span
