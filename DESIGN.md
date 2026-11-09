@@ -14,14 +14,14 @@ Calm, bright and confident. A big serif headline on a sky that fades into a whit
 | Section titles | Geist 500; the Studio uses the fade (`.fade-text`) | 30–42px on the landing (plain ink), 26px in the Studio (ink fading to gray, left to right)                                                                |
 | Text and UI    | Geist 400/500 (`--font`)                           | Body 16–19px / 1.5, captions 13–14px, buttons 15–16px / 500                                                                                               |
 
-Captions lead with a bold phrase: "**Every claim links to a real post.** If a quote can't be traced…". Small uppercase labels: Geist 500, 12–13px, 0.14em tracking, `--slate`.
+Captions lead with a bold phrase: "**Every claim links to a real post.** If a quote can't be traced…". Small labels in the Studio are sentence case: Geist 500, 13px, `--slate`. Uppercase labels stay on the welcome screens only.
 
 ## Color
 
 | Token                              | Value                               | Use                                                                                       |
 | ---------------------------------- | ----------------------------------- | ----------------------------------------------------------------------------------------- |
 | `--ink`                            | `#19191d`                           | text                                                                                      |
-| `--muted` / `--text-3`             | `#6b6b7b` / `#9a9aab`               | secondary text, placeholders                                                              |
+| `--muted` / `--text-3`             | `#6b6b7b` / `#6f6f84`               | secondary text, placeholders (both pass 4.5:1 on white)                                   |
 | `--primary` (= `--blue`, `--navy`) | `#1c38ea`                           | the main action, "Strong", selected chips, links                                          |
 | `--glossy` + `--glossy-shadow`     | blue gradient with a soft highlight | **the one main action per screen** (`.glossy`, `.pill-dark`)                              |
 | `--paper` / `--white`              | `#ffffff`                           | page and cards                                                                            |

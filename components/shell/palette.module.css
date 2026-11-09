@@ -4,7 +4,7 @@
   margin: 12vh auto auto;
   padding: 0;
   border: 0;
-  border-radius: 20px;
+  border-radius: var(--radius-card);
   background: var(--white);
   color: var(--ink);
   box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.35);
@@ -75,7 +75,7 @@
 .group {
   margin: 10px 10px 4px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--muted);
 }
 .item {

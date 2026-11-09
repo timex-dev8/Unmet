@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowDown, ArrowRight, ArrowUp } from "lucide-react";
 import { ideaHref } from "@/lib/links";
-import type { Card, Idea } from "@/lib/types";
+import { categoryLabel, type Card, type Idea } from "@/lib/types";
 import { VERDICT, competitionLine } from "@/lib/verdict";
 import SaveButton from "./SaveButton";
 import SourcesSheet from "./SourcesSheet";
@@ -42,7 +42,7 @@ export default function IdeaCard({ card }: { card: Card }) {
             )}
           </span>
           <span aria-hidden="true">·</span>
-          <span>{card.category}</span>
+          <span>{categoryLabel(card.category)}</span>
           {card.sample ? (
             <span className={styles.sample}>Sample</span>
           ) : (
@@ -50,7 +50,7 @@ export default function IdeaCard({ card }: { card: Card }) {
           )}
         </div>
 
-        <p className={styles.idea}>{idea ? <IdeaLine idea={idea} /> : "No idea checked yet. Open it to get one."}</p>
+        <p className={styles.idea}>{idea ? <IdeaLine idea={idea} /> : "No idea yet. See the posts behind this problem."}</p>
 
         <div className={styles.bottom}>
           <Link href={ideaHref(card.slug)} className={`glossy ${styles.primary}`} draggable={false}>

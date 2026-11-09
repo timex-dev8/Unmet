@@ -110,14 +110,14 @@
   justify-content: center;
   gap: 2px;
   min-height: 48px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--text-3);
   transition: color 0.15s ease;
 }
 .tabOn {
   color: var(--ink);
-  font-weight: 600;
+  font-weight: 500;
 }
 .tabIcon {
   position: relative;
@@ -144,6 +144,11 @@
   font-size: 15px;
   font-weight: 500;
   margin: 8px 0 20px;
+}
+.newQuiet {
+  background: var(--white);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--line);
 }
 .nav {
   display: flex;
@@ -186,7 +191,7 @@
   animation: count-bump 0.35s var(--ease);
   margin-left: auto;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--muted);
 }
 .sideLabel {
@@ -225,7 +230,7 @@
     flex-direction: column;
     padding: 20px 16px;
     background: var(--side);
-    box-shadow: 1px 0 0 #eceef4;
+    box-shadow: 1px 0 0 var(--line);
   }
   .tabsWrap,
   .topBrand,
@@ -253,7 +258,7 @@
     color: var(--muted);
   }
   .searchField:hover {
-    background: #ebeef5;
+    background: var(--line);
   }
 }
 .threads {

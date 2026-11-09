@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowRight, ArrowUp, Sparkles } from "lucide-react";
-import type { Card, SourceKind, Trend } from "@/lib/types";
+import { categoryLabel, type Card, type SourceKind, type Trend } from "@/lib/types";
 import styles from "./card.module.css";
 
 export function windowLabel(days: number) {
@@ -9,7 +9,11 @@ export function windowLabel(days: number) {
 
 export function shortDate(iso?: string) {
   if (!iso) return "";
-  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 const KIND_BADGE: Record<SourceKind, string> = {
@@ -44,7 +48,7 @@ export function CardTags({ card }: { card: Card }) {
   return (
     <div className={styles.tagRow}>
       <div className={styles.tags}>
-        <span className={styles.tag}>{card.category}</span>
+        <span className={styles.tag}>{categoryLabel(card.category)}</span>
         {card.sample && <span className={`${styles.tag} ${styles.tagSample}`}>Sample</span>}
         {card.fresh && <span className={`${styles.tag} ${styles.tagFresh}`}>Fresh</span>}
         {card.signal === "niche" && <span className={`${styles.tag} ${styles.tagSample}`}>Niche</span>}

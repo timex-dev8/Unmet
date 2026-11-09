@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
-import { House, Layers, LayoutGrid, Lightbulb, MessageSquare, NotebookPen, Plus, Search, Sparkles, type LucideIcon } from "lucide-react";
+import { House, Layers, LayoutGrid, Lightbulb, MessageSquare, NotebookPen, Plus, Search, Telescope, type LucideIcon } from "lucide-react";
 import { ideaHref, researchHref, searchHref } from "@/lib/links";
 import { useThreads } from "@/lib/research-store";
 import { useSaved } from "@/lib/saved";
-import type { Card } from "@/lib/types";
+import { categoryLabel, type Card } from "@/lib/types";
 import styles from "./palette.module.css";
 
 type Item = { id: string; group: "Actions" | "Ideas" | "Research"; label: string; sub?: string; href: string; Icon: LucideIcon };
@@ -52,7 +52,7 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
         id: `i-${card.slug}`,
         group: "Ideas",
         label: card.headline,
-        sub: card.category,
+        sub: categoryLabel(card.category),
         href: ideaHref(card.slug),
         Icon: Lightbulb,
       }));
@@ -70,7 +70,7 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
             label: `Research “${trimmedQuery}”`,
             sub: "Search the web for real complaints",
             href: researchHref(trimmedQuery),
-            Icon: Sparkles,
+            Icon: Telescope,
           },
           { id: "q-search", group: "Actions", label: `Search ideas for “${trimmedQuery}”`, href: searchHref(trimmedQuery), Icon: Search },
         ]

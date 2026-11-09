@@ -1,6 +1,9 @@
 export const CATEGORIES = ["Dev tools", "Productivity", "Money", "Work", "Health", "Home"] as const;
 export type Category = (typeof CATEGORIES)[number];
 
+// Home is also a tab name, so people see Household. saved cards and urls keep Home
+export const categoryLabel = (category: string) => (category === "Home" ? "Household" : category);
+
 export type Trend = "rising" | "steady" | "falling";
 
 export type SourceKind = "forum" | "qa" | "review" | "app-review" | "issue" | "social" | "hn" | "news" | "blog";

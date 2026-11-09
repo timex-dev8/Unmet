@@ -1,5 +1,5 @@
 .home {
-  max-width: 1080px;
+  max-width: 1120px;
   margin: 0 auto;
   padding: 48px 16px 56px;
   display: flex;
@@ -51,16 +51,14 @@
   background: var(--surface);
   border-radius: 18px;
   box-shadow:
-    0 1px 2px rgba(25, 25, 29, 0.05),
-    0 24px 50px -24px rgba(70, 110, 220, 0.45),
-    inset 0 0 0 1px #e6e8f0;
+    inset 0 0 0 1px var(--line),
+    var(--shadow-float);
   transition: box-shadow 0.2s ease;
 }
 .composer:focus-within {
   box-shadow:
-    0 0 0 4px var(--tint),
-    0 24px 50px -24px rgba(70, 110, 220, 0.45),
-    inset 0 0 0 1px #c9d3f5;
+    inset 0 0 0 1.5px var(--blue),
+    var(--shadow-float);
 }
 .input {
   flex: 1;
@@ -76,28 +74,6 @@
 .input::placeholder {
   color: var(--text-3);
 }
-.send {
-  flex: none;
-  width: 46px;
-  height: 46px;
-  border: 0;
-  border-radius: 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition:
-    transform 0.15s ease,
-    opacity 0.15s ease;
-}
-.send:active {
-  transform: scale(0.95);
-}
-.send:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
 .cards {
   display: flex;
   gap: 12px;
@@ -116,8 +92,8 @@
   display: flex;
   flex-direction: column;
   background: var(--surface);
-  border-radius: 20px;
-  box-shadow: inset 0 0 0 1px #eceef4;
+  border-radius: var(--radius-card);
+  box-shadow: inset 0 0 0 1px var(--line);
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
@@ -125,7 +101,7 @@
 .card:hover {
   transform: translateY(-2px);
   box-shadow:
-    inset 0 0 0 1px #eceef4,
+    inset 0 0 0 1px var(--line),
     0 24px 50px -28px rgba(70, 110, 220, 0.4);
 }
 .cardBody {
@@ -142,7 +118,7 @@
   background: var(--gray);
   font-size: 13px;
   font-weight: 500;
-  color: #4b5563;
+  color: var(--ink-2);
 }
 .cardTitle {
   margin: 0;
@@ -164,7 +140,7 @@
 }
 .evidence strong {
   color: var(--ink);
-  font-weight: 600;
+  font-weight: 500;
 }
 .cardActions {
   display: flex;
@@ -190,7 +166,7 @@
 
 @media (min-width: 900px) {
   .home {
-    padding: 72px 64px 96px;
+    padding: 72px 40px 96px;
     gap: 64px;
   }
   .cards {
@@ -230,7 +206,7 @@
   padding: 0 5px 0 16px;
   border-radius: 999px;
   background: var(--surface);
-  box-shadow: inset 0 0 0 1px #e6e8f0;
+  box-shadow: inset 0 0 0 1px var(--line);
 }
 .nicheName {
   font-size: 15px;
@@ -280,7 +256,7 @@
   justify-content: space-between;
   gap: 16px;
   padding: 20px 24px;
-  border-radius: 20px;
+  border-radius: var(--radius-card);
   background: var(--mist);
   box-shadow: inset 0 0 0 1px var(--mist-line);
 }
@@ -299,6 +275,8 @@
 }
 .setupGo {
   flex: none;
+  background: var(--white);
+  box-shadow: inset 0 0 0 1px var(--mist-line);
   min-height: 40px;
   padding: 0 16px;
   border-radius: 10px;
@@ -361,8 +339,8 @@
   gap: 12px;
   padding: 22px;
   background: var(--surface);
-  border-radius: 20px;
-  box-shadow: inset 0 0 0 1px #eceef4;
+  border-radius: var(--radius-card);
+  box-shadow: inset 0 0 0 1px var(--line);
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
@@ -370,7 +348,7 @@
 .trendCard:hover {
   transform: translateY(-2px);
   box-shadow:
-    inset 0 0 0 1px #eceef4,
+    inset 0 0 0 1px var(--line),
     0 24px 50px -28px rgba(70, 110, 220, 0.4);
 }
 .trendTop {
@@ -420,7 +398,7 @@
   transition: box-shadow var(--t-fast) var(--ease);
 }
 .trendChip:hover {
-  box-shadow: inset 0 0 0 1px #c9d3f5;
+  box-shadow: inset 0 0 0 1px var(--sand);
 }
 .trendGaps {
   margin-top: auto;

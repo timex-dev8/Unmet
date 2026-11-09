@@ -32,7 +32,7 @@
 
   --studio-bg: var(--paper);
   --surface: #ffffff;
-  --text-3: #9a9aab;
+  --text-3: #6f6f84;
   --early-tint: #fdf3cf;
   --early-ink: #6b5200;
 
@@ -51,6 +51,7 @@
   --font-serif: var(--font-display), "Iowan Old Style", Georgia, serif;
 
   --radius-tile: 28px;
+  --radius-card: 20px;
   --radius-pill: 980px;
 }
 
@@ -125,6 +126,33 @@ summary:focus-visible {
   background: var(--glossy);
   box-shadow: var(--glossy-shadow);
   color: var(--white);
+}
+.pill-dark:disabled,
+.glossy:disabled {
+  background: var(--gray);
+  box-shadow: none;
+  color: var(--muted);
+  opacity: 1;
+  cursor: default;
+}
+/* the send arrow in every composer. add .glossy for the blue fill */
+.send-btn {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform var(--t-fast) var(--ease);
+}
+.send-btn:active {
+  transform: scale(0.96);
+}
+.send-btn:disabled {
+  transform: none;
 }
 .spin {
   animation: spin 0.9s linear infinite;

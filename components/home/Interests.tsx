@@ -31,7 +31,7 @@ export function Niches() {
           <strong>Tell Unmet who you build for</strong>
           <span>Get problems from your niches first, and have them researched every few days.</span>
         </span>
-        <span className={`glossy ${styles.setupGo}`}>Set up</span>
+        <span className={styles.setupGo}>Set up</span>
       </Link>
     );
   }

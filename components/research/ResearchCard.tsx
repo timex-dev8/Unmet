@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Quote } from "@/components/card/parts";
 import SaveButton from "@/components/card/SaveButton";
 import { ideaHref } from "@/lib/links";
+import { sourceCount } from "@/lib/text";
 import { VERDICT } from "@/lib/verdict";
 import type { Card } from "@/lib/types";
 import styles from "./research.module.css";
@@ -17,10 +18,12 @@ export default function ResearchCard({
 }: {
   card: Card;
   index: number;
-  onOpen?: (card: Card) => void;
+  onOpen?: (card: Card, link: HTMLElement) => void;
   selected?: boolean;
 }) {
   const ideas = card.ideas ?? [];
+  const idea = ideas[0];
+  const moreIdeas = ideas.length - 1;
   const verdict = card.report?.verdict;
   const label =
     card.signal === "niche"
@@ -30,11 +33,11 @@ export default function ResearchCard({
         : verdict === "strong" || verdict === "maybe"
           ? VERDICT[verdict].short
           : null;
-  const threadCount = card.evidence.threads;
-  const open = (event: MouseEvent) => {
+  const sources = sourceCount(card);
+  const open = (event: MouseEvent<HTMLElement>) => {
     if (onOpen && window.matchMedia("(min-width: 1100px)").matches) {
       event.preventDefault();
-      onOpen(card);
+      onOpen(card, event.currentTarget);
     }
   };
 
@@ -45,39 +48,30 @@ export default function ResearchCard({
       aria-labelledby={`r-${card.slug}`}
     >
       <div className={styles.cardInner}>
-        {label && (
-          <div className={styles.cardMeta}>
-            <span className={`${styles.verdictTag} ${!card.signal && verdict === "strong" ? styles.verdictStrong : ""}`}>{label}</span>
-          </div>
-        )}
+        {label && <span className={`${styles.verdictTag} ${!card.signal && verdict === "strong" ? styles.verdictStrong : ""}`}>{label}</span>}
         <h3 id={`r-${card.slug}`} className={styles.cardTitle}>
           <Link href={ideaHref(card.slug)} onClick={open}>
             {card.headline}
           </Link>
         </h3>
         <p className={styles.cardSummary}>{card.summary}</p>
-        {card.thoughts && <p className={styles.cardThoughts}>{card.thoughts}</p>}
-        {ideas.map((idea) => (
-          <div key={idea.title} className={styles.cardIdea}>
+        {idea && (
+          <div className={styles.cardIdea}>
             <p className={styles.cardIdeaLabel}>Idea to try</p>
             <p className={styles.cardIdeaTitle}>{idea.title}</p>
             <p className={styles.cardIdeaPitch}>{idea.pitch}</p>
-            {idea.shift && <p className={styles.cardIdeaPitch}>{idea.shift}</p>}
-            {idea.twists?.map((twist) => (
-              <p key={twist.name} className={styles.cardIdeaPitch}>
-                <strong>{twist.name}:</strong> {twist.how}
+            {moreIdeas > 0 && (
+              <p className={styles.cardIdeaMore}>
+                +{moreIdeas} more {moreIdeas === 1 ? "idea" : "ideas"}
               </p>
-            ))}
-            {idea.whyLove && <p className={styles.cardIdeaPitch}>{idea.whyLove}</p>}
+            )}
           </div>
-        ))}
+        )}
         {card.quote && <Quote text={card.quote} highlight={card.highlight} className={styles.cardQuote} />}
         <div className={styles.cardFoot}>
-          <span>
-            <strong>
-              {threadCount} {threadCount === 1 ? "source" : "sources"}
-            </strong>
-          </span>
+          <strong>
+            {sources} {sources === 1 ? "source" : "sources"}
+          </strong>
           <SaveButton card={card} />
         </div>
       </div>

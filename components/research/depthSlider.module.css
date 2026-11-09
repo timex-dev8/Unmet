@@ -150,7 +150,7 @@
 }
 .pill:hover,
 .pillOpen {
-  background: #e3e8ef;
+  background: var(--line);
 }
 .pill:active {
   transform: scale(0.97);
@@ -194,11 +194,25 @@
 }
 .pop .title {
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--ink);
 }
 .pop .head {
   margin-bottom: 4px;
+}
+/* phones: icon and chevron only, the 36px pill keeps a 44px target */
+@media (max-width: 899px) {
+  .pill {
+    position: relative;
+  }
+  .pill::after {
+    content: "";
+    position: absolute;
+    inset: -4px 0;
+  }
+  .pillLabel {
+    display: none;
+  }
 }
 /* phones: popover anchors to the whole composer so it stays on screen */
 @media (max-width: 600px) {

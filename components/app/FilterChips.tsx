@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Check, SlidersHorizontal, TrendingUp } from "lucide-react";
 import Highlight from "@/components/motion/Highlight";
-import { CATEGORIES, SOURCE_KINDS } from "@/lib/types";
+import { CATEGORIES, SOURCE_KINDS, categoryLabel } from "@/lib/types";
 import type { FeedFilter } from "@/lib/cards";
 import { kindBadge } from "@/components/card/parts";
 import type { Source, SourceKind } from "@/lib/types";
@@ -22,7 +22,10 @@ export default function FilterChips({ active, source, kinds = [] }: { active: Fe
   const chips: { label: string; value: FeedFilter }[] = [
     { label: "All", value: undefined },
     { label: "Trending", value: "Trending" },
-    ...CATEGORIES.map((category) => ({ label: category, value: category })),
+    ...CATEGORIES.map((category) => ({
+      label: categoryLabel(category),
+      value: category,
+    })),
   ];
   return (
     <div className={styles.filters}>

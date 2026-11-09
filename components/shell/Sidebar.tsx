@@ -15,6 +15,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { saved } = useSaved();
   const threads = useThreads().slice(0, 8);
+  const onResearch = pathname === "/app/research" || pathname.startsWith("/app/research/");
 
   return (
     <aside className={styles.side} aria-label="Studio">
@@ -22,7 +23,7 @@ export default function Sidebar() {
         <Logo size={24} />
       </Link>
 
-      <Link href="/app/research" className={`pill pill-dark ${styles.newBtn}`}>
+      <Link href="/app/research" className={`pill ${onResearch ? styles.newQuiet : "pill-dark"} ${styles.newBtn}`}>
         <Plus size={16} strokeWidth={2.4} aria-hidden="true" />
         New research
       </Link>

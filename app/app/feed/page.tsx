@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 import FilterChips from "@/components/app/FilterChips";
 import SwipeFeed from "@/components/feed/SwipeFeed";
 import { getAllCards, getCards, isCategory, searchCards, type FeedFilter } from "@/lib/cards";
@@ -42,6 +43,8 @@ function matchesProduct(product: Product, words: string[]) {
 
 export default async function FeedPage({ searchParams }: PageProps<"/app/feed">) {
   const { topic, source: sourceParam, q: queryParam } = await searchParams;
+  // mixSources reads the clock
+  await connection();
   const query = typeof queryParam === "string" ? queryParam.trim().slice(0, 120) : "";
   const filter: FeedFilter = topic === "Trending" ? "Trending" : isCategory(topic) ? topic : undefined;
   const [{ cards: listed }, all, listedProducts, found] = await Promise.all([
@@ -65,7 +68,7 @@ export default async function FeedPage({ searchParams }: PageProps<"/app/feed">)
       <h1 className="sr-only">Idea feed{filter ? `: ${filter}` : ""}</h1>
       <FilterChips active={filter} source={source} kinds={[...kinds, ...productSources]} />
       {query && !cards.length && !shownProducts.length ? (
-        <div className={styles.end} style={{ position: "static", flex: 1, margin: "0 12px 12px" }}>
+        <div className={`${styles.end} ${styles.endInline}`}>
           <h2 className={styles.endTitle}>Nothing in the feed for “{query}”.</h2>
           <p className={styles.endText}>Try another word, or research it to look for real complaints.</p>
           <Link href="/app/feed" className="pill pill-dark">
@@ -76,7 +79,7 @@ export default async function FeedPage({ searchParams }: PageProps<"/app/feed">)
           </Link>
         </div>
       ) : source && !cards.length && !shownProducts.length ? (
-        <div className={styles.end} style={{ position: "static", flex: 1, margin: "0 12px 12px" }}>
+        <div className={`${styles.end} ${styles.endInline}`}>
           <h2 className={styles.endTitle}>Nothing from this source yet.</h2>
           <p className={styles.endText}>No ideas here have evidence from it. Try another source.</p>
           <Link href={filter ? `/app/feed?topic=${encodeURIComponent(filter)}` : "/app/feed"} className="pill pill-dark">

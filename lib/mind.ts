@@ -59,8 +59,10 @@ export function useMind() {
 export function addThought(text: string) {
   const note = text.trim().slice(0, 2000);
   if (!note) return;
+  const thought: Thought = { id: Math.random().toString(36).slice(2, 10), text: note, at: Date.now() };
   const current = getSnapshot();
-  write({ ...current, thoughts: [{ id: Math.random().toString(36).slice(2, 10), text: note, at: Date.now() }, ...current.thoughts].slice(0, 200) });
+  write({ ...current, thoughts: [thought, ...current.thoughts].slice(0, 200) });
+  return thought;
 }
 
 export function removeThought(id: string) {

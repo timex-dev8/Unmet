@@ -21,12 +21,11 @@
   padding: 24px 20px 28px;
   text-align: center;
 }
+/* font and tracking come from .shell h1 */
 .title {
   margin: 0 auto 12px;
   max-width: 14em;
   font-size: clamp(32px, 5vw, 48px);
-  font-weight: 600;
-  letter-spacing: -0.04em;
   line-height: 1.05;
 }
 .lead {
@@ -42,6 +41,15 @@
   flex-direction: column;
   gap: 20px;
 }
+.threadTitle {
+  margin: 0;
+  font-size: 26px;
+  line-height: 1.2;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .userRow {
   display: flex;
   justify-content: flex-end;
@@ -51,14 +59,14 @@
   max-width: 85%;
   padding: 12px 16px;
   border-radius: 18px;
-  background: #f2f3f7;
+  background: var(--gray);
   color: var(--ink);
   white-space: pre-wrap;
 }
 .reply {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 .steps {
   list-style: none;
@@ -66,7 +74,7 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   font-size: 14px;
   color: var(--muted);
 }
@@ -110,15 +118,30 @@
 .error {
   margin: 0;
   padding: 12px 16px;
-  border-radius: 16px;
+  border-radius: 12px;
   background: var(--early-tint);
   color: var(--early-ink);
   font-size: 15px;
 }
+.retry {
+  align-self: flex-start;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--gray);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+}
+.retry:hover {
+  background: var(--line);
+}
 .groupTitle {
   margin: 4px 0 -4px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--muted);
 }
 .footnote {
@@ -132,19 +155,31 @@
   grid-template-columns: 1fr;
   gap: 12px;
 }
+/* isolated so the save button's z-index can't climb over the sticky composer */
 .card {
+  position: relative;
+  isolation: isolate;
   background: var(--white);
-  border-radius: 24px;
-  overflow: hidden;
+  border-radius: var(--radius-card);
+  box-shadow: inset 0 0 0 1px var(--line);
   display: flex;
   flex-direction: column;
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+    transform var(--t-med) var(--ease),
+    box-shadow var(--t-med) var(--ease);
 }
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-float);
+  box-shadow:
+    inset 0 0 0 1px var(--line),
+    var(--shadow-float);
+}
+.card.cardSelected {
+  box-shadow: inset 0 0 0 2px var(--blue);
+}
+.card:has(.cardTitle a:focus-visible) {
+  outline: 3px solid var(--blue);
+  outline-offset: 3px;
 }
 .cardInner {
   padding: 24px 24px 20px;
@@ -162,30 +197,42 @@
 }
 .cardFoot strong {
   color: var(--ink);
-  font-weight: 600;
+  font-weight: 500;
 }
 .cardFoot > button {
+  position: relative;
+  z-index: 1;
   flex: 0 0 auto;
   min-width: 108px;
 }
-.cardMeta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--muted);
-}
 .cardTitle {
   margin: 0;
-  font-size: 22px;
-  font-weight: 600;
-  letter-spacing: -0.03em;
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
   line-height: 1.15;
+  text-wrap: balance;
+}
+.cardTitle a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
 }
 .cardTitle a:hover {
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+.cardTitle a:focus-visible {
+  outline: none;
+}
+.cardSummary,
+.cardIdeaPitch {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
 }
 .cardSummary {
   margin: 0;
@@ -193,15 +240,9 @@
   line-height: 1.45;
   color: var(--ink-2);
 }
-.cardThoughts {
-  margin: 0;
-  font-size: 15px;
-  line-height: 1.5;
-  color: var(--ink);
-}
 .cardIdea {
-  padding: 12px 14px;
-  border-radius: 16px;
+  padding: 12px 16px;
+  border-radius: 12px;
   background: var(--tint);
 }
 .cardIdeaLabel {
@@ -212,7 +253,7 @@
 .cardIdeaTitle {
   margin: 0;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--navy);
 }
 .cardIdeaPitch {
@@ -221,26 +262,43 @@
   line-height: 1.4;
   color: var(--ink-2);
 }
+.cardIdeaMore {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
 .cardQuote {
   margin: 0;
   font-size: 15px;
   line-height: 1.45;
-  font-style: italic;
   color: var(--ink-2);
 }
 
 .composerWrap {
   position: sticky;
   bottom: var(--shell-bottom, 0px);
-  padding: 10px 16px 14px;
-  background: linear-gradient(to top, var(--paper) 70%, rgba(255, 255, 255, 0));
+  padding: 8px 16px 12px;
+  background: var(--paper);
+}
+/* keeps the page covered behind the floating tab bar */
+.composerWrap::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: var(--shell-bottom, 0px);
+  background: var(--paper);
 }
 .chatEmpty .composerWrap {
   position: static;
   background: none;
 }
+.chatEmpty .composerWrap::after {
+  content: none;
+}
 .notice {
-  margin: 0 0 10px;
+  margin: 0 0 12px;
   text-align: center;
   font-size: 14px;
   color: var(--early-ink);
@@ -250,29 +308,17 @@
   display: flex;
   align-items: flex-end;
   gap: 8px;
-  padding: 8px 8px 8px 18px;
+  padding: 8px 8px 8px 16px;
   background: var(--white);
   border-radius: 18px;
   box-shadow:
-    0 1px 2px rgba(25, 25, 29, 0.05),
-    0 24px 50px -24px rgba(70, 110, 220, 0.45),
-    inset 0 0 0 1px #e6e8f0;
+    inset 0 0 0 1px var(--line),
+    var(--shadow-float);
 }
 .composer:focus-within {
   box-shadow:
-    0 0 0 4px var(--tint),
-    0 24px 50px -24px rgba(70, 110, 220, 0.45),
-    inset 0 0 0 1px #c9d3f5;
-}
-@media (max-width: 899px) {
-  .composer {
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    padding: 6px 8px 8px 16px;
-  }
-  .composer .input {
-    flex: 1 1 100%;
-  }
+    inset 0 0 0 1.5px var(--blue),
+    var(--shadow-float);
 }
 .input {
   flex: 1;
@@ -287,32 +333,36 @@
   background: none;
   font: inherit;
   font-size: 17px;
+  line-height: 22px;
   color: var(--ink);
 }
 .input::placeholder {
   color: var(--muted);
 }
-.send {
-  flex: none;
-  width: 44px;
-  height: 44px;
-  border: 0;
-  border-radius: 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+.stop {
+  background: var(--gray);
+  color: var(--ink);
 }
-.send:disabled {
-  background: #d2d2d7;
-  cursor: default;
+.stop:hover {
+  background: var(--line);
+}
+@media (max-width: 899px) {
+  .composerWrap {
+    padding: 8px 16px;
+  }
+  .composer {
+    padding: 4px 4px 4px 16px;
+  }
+  .input {
+    max-height: 96px;
+  }
 }
 .examples {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
-  padding-top: 18px;
+  padding-top: 16px;
 }
 .example {
   min-height: 44px;
@@ -320,7 +370,7 @@
   border: 0;
   border-radius: 999px;
   background: var(--white);
-  box-shadow: inset 0 0 0 1px #e6e8f0;
+  box-shadow: inset 0 0 0 1px var(--line);
   font-size: 14px;
   color: var(--ink);
   cursor: pointer;
@@ -331,8 +381,14 @@
 }
 
 @media (min-width: 900px) {
+  .threadTitle {
+    font-size: 30px;
+  }
   .cards {
     grid-template-columns: 1fr 1fr;
+  }
+  .cards:has(> :only-child) {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -344,15 +400,6 @@
 .layout > .chat {
   min-width: 0;
 }
-.threadTitle {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--muted);
-}
-.cardSelected {
-  box-shadow: 0 0 0 2px var(--blue);
-}
 .followUps {
   display: flex;
   flex-wrap: wrap;
@@ -360,11 +407,11 @@
 }
 .nextStep {
   min-height: 44px;
-  padding: 0 18px;
+  padding: 0 16px;
   border: 0;
   border-radius: 999px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   transition: transform var(--t-fast) var(--ease);
 }
@@ -382,7 +429,7 @@
   background: var(--tint);
   color: var(--navy);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
 }
 .addAll:disabled {
@@ -391,6 +438,7 @@
 }
 .panel {
   display: none;
+  outline: none;
 }
 .panelBar {
   height: 56px;
@@ -403,7 +451,7 @@
 }
 .panelLabel {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--muted);
 }
 .panelTools {
@@ -414,7 +462,7 @@
   width: 40px;
   height: 40px;
   border: 0;
-  border-radius: 50%;
+  border-radius: 10px;
   background: var(--gray);
   display: inline-flex;
   align-items: center;
@@ -424,7 +472,7 @@
 .panelBody {
   flex: 1;
   overflow-y: auto;
-  padding-top: 8px;
+  padding: 8px 12px 24px;
 }
 .panelActions {
   flex: none;
@@ -440,11 +488,11 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  border-radius: var(--radius-pill);
+  border-radius: 12px;
   background: var(--tint);
   color: var(--navy);
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 @media (min-width: 1100px) {
@@ -456,8 +504,8 @@
     flex: none;
     display: flex;
     flex-direction: column;
-    /* frosted, no divider: page gradient shows through */
-    background: rgba(255, 255, 255, 0.72);
+    background: var(--white);
+    box-shadow: -1px 0 0 var(--line);
     animation: panel-in 0.32s var(--ease);
   }
   @keyframes panel-in {
@@ -473,7 +521,7 @@
   align-items: center;
   gap: 8px;
   min-height: 36px;
-  padding: 0 14px;
+  padding: 0 16px;
   border-radius: var(--radius-pill);
   background: var(--white);
   font-size: 13px;
@@ -488,7 +536,7 @@
   color: var(--ink);
 }
 .stepsFold[open] summary {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 /* snaps instead of animating where unsupported */
 .stepsFold {
@@ -507,14 +555,12 @@
   block-size: auto;
   opacity: 1;
 }
-.stepsFold summary svg {
-  transition: transform var(--t-med) var(--ease);
-}
 
 .verdictTag {
+  align-self: flex-start;
   font-size: 12px;
   font-weight: 500;
-  padding: 3px 10px;
+  padding: 4px 12px;
   border-radius: var(--radius-pill);
   background: var(--gray);
   color: var(--ink-2);
@@ -539,25 +585,25 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  border-radius: 20px;
+  border-radius: var(--radius-card);
   background: var(--white);
-  box-shadow: inset 0 0 0 1px #eceef4;
+  box-shadow: inset 0 0 0 1px var(--line);
   overflow: hidden;
 }
 .pastList li + li {
-  border-top: 1px solid #eceef4;
+  border-top: 1px solid var(--line);
 }
 .pastItem {
   display: flex;
   align-items: center;
   gap: 12px;
   min-height: 64px;
-  padding: 10px 16px 10px 18px;
+  padding: 12px 16px;
   color: var(--ink);
   transition: background var(--t-fast) var(--ease);
 }
 .pastItem:hover {
-  background: #f7f8fb;
+  background: var(--side);
 }
 .pastItem > svg {
   flex: none;

@@ -142,6 +142,21 @@
   background: var(--tint);
 }
 .sourceItem[aria-current] {
-  font-weight: 600;
+  font-weight: 500;
   color: var(--primary);
+}
+
+@media (min-width: 900px) {
+  .filters {
+    padding-right: 0;
+  }
+  .filters .chips {
+    justify-content: safe center;
+    padding-inline: 136px;
+  }
+  .sourceMenu {
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
 }

@@ -19,16 +19,13 @@
 .grid {
   display: grid;
   gap: 32px;
-  max-width: 640px;
-}
-.grid.split {
-  max-width: none;
 }
 .write {
   min-width: 0;
 }
 .side {
   min-width: 0;
+  scroll-margin-top: calc(var(--shell-top, 0px) + 16px);
 }
 
 .composer {
@@ -65,17 +62,37 @@
 }
 .bar {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   margin-top: 12px;
 }
+/* the padding holds each chip's tap area and focus ring inside the scroller */
 .chips {
+  flex: 1;
+  min-width: 0;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 8px;
+  margin-inline: -6px;
+  padding: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.chips::-webkit-scrollbar {
+  display: none;
+}
+/* quiet, "Shape my idea" is the blue one here */
+.addNote {
+  background: var(--gray);
+  color: var(--ink);
+}
+.addNote:disabled {
+  color: var(--muted);
+  cursor: default;
 }
 .chip {
+  flex: none;
   position: relative;
   min-height: 32px;
   padding: 0 12px;
@@ -100,31 +117,6 @@
 .chip:active {
   transform: scale(0.96);
 }
-.add {
-  flex: none;
-  width: 40px;
-  height: 40px;
-  margin-top: -4px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  border-radius: 12px;
-  background: var(--ink);
-  color: var(--white);
-  cursor: pointer;
-  transition:
-    opacity var(--t-fast) var(--ease),
-    transform var(--t-fast) var(--ease);
-}
-.add:active {
-  transform: scale(0.94);
-}
-.add:disabled {
-  opacity: 0.2;
-  cursor: default;
-  transform: none;
-}
 .hint {
   margin: 8px 16px 0;
   font-size: 13px;
@@ -140,10 +132,8 @@
 
 .label {
   margin: 0 0 8px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
   color: var(--slate);
 }
 .write > .label {
@@ -208,14 +198,6 @@
   gap: 12px;
   margin-top: 20px;
 }
-.shape {
-  min-width: 180px;
-}
-.action .shape:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-  filter: none;
-}
 .error {
   margin: 12px 0 0;
   padding: 12px 16px;
@@ -268,14 +250,13 @@
 
 .brief {
   padding: 24px 20px;
-  border-radius: 20px;
+  border-radius: var(--radius-card);
   background: var(--mist);
   box-shadow: inset 0 0 0 1px var(--mist-line);
 }
 .example {
   background: var(--white);
   box-shadow: inset 0 0 0 1px var(--line);
-  opacity: 0.72;
 }
 .idea {
   margin: 0;
@@ -375,15 +356,6 @@
   }
 }
 
-@media (max-width: 599px) {
-  .shape {
-    width: 100%;
-  }
-  .action {
-    gap: 12px;
-  }
-}
-
 .in {
   animation: empty-in 0.35s var(--ease) backwards;
   animation-delay: calc(var(--i, 0) * 80ms);
@@ -395,14 +367,11 @@
   }
 }
 .empty {
-  max-width: 720px;
+  max-width: 760px;
   padding-top: 24px;
 }
 .empty .head {
   text-align: center;
-}
-.empty .grid {
-  max-width: none;
 }
 .empty .hint {
   text-align: center;
@@ -410,11 +379,9 @@
 }
 .empty .action {
   align-items: center;
-  margin-top: 20px;
 }
 .empty .shape {
   min-width: 200px;
-  width: auto;
 }
 .empty .helper {
   text-align: center;
@@ -426,16 +393,14 @@
   margin-top: 32px;
 }
 .caption {
-  margin: 0 0 16px;
-  font-size: 12px;
+  margin: 0 0 12px;
+  font-size: 13px;
   font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--muted);
+  color: var(--slate);
   text-align: center;
 }
 .sparks {
-  margin-top: 40px;
+  margin-top: 32px;
 }
 .sparkGrid {
   display: grid;
@@ -447,9 +412,9 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
-  padding: 18px 20px;
+  padding: 16px;
   border: 0;
-  border-radius: 20px;
+  border-radius: var(--radius-card);
   background: var(--mist);
   box-shadow: inset 0 0 0 1px var(--mist-line);
   font: inherit;
@@ -474,46 +439,22 @@
   outline-offset: 2px;
 }
 .sparkIcon {
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   color: var(--primary);
 }
 .sparkTitle {
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 500;
 }
 .sparkText {
   font-size: 13px;
   line-height: 1.45;
   color: var(--muted);
 }
-.steps {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  margin: 40px 0 0;
-  padding: 0;
-}
-.step {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: var(--ink-2);
-}
-.stepNum {
-  flex: none;
-  width: 24px;
-  height: 24px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: var(--tint);
-  color: var(--primary);
-  font-size: 12px;
-  font-weight: 600;
+@media (max-width: 899px) {
+  .spark:nth-child(n + 3) {
+    display: none;
+  }
 }
 @media (min-width: 900px) {
   .empty {
@@ -521,19 +462,7 @@
   }
   .sparkGrid {
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-  .steps {
-    flex-direction: row;
-    justify-content: center;
-    gap: 0;
-  }
-  .step + .step::before {
-    content: "";
-    width: 40px;
-    height: 1px;
-    margin: 0 16px;
-    background: var(--line);
+    gap: 12px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

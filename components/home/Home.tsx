@@ -15,6 +15,7 @@ import { ideaHref, productResearchHref, researchHref } from "@/lib/links";
 import { forYou, profileKeywords } from "@/lib/rank";
 import type { Depth } from "@/lib/research-types";
 import { useSaved } from "@/lib/saved";
+import { categoryLabel } from "@/lib/types";
 import { VERDICT } from "@/lib/verdict";
 import { Niches } from "./Interests";
 import styles from "./home.module.css";
@@ -59,7 +60,7 @@ export default function Home({ cards, products = [] }: { cards: HomeIdea[]; prod
             enterKeyHint="go"
           />
           <DepthPicker value={depth} onChange={setDepth} />
-          <button type="submit" className={`glossy ${styles.send}`} disabled={!input.trim()} aria-label="Start research">
+          <button type="submit" className="send-btn glossy" disabled={!input.trim()} aria-label="Start research">
             <ArrowUp size={20} strokeWidth={2.6} aria-hidden="true" />
           </button>
         </form>
@@ -116,7 +117,7 @@ function HomeCard({ card, index }: { card: HomeIdea; index: number }) {
     <article className={`${styles.card} rise`} style={stagger(index)}>
       <div className={styles.cardBody}>
         <span className={styles.meta}>
-          {card.category}
+          {categoryLabel(card.category)}
           {card.trend === "rising" ? " · ↑ Rising" : ""}
         </span>
         <h3 className={styles.cardTitle}>
@@ -145,7 +146,7 @@ function HomeProduct({ product, index }: { product: HomeProduct; index: number }
   return (
     <article className={`${styles.card} rise`} style={stagger(index)}>
       <div className={styles.cardBody}>
-        <span className={`${styles.meta} ${styles.metaWorking}`}>Working · {product.category}</span>
+        <span className={`${styles.meta} ${styles.metaWorking}`}>Working · {categoryLabel(product.category)}</span>
         <h3 className={styles.cardTitle}>
           <a href={product.url} target="_blank" rel="noopener noreferrer">
             {product.name}

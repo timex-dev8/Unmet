@@ -1,3 +1,4 @@
+import { sourceCount } from "./text";
 import type { Card, Product, ProductProof, Report } from "./types";
 
 // slim copy of cards, the full ones would ride along in the page for nothing
@@ -21,7 +22,7 @@ export function homeIdea(card: Card): HomeIdea {
     category: card.category,
     trend: card.trend,
     scores: { demand: { value: card.scores.demand.value } },
-    evidence: { posts: card.evidence.posts, threads: card.evidence.threads, site: card.evidence.site },
+    evidence: { posts: card.evidence.posts, threads: sourceCount(card), site: card.evidence.site },
     sites: new Set(card.sources.map((source) => source.site)).size || 1,
     verdict: card.report?.verdict,
     sample: card.sample || undefined,

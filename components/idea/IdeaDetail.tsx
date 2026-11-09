@@ -5,7 +5,7 @@ import { AiSuggestions, CardTags, kindBadge, Quote, shortDate, sourceMeta, Spark
 import SaveButton from "@/components/card/SaveButton";
 import ShareButton from "@/components/card/ShareButton";
 import { digDeeperHref } from "@/lib/links";
-import { formatMrr } from "@/lib/text";
+import { formatMrr, sourceCount } from "@/lib/text";
 import type { Card } from "@/lib/types";
 import IdeasSection from "./IdeasSection";
 import WorthBuilding from "./WorthBuilding";
@@ -22,7 +22,7 @@ export default function IdeaDetail({ card, backHref = "/app/feed", backLabel = "
 
       <div className={styles.bottomBar}>
         <div className={styles.bottomInner}>
-          <SaveButton card={card} label="Save idea" />
+          <SaveButton card={card} label="Save idea" primary />
           <Link href={digDeeperHref(card)} className={styles.dig}>
             <Sparkles size={16} aria-hidden="true" />
             Dig deeper
@@ -37,6 +37,7 @@ export default function IdeaDetail({ card, backHref = "/app/feed", backLabel = "
 export function IdeaSections({ card, headingLevel = 1 }: { card: Card; headingLevel?: 1 | 2 }) {
   const Title = headingLevel === 1 ? "h1" : "h2";
   const evidence = card.evidence;
+  const sources = sourceCount(card);
   const yearly = evidence.days >= 365;
   const scores = [
     ["Demand", card.scores.demand],
@@ -70,8 +71,8 @@ export function IdeaSections({ card, headingLevel = 1 }: { card: Card; headingLe
               <div className={styles.meta}>mentions</div>
             </div>
             <div>
-              <div className={styles.stat}>{evidence.threads}</div>
-              <div className={styles.meta}>{card.fresh ? "sources" : "threads"}</div>
+              <div className={styles.stat}>{sources}</div>
+              <div className={styles.meta}>{sources === 1 ? "source" : "sources"}</div>
             </div>
             <div>
               <div className={styles.stat}>{yearly ? 12 : evidence.days}</div>

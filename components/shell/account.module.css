@@ -7,7 +7,7 @@
   min-height: 52px;
   padding: 8px 12px;
   border: 0;
-  border-radius: 16px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.55);
   font: inherit;
   text-align: left;
@@ -68,7 +68,7 @@
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
 }
 .avatarBig {
   width: 56px;
@@ -81,7 +81,7 @@
   margin: auto;
   padding: 0;
   border: 0;
-  border-radius: 28px;
+  border-radius: var(--radius-card);
   background: var(--white);
   color: var(--ink);
   box-shadow: 0 30px 80px -20px rgba(14, 23, 38, 0.35);
@@ -154,7 +154,7 @@
   margin: 4px 0 0;
   max-width: 100%;
   font-size: 24px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.02em;
   overflow-wrap: anywhere;
 }
@@ -166,7 +166,7 @@
 }
 .sub strong {
   color: var(--ink);
-  font-weight: 600;
+  font-weight: 500;
 }
 .badge {
   width: 56px;
@@ -238,9 +238,10 @@
   width: 100%;
   min-height: 48px;
   padding: 0 16px;
-  border: 1px solid #e6e8f0;
+  border: 0;
   border-radius: 12px;
-  background: #f5f6fa;
+  background: var(--gray);
+  box-shadow: inset 0 0 0 1px var(--line);
   font: inherit;
   font-size: 16px; /* 16px+ so ios doesnt zoom in */
   color: var(--ink);
@@ -249,15 +250,14 @@
 }
 .input:focus {
   background: var(--white);
-  border-color: #c9d3f5;
-  box-shadow: 0 0 0 3px var(--tint);
+  box-shadow: inset 0 0 0 1.5px var(--blue);
 }
 
 .error {
   width: 100%;
   margin: 0;
   padding: 10px 14px;
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--early-tint);
   color: var(--early-ink);
   font-size: 14px;
@@ -301,14 +301,14 @@
   grid-template-columns: 1fr 1fr;
   padding: 4px;
   border-radius: 12px;
-  background: #f2f3f8;
+  background: var(--gray);
 }
 .mode {
   position: relative;
   isolation: isolate;
   min-height: 38px;
   border: 0;
-  border-radius: 9px;
+  border-radius: 10px;
   background: none;
   font: inherit;
   font-size: 14px;
@@ -322,7 +322,7 @@
 }
 .modePill {
   background: var(--white);
-  border-radius: 9px;
+  border-radius: 10px;
   box-shadow: 0 1px 3px rgba(25, 25, 29, 0.1);
 }
 .links {

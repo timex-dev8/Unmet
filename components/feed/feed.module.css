@@ -21,7 +21,7 @@
   right: 18px;
   bottom: 0;
   height: 40px;
-  border-radius: 24px;
+  border-radius: var(--radius-card);
   background: rgba(255, 255, 255, 0.5);
 }
 .cardWrap {
@@ -47,7 +47,7 @@
   background: var(--blue);
   color: var(--white);
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 500;
   pointer-events: none;
 }
 
@@ -71,6 +71,12 @@
   cursor: pointer;
   padding: 0;
 }
+.footerIn {
+  display: none;
+}
+.hintDown {
+  display: none;
+}
 .counter {
   font-size: 13px;
   color: var(--muted);
@@ -81,7 +87,7 @@
   position: absolute;
   inset: 0 0 12px;
   background: var(--white);
-  border-radius: var(--radius-tile);
+  border-radius: var(--radius-card);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -90,10 +96,18 @@
   padding: 32px;
   gap: 12px;
 }
+.endInline.end {
+  position: static;
+  flex: 1;
+  margin: 0 12px 12px;
+}
+.startOver {
+  background: var(--white);
+}
 .endTitle {
   margin: 0;
   font-size: 28px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.035em;
 }
 .endLink {
@@ -127,7 +141,7 @@
   background: var(--ink);
   color: var(--white);
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 500;
   pointer-events: none;
   transition:
     opacity 0.2s ease,
@@ -167,6 +181,10 @@
     width: min(720px, 100% - 160px);
     height: 360px;
   }
+  .endInline.end {
+    flex: none;
+    margin: auto;
+  }
   .sideNav {
     position: absolute;
     top: 50%;
@@ -198,9 +216,20 @@
     cursor: default;
   }
   .footer {
-    width: min(720px, 100% - 160px);
-    margin: 0 auto;
+    display: none;
+  }
+  .footerIn {
+    display: flex;
+    height: 44px;
+    margin-top: 8px;
     padding: 0;
+    cursor: default;
+  }
+  .hintUp {
+    display: none;
+  }
+  .hintDown {
+    display: block;
   }
   .touchHint {
     display: none;

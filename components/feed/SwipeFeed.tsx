@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { AnimatePresence, m, useMotionValue, useReducedMotion, useTransform, type PanInfo } from "motion/react";
+import { AnimatePresence, m, useDragControls, useMotionValue, useReducedMotion, useTransform, type PanInfo } from "motion/react";
 import { Bookmark, ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
 import IdeaCard from "@/components/card/IdeaCard";
 import ProductCard from "@/components/card/ProductCard";
@@ -12,8 +12,8 @@ import { useSaved } from "@/lib/saved";
 import type { Card, Product } from "@/lib/types";
 import styles from "./feed.module.css";
 
-// 1 = next, -1 = back, 2 = saved
-type Dir = 1 | -1 | 2;
+// 1 = next, -1 = back, 2 = saved, 3 = next by swiping left
+type Dir = 1 | -1 | 2 | 3;
 
 const SWIPE_DISTANCE = 100;
 const SWIPE_VELOCITY = 600;
@@ -69,7 +69,7 @@ export default function SwipeFeed({ cards: input, products = [] }: { cards: Card
     (direction: Dir) => {
       markHintSeen();
       const current = cards[index];
-      if (direction === 1 && current && !isProduct(current)) markSkipped(current.slug);
+      if ((direction === 1 || direction === 3) && current && !isProduct(current)) markSkipped(current.slug);
       setDir(direction);
       setIndex((i) => (direction === -1 ? Math.max(i - 1, 0) : Math.min(i + 1, cards.length)));
     },
@@ -113,6 +113,7 @@ export default function SwipeFeed({ cards: input, products = [] }: { cards: Card
   function onDragEnd(_: unknown, info: PanInfo) {
     const { offset, velocity } = info;
     if (offset.x > SWIPE_DISTANCE || velocity.x > SWIPE_VELOCITY) saveAndNext();
+    else if (offset.x < -SWIPE_DISTANCE || velocity.x < -SWIPE_VELOCITY) move(3);
     else if (offset.y < -SWIPE_DISTANCE || velocity.y < -SWIPE_VELOCITY) move(1);
     else if ((offset.y > SWIPE_DISTANCE || velocity.y > SWIPE_VELOCITY) && index > 0) move(-1);
   }
@@ -122,17 +123,39 @@ export default function SwipeFeed({ cards: input, products = [] }: { cards: Card
     enter: (direction: Dir) => (direction === -1 ? { y: -500, opacity: 0 } : { y: 16, scale: 0.96, opacity: 0.6 }),
     center: { x: 0, y: 0, scale: 1, opacity: 1, rotate: 0 },
     exit: (direction: Dir) =>
-      direction === 2 ? { x: 480, rotate: 10, opacity: 0 } : direction === 1 ? { y: -600, opacity: 0 } : { y: 40, scale: 0.96, opacity: 0 },
+      direction === 2
+        ? { x: 480, rotate: 10, opacity: 0 }
+        : direction === 3
+          ? { x: -480, rotate: -10, opacity: 0 }
+          : direction === 1
+            ? { y: -600, opacity: 0 }
+            : { y: 40, scale: 0.96, opacity: 0 },
   };
+
+  const footer = (
+    <>
+      <button type="button" className={styles.navBtn} onClick={() => move(1)}>
+        <ChevronUp size={16} className={styles.hintUp} aria-hidden="true" />
+        <ChevronDown size={16} className={styles.hintDown} aria-hidden="true" />
+        <span className={styles.touchHint}>{hintSeen ? "Next" : "Swipe up for next · right to save"}</span>
+        <span className={styles.keyHint}>Next · or use ↑ ↓ and S to save</span>
+      </button>
+      <span className={styles.counter} aria-hidden="true">
+        {index + 1} of {cards.length}
+      </span>
+    </>
+  );
 
   if (!cards.length) {
     return (
-      <div className={styles.end}>
-        <h2 className={styles.endTitle}>No ideas here yet.</h2>
-        <p className={styles.endText}>Try another filter or search for a problem.</p>
-        <Link href="/app/search" className="pill pill-dark">
-          Search
-        </Link>
+      <div className={styles.stage}>
+        <div className={styles.end}>
+          <h2 className={styles.endTitle}>No ideas here yet.</h2>
+          <p className={styles.endText}>Try another filter or search for a problem.</p>
+          <Link href="/app/search" className="pill pill-dark">
+            Search
+          </Link>
+        </div>
       </div>
     );
   }
@@ -144,7 +167,7 @@ export default function SwipeFeed({ cards: input, products = [] }: { cards: Card
 
         <AnimatePresence initial={false} custom={dir}>
           {card ? (
-            <SwipeCard key={keyOf(card)} card={card} dir={dir} variants={variants} duration={duration} onDragEnd={onDragEnd} />
+            <SwipeCard key={keyOf(card)} card={card} dir={dir} variants={variants} duration={duration} onDragEnd={onDragEnd} footer={footer} />
           ) : (
             <m.div key="end" className={styles.end} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration }}>
               <h2 className={styles.endTitle}>You’ve seen every idea.</h2>
@@ -153,7 +176,7 @@ export default function SwipeFeed({ cards: input, products = [] }: { cards: Card
                 <Link href="/app/board" className="pill pill-dark">
                   View saved
                 </Link>
-                <button type="button" className="pill" style={{ background: "var(--white)" }} onClick={() => setIndex(0)}>
+                <button type="button" className={`pill ${styles.startOver}`} onClick={() => setIndex(0)}>
                   <RotateCcw size={16} aria-hidden="true" />
                   Start over
                 </button>
@@ -174,20 +197,13 @@ export default function SwipeFeed({ cards: input, products = [] }: { cards: Card
         )}
       </div>
 
-      <div className={styles.footer}>
-        {card && (
-          <>
-            <button type="button" className={styles.navBtn} onClick={() => move(1)}>
-              <ChevronUp size={16} aria-hidden="true" />
-              <span className={styles.touchHint}>{hintSeen ? "Next" : "Swipe up for next · right to save"}</span>
-              <span className={styles.keyHint}>Next · or use ↑ ↓ and S to save</span>
-            </button>
-            <span className={styles.counter} aria-live="polite">
-              {index + 1} of {cards.length}
-            </span>
-          </>
-        )}
-      </div>
+      <div className={styles.footer}>{card && footer}</div>
+
+      {card && (
+        <span className="sr-only" role="status" aria-live="polite">
+          {index + 1} of {cards.length}
+        </span>
+      )}
 
       <div className={`${styles.toast} ${toast ? styles.toastOn : ""}`} role="status" aria-live="polite">
         {toast && (
@@ -207,16 +223,19 @@ function SwipeCard({
   variants,
   duration,
   onDragEnd,
+  footer,
 }: {
   card: Item;
   dir: Dir;
   variants: Record<string, unknown>;
   duration: number;
   onDragEnd: (e: unknown, info: PanInfo) => void;
+  footer: React.ReactNode;
 }) {
   const x = useMotionValue(0);
   const stamp = useTransform(x, [20, SWIPE_DISTANCE], [0, 1]);
   const rotate = useTransform(x, [-200, 0, 200], [-6, 0, 6]);
+  const controls = useDragControls();
 
   return (
     <m.div
@@ -228,6 +247,9 @@ function SwipeCard({
       exit="exit"
       transition={{ duration, ease: [0.2, 0.8, 0.2, 1] }}
       drag
+      dragControls={controls}
+      dragListener={false}
+      onPointerDown={(e) => !(e.target as HTMLElement).closest("[data-nodrag]") && controls.start(e)}
       dragSnapToOrigin
       dragElastic={0.6}
       onDragEnd={onDragEnd}
@@ -240,6 +262,9 @@ function SwipeCard({
         </m.div>
       )}
       {isProduct(card) ? <ProductCard product={card} /> : <IdeaCard card={card} />}
+      <div className={`${styles.footer} ${styles.footerIn}`} data-nodrag>
+        {footer}
+      </div>
     </m.div>
   );
 }

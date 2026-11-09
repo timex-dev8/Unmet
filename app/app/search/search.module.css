@@ -3,26 +3,28 @@
   background: var(--gray);
 }
 .wrap {
-  max-width: 640px;
+  max-width: 1120px;
   margin: 0 auto;
-  padding-bottom: 40px;
+  padding: 0 16px 40px;
 }
 .title {
   margin: 0;
-  padding: 20px 20px 8px;
-  font-size: 30px;
-  font-weight: 700;
-  letter-spacing: -0.04em;
+  padding: 20px 0 8px;
+  font-family: var(--font-serif);
+  font-size: 36px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
 }
 .form {
   position: relative;
   display: flex;
   gap: 8px;
-  padding: 8px 16px 20px;
+  max-width: 680px;
+  padding: 8px 0 20px;
 }
 .formIcon {
   position: absolute;
-  left: 34px;
+  left: 18px;
   top: 21px;
   color: var(--muted);
   pointer-events: none;
@@ -32,9 +34,10 @@
   min-width: 0;
   min-height: 44px;
   padding: 0 16px 0 44px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-pill);
+  border: 0;
+  border-radius: 12px;
   background: var(--white);
+  box-shadow: inset 0 0 0 1px var(--line);
   font: inherit;
   font-size: 17px;
   color: var(--ink);
@@ -47,12 +50,12 @@
   outline-offset: 1px;
 }
 .suggest {
-  padding: 0 20px;
+  padding: 0;
 }
 .label {
   margin: 0 0 10px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--muted);
 }
 .chips {
@@ -70,13 +73,13 @@
   font-size: 15px;
 }
 .count {
-  margin: 0 20px 12px;
+  margin: 0 0 12px;
   font-size: 14px;
   color: var(--muted);
 }
 .results {
   list-style: none;
-  margin: 0 16px;
+  margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -88,14 +91,14 @@
   gap: 8px;
   padding: 18px;
   background: var(--white);
-  border-radius: 22px;
+  border-radius: var(--radius-card);
 }
 .result:hover {
   box-shadow: 0 6px 20px -10px rgba(0, 0, 0, 0.2);
 }
 .resultTitle {
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.025em;
   line-height: 1.2;
 }
@@ -108,10 +111,10 @@
   color: var(--muted);
 }
 .empty {
-  margin: 0 16px;
+  margin: 0;
   padding: 32px 24px;
   background: var(--white);
-  border-radius: 22px;
+  border-radius: var(--radius-card);
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -121,7 +124,7 @@
 .emptyTitle {
   margin: 0;
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 500;
 }
 .emptyText {
   margin: 0 0 12px;
@@ -131,4 +134,15 @@
 .empty button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+@media (min-width: 900px) {
+  .wrap {
+    padding: 12px 40px 56px;
+  }
+  .results {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
 }

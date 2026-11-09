@@ -10,7 +10,7 @@ import { entryFor, moveTo, nextStage, prevStage, removeEntry, setNote, STAGES, s
 import { STAGE_COLORS } from "@/lib/colors";
 import { digDeeperHref, ideaHref } from "@/lib/links";
 import { useSaved } from "@/lib/saved";
-import type { Card } from "@/lib/types";
+import { categoryLabel, type Card } from "@/lib/types";
 import styles from "./board.module.css";
 
 export default function BoardView() {
@@ -155,7 +155,7 @@ function Item({ card, stage, note, onRemove }: { card: Card; stage: Stage; note:
         }}
       >
         <div className={styles.meta}>
-          <span>{card.category}</span>
+          <span>{categoryLabel(card.category)}</span>
           <TrendBadge trend={card.trend} />
           <button type="button" className={styles.remove} onClick={leave} aria-label={`Remove “${card.headline}” from board`}>
             <X size={15} aria-hidden="true" />

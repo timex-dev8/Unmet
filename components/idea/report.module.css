@@ -4,7 +4,7 @@
 .h2 {
   margin: 0 0 12px;
   font-size: 22px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.02em;
 }
 .lede {
@@ -22,7 +22,7 @@
 .error {
   margin: 12px 0 0;
   padding: 10px 14px;
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--early-tint);
   color: var(--early-ink);
   font-size: 14px;
@@ -33,12 +33,12 @@
   flex-direction: column;
   gap: 4px;
   padding: 18px 20px;
-  border-radius: 22px;
+  border-radius: var(--radius-card);
   background: var(--white);
 }
 .verdictLabel {
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.02em;
 }
 .verdictNote {
@@ -90,7 +90,7 @@
   flex-direction: column;
   gap: 2px;
   padding: 12px;
-  border-radius: 16px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.55);
   color: var(--text-3);
 }
@@ -100,7 +100,7 @@
 }
 .signalNum {
   font-size: 22px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.02em;
 }
 .signalLabel {
@@ -116,7 +116,7 @@
 .today {
   margin-top: 12px;
   padding: 14px 16px;
-  border-radius: 18px;
+  border-radius: var(--radius-card);
   background: var(--white);
   font-size: 14px;
   line-height: 1.5;
@@ -130,7 +130,7 @@
 }
 .today strong {
   color: var(--ink);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .ideas {
@@ -140,7 +140,7 @@
 }
 .idea {
   padding: 20px;
-  border-radius: 24px;
+  border-radius: var(--radius-card);
   background: var(--white);
 }
 .ideaTop {
@@ -194,7 +194,7 @@
 }
 .twists strong {
   color: var(--ink);
-  font-weight: 600;
+  font-weight: 500;
 }
 .score {
   min-width: 36px;
@@ -204,7 +204,7 @@
   background: var(--ink);
   color: var(--white);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -212,7 +212,7 @@
 .ideaTitle {
   margin: 12px 0 4px;
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
@@ -249,7 +249,7 @@
 .answers {
   margin-top: 14px;
   padding: 12px 14px;
-  border-radius: 16px;
+  border-radius: 12px;
   background: var(--gray);
   display: flex;
   flex-direction: column;
@@ -272,14 +272,14 @@
   justify-content: space-between;
   gap: 10px;
   padding: 10px 14px;
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--gray);
   font-size: 14px;
   color: var(--ink-2);
 }
 .similar strong {
   color: var(--ink);
-  font-weight: 600;
+  font-weight: 500;
 }
 .validate {
   margin-top: 14px;
@@ -312,7 +312,7 @@
 .planLabel {
   margin: 16px 0 8px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
 }
 .planLabel:first-child {
   margin-top: 0;
@@ -322,13 +322,13 @@
   flex-direction: column;
   gap: 6px;
   padding: 18px;
-  border-radius: 18px;
+  border-radius: 12px;
   background-color: var(--tint);
   font-size: 14px;
 }
 .landing strong {
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
@@ -355,7 +355,7 @@
 .outreach {
   position: relative;
   padding: 14px 16px 44px;
-  border-radius: 16px;
+  border-radius: 12px;
   background: var(--gray);
   font-size: 14px;
   line-height: 1.5;

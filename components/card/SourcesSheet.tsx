@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { ArrowUpRight, Link2, X } from "lucide-react";
+import { sourceCount } from "@/lib/text";
 import type { Card } from "@/lib/types";
 import { kindBadge, sourceMeta, windowLabel } from "./parts";
 import styles from "./card.module.css";
@@ -9,7 +10,7 @@ import sheetStyles from "./sheet.module.css";
 
 export default function SourcesSheet({ card, link }: { card: Card; link?: boolean }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const count = card.sources.length;
+  const count = sourceCount(card);
 
   return (
     <>
@@ -44,7 +45,11 @@ export default function SourcesSheet({ card, link }: { card: Card; link?: boolea
           <p className={sheetStyles.note}>
             {card.evidence.posts} {card.evidence.posts === 1 ? "mention" : "mentions"}
             {card.query ? ` of “${card.query.replaceAll('"', "")}”` : ""} on {card.evidence.site}, {windowLabel(card.evidence.days)}.
-            {card.fresh ? " Strongest sources first:" : " Top recent ones:"}
+            {count > card.sources.length
+              ? ` Showing the ${card.sources.length} strongest:`
+              : card.fresh
+                ? " Strongest sources first:"
+                : " Top recent ones:"}
           </p>
           <ul className={sheetStyles.list}>
             {card.sources.map((src) => (

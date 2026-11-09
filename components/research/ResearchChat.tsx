@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowUp, BookmarkPlus, Check, ChevronRight, ExternalLink, LoaderCircle, Sparkles, X } from "lucide-react";
+import { ArrowUp, BookmarkPlus, Check, ChevronRight, ExternalLink, LoaderCircle, Sparkles, Square, X } from "lucide-react";
 import SaveButton from "@/components/card/SaveButton";
 import ShareButton from "@/components/card/ShareButton";
 import { IdeaSections } from "@/components/idea/IdeaDetail";
@@ -18,6 +18,10 @@ import ResearchCard from "./ResearchCard";
 import styles from "./research.module.css";
 
 type Context = Pick<Card, "slug" | "headline" | "summary">;
+
+const STOPPED = "Stopped.";
+// the new-thread url change remounts this component, so running requests live out here
+const running = new Map<string, AbortController>();
 
 export default function ResearchChat({
   configured,
@@ -45,19 +49,35 @@ export default function ResearchChat({
   const authKnown = user !== undefined && guest !== undefined;
   const [openCard, setOpenCard] = useState<Card | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
   const busy = messages.some((chatMessage) => chatMessage.pending);
+  // only announce a finish this page actually watched, not when opening an old thread
+  const [watched, setWatched] = useState(false);
+  if (busy && !watched) setWatched(true);
 
-  const lastSteps = messages[messages.length - 1]?.steps?.length ?? 0;
+  const last = messages[messages.length - 1];
+  const lastSteps = last?.steps?.length ?? 0;
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages.length, lastSteps]);
 
+  const openPanel = (card: Card, link: HTMLElement) => {
+    openerRef.current = link;
+    setOpenCard(card);
+  };
+  const closePanel = useCallback(() => {
+    setOpenCard(null);
+    openerRef.current?.focus();
+  }, []);
+
   useEffect(() => {
     if (!openCard) return;
-    const onKey = (e: globalThis.KeyboardEvent) => e.key === "Escape" && setOpenCard(null);
+    panelRef.current?.focus();
+    const onKey = (e: globalThis.KeyboardEvent) => e.key === "Escape" && closePanel();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [openCard]);
+  }, [openCard, closePanel]);
 
   // start the ?q= research once auth is known so ?depth=high doesnt run as a guests low
   const started = useRef(false);
@@ -85,7 +105,7 @@ export default function ResearchChat({
         list.map((chatMessage) => (chatMessage.id === msgId ? { ...chatMessage, ...fn(chatMessage) } : chatMessage)),
       );
 
-    const prior = messages.filter((chatMessage) => !chatMessage.error);
+    const prior = messages.filter((chatMessage) => !chatMessage.error && chatMessage.text !== STOPPED);
     const history = prior.slice(-8).map((chatMessage) => ({ role: chatMessage.role, text: chatMessage.text.slice(0, 1500) }));
     const cards: Context[] = [
       ...(about && !threadId ? [about] : []),
@@ -95,15 +115,22 @@ export default function ResearchChat({
     const reply: ChatMessage = { id: newId(), role: "assistant", text: "", steps: [], pending: true };
     updateThread(streamThreadId, (list) => [...list, { id: newId(), role: "user", text: message }, reply]);
 
+    // stop marks the reply right away, so failures from the aborted stream find it no longer pending
+    const fail = (text: string) => patch(reply.id, (chatMessage) => (chatMessage.pending ? { text, error: true, pending: false } : {}));
+    const controller = new AbortController();
+    running.set(streamThreadId, controller);
+    controller.signal.addEventListener("abort", () => patch(reply.id, () => ({ text: STOPPED, pending: false })));
+
     try {
       const response = await fetch("/api/research", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(await authHeaders()) },
         body: JSON.stringify({ message, history, cards, depth: lowOnly ? "low" : depth }),
+        signal: controller.signal,
       });
       if (!response.ok || !response.body) {
         const body = await response.json().catch(() => ({}));
-        patch(reply.id, () => ({ text: body.error ?? "Something went wrong. Please try again.", error: true, pending: false }));
+        fail(body.error ?? "Something went wrong. Please try again.");
         return;
       }
 
@@ -135,23 +162,27 @@ export default function ResearchChat({
                 suggestions: event.suggestions,
                 pending: false,
               }));
-            else patch(reply.id, () => ({ text: event.message, error: true, pending: false }));
+            else fail(event.message);
           }
         }
       } catch (err) {
         void reader.cancel().catch(() => {});
         throw err;
       }
-      patch(reply.id, (chatMessage) =>
-        chatMessage.pending ? { text: "The research took too long. Please try again.", error: true, pending: false } : {},
-      );
+      fail("The research took too long. Please try again.");
     } catch {
-      patch(reply.id, () => ({ text: "Couldn’t reach Unmet. Check your connection and try again.", error: true, pending: false }));
+      fail("Couldn’t reach Unmet. Check your connection and try again.");
+    } finally {
+      if (running.get(streamThreadId) === controller) running.delete(streamThreadId);
     }
   }
 
+  function stop() {
+    if (threadId) running.get(threadId)?.abort();
+  }
+
   function submit() {
-    if (!authKnown) return;
+    if (!authKnown || busy) return;
     const text = input;
     setInput("");
     send(text);
@@ -174,7 +205,7 @@ export default function ResearchChat({
       <main className={`${styles.chat} ${styles.chatEmpty}`}>
         <div className={styles.intro}>
           <h1 className={styles.title}>This research isn’t on this device.</h1>
-          <p className={styles.lead}>Research is kept in the browser where you ran it, until accounts arrive.</p>
+          <p className={styles.lead}>Research syncs when you’re signed in, but as a guest it stays in the browser where you ran it.</p>
           <p>
             <Link href="/app/research" className="pill pill-dark">
               Start a new research
@@ -188,11 +219,21 @@ export default function ResearchChat({
   const empty = messages.length === 0;
   const lastAnswerId = [...messages]
     .reverse()
-    .find((chatMessage) => chatMessage.role === "assistant" && !chatMessage.pending && !chatMessage.error)?.id;
+    .find((chatMessage) => chatMessage.role === "assistant" && !chatMessage.pending && !chatMessage.error && chatMessage.text !== STOPPED)?.id;
+  const status = busy
+    ? (last?.steps?.at(-1) ?? "Starting research")
+    : !watched
+      ? ""
+      : last?.error || last?.text === STOPPED
+        ? last.text
+        : "Research finished";
 
   return (
     <div className={styles.layout}>
       <main className={`${styles.chat} ${empty ? styles.chatEmpty : ""}`}>
+        <p role="status" className="sr-only">
+          {status}
+        </p>
         {empty ? (
           <div className={styles.intro} data-wash>
             <h1 className={styles.title}>{about ? `Dig into “${about.headline}”` : "What do you want to find out?"}</h1>
@@ -201,8 +242,10 @@ export default function ResearchChat({
             </p>
           </div>
         ) : (
-          <div className={styles.thread} aria-live="polite">
-            <h1 className={styles.threadTitle}>{thread?.title ?? "Research"}</h1>
+          <div className={styles.thread}>
+            <h1 className={styles.threadTitle} title={thread?.title}>
+              {thread?.title ?? "Research"}
+            </h1>
             {messages.map((chatMessage, messageIndex) =>
               chatMessage.role === "user" ? (
                 <UserBubble key={chatMessage.id} text={chatMessage.text} />
@@ -213,7 +256,7 @@ export default function ResearchChat({
                   isLast={chatMessage.id === lastAnswerId}
                   lastQuery={messages.slice(0, messageIndex).findLast((earlier) => earlier.role === "user")?.text ?? ""}
                   onAsk={(question) => send(question)}
-                  onOpen={setOpenCard}
+                  onOpen={openPanel}
                   openSlug={openCard?.slug}
                 />
               ),
@@ -236,27 +279,34 @@ export default function ResearchChat({
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onKeyDown}
-              placeholder={empty ? "I don’t know what to build, give me ideas" : "Ask a follow-up or explore something new"}
+              placeholder={empty ? "Ask about a market, product or problem" : "Ask a follow-up"}
               disabled={!configured}
             />
             {!lowOnly && <DepthPicker value={depth} onChange={setDepth} disabled={busy} placement={empty ? "down" : "up"} />}
-            <button type="submit" className={`glossy ${styles.send}`} disabled={!input.trim() || busy || !configured || !authKnown} aria-label="Send">
-              {busy ? <LoaderCircle size={20} className="spin" aria-hidden="true" /> : <ArrowUp size={20} aria-hidden="true" />}
-            </button>
+            {/* keyed so a click on stop can't land on the submit button that replaces it */}
+            {busy ? (
+              <button key="stop" type="button" className={`send-btn ${styles.stop}`} onClick={stop} aria-label="Stop research">
+                <Square size={16} fill="currentColor" aria-hidden="true" />
+              </button>
+            ) : (
+              <button key="send" type="submit" className="send-btn glossy" disabled={!input.trim() || !configured || !authKnown} aria-label="Send">
+                <ArrowUp size={20} aria-hidden="true" />
+              </button>
+            )}
           </form>
           {empty && configured && !about && <PastResearch onTry={send} />}
         </div>
       </main>
 
       {openCard && (
-        <aside className={styles.panel} aria-label="Idea details">
+        <aside ref={panelRef} tabIndex={-1} className={styles.panel} aria-label="Idea details">
           <div className={styles.panelBar}>
             <span className={styles.panelLabel}>Idea</span>
             <div className={styles.panelTools}>
               <Link href={ideaHref(openCard.slug)} className={styles.panelBtn} aria-label="Open as a full page">
                 <ExternalLink size={16} aria-hidden="true" />
               </Link>
-              <button type="button" className={styles.panelBtn} onClick={() => setOpenCard(null)} aria-label="Close panel">
+              <button type="button" className={styles.panelBtn} onClick={closePanel} aria-label="Close panel">
                 <X size={18} aria-hidden="true" />
               </button>
             </div>
@@ -314,7 +364,7 @@ function Reply({
   isLast: boolean;
   lastQuery: string;
   onAsk: (question: string) => void;
-  onOpen: (card: Card) => void;
+  onOpen: (card: Card, link: HTMLElement) => void;
   openSlug?: string;
 }) {
   const steps = chatMessage.steps ?? [];
@@ -361,6 +411,11 @@ function Reply({
         </p>
       )}
       {chatMessage.text && <p className={chatMessage.error ? styles.error : styles.answer}>{chatMessage.text}</p>}
+      {chatMessage.error && lastQuery && (
+        <button type="button" className={styles.retry} onClick={() => onAsk(lastQuery)}>
+          Try again
+        </button>
+      )}
       {popular.length > 0 && group(popular, both ? "Main problems" : null, 0)}
       {niche.length > 0 && group(niche, "Niche problems: smaller and less proven", popular.length)}
       {showFootnote ? <p className={styles.footnote}>Sources from the last 12 months; every quote is checked against its source.</p> : null}
